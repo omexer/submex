@@ -12,20 +12,20 @@ jest.mock( '@wordpress/api-fetch' );
 const ROWS = [
 	{
 		id: 812,
-		status: 'subly-active',
+		status: 'submex-active',
 		status_label: 'Active',
 		customer_name: 'Ada Lovelace',
 		customer_email: 'ada@example.com',
 		total_formatted: '£24.00',
 		next_payment_formatted: '12 September 2026',
 		payment_method_title: 'PayPal',
-		payment_method: 'subly_paypal',
+		payment_method: 'submex_paypal',
 		billable: true,
 		edit_url: 'http://example.test/?subscription=812',
 	},
 	{
 		id: 813,
-		status: 'subly-cancelled',
+		status: 'submex-cancelled',
 		status_label: 'Cancelled',
 		customer_name: '',
 		customer_email: 'bob@example.com',
@@ -39,18 +39,18 @@ const ROWS = [
 ];
 
 const STATUSES = [
-	{ key: 'subly-active', label: 'Active', count: 1 },
-	{ key: 'subly-cancelled', label: 'Cancelled', count: 1 },
-	{ key: 'subly-expired', label: 'Ended', count: 0 },
+	{ key: 'submex-active', label: 'Active', count: 1 },
+	{ key: 'submex-cancelled', label: 'Cancelled', count: 1 },
+	{ key: 'submex-expired', label: 'Ended', count: 0 },
 ];
 
 function respond( { rows = ROWS, total = rows.length } = {} ) {
 	apiFetch.mockImplementation( ( options ) => {
-		if ( options.path.startsWith( '/subly/v1/subscriptions/statuses' ) ) {
+		if ( options.path.startsWith( '/submex/v1/subscriptions/statuses' ) ) {
 			return Promise.resolve( STATUSES );
 		}
 
-		if ( options.path.startsWith( '/subly/v1/subscriptions?' ) ) {
+		if ( options.path.startsWith( '/submex/v1/subscriptions?' ) ) {
 			return Promise.resolve( {
 				json: () => Promise.resolve( rows ),
 				headers: { get: () => String( total ) },
@@ -88,7 +88,7 @@ const byText = ( text, tag = 'button' ) =>
 
 const listCalls = () =>
 	apiFetch.mock.calls.filter( ( call ) =>
-		call[ 0 ].path.startsWith( '/subly/v1/subscriptions?' )
+		call[ 0 ].path.startsWith( '/submex/v1/subscriptions?' )
 	);
 
 describe( 'the subscriptions list', () => {
@@ -153,7 +153,7 @@ describe( 'the subscriptions list', () => {
 		} );
 
 		const bulk = apiFetch.mock.calls.find(
-			( call ) => '/subly/v1/subscriptions/actions' === call[ 0 ].path
+			( call ) => '/submex/v1/subscriptions/actions' === call[ 0 ].path
 		);
 
 		expect( bulk[ 0 ].data ).toEqual( {

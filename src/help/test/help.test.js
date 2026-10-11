@@ -32,10 +32,10 @@ describe( 'the help screen', () => {
 					title: 'Read the activity log',
 					body: 'Open one.',
 					label: 'All subscriptions',
-					url: '/wp-admin/admin.php?page=subly-list',
+					url: '/wp-admin/admin.php?page=submex-list',
 				},
 			],
-			report: 'Subly: 1.0\nHPOS: yes\n',
+			report: 'Submex: 1.0\nHPOS: yes\n',
 		} );
 
 		await render();
@@ -44,10 +44,10 @@ describe( 'the help screen', () => {
 			( a ) => a.textContent === 'All subscriptions'
 		);
 		expect( link.getAttribute( 'href' ) ).toBe(
-			'/wp-admin/admin.php?page=subly-list'
+			'/wp-admin/admin.php?page=submex-list'
 		);
 		expect( container.querySelector( 'textarea' ).value ).toBe(
-			'Subly: 1.0\nHPOS: yes\n'
+			'Submex: 1.0\nHPOS: yes\n'
 		);
 	} );
 

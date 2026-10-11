@@ -1,9 +1,9 @@
 <?php
 
-namespace Subly\Gateways\PayPal;
+namespace Submex\Gateways\PayPal;
 
-use Subly\Domain\Billing_Schedule;
-use Subly\Product\Line_Terms;
+use Submex\Domain\Billing_Schedule;
+use Submex\Product\Line_Terms;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -18,9 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class PayPal_Plans {
 
-	private const META_PRODUCT = '_subly_paypal_product_id';
+	private const META_PRODUCT = '_submex_paypal_product_id';
 	// Fingerprint => plan id: one product sold on several terms needs a plan for each.
-	public const META_PLANS = '_subly_paypal_plans';
+	public const META_PLANS = '_submex_paypal_plans';
 
 	public function __construct( private readonly PayPal_Client $client ) {}
 
@@ -93,14 +93,14 @@ class PayPal_Plans {
 		/**
 		 * How many payments PayPal should take before it stops on its own.
 		 *
-		 * PayPal owns this schedule, so a limit Subly knows about — a payment cap, an
+		 * PayPal owns this schedule, so a limit Submex knows about — a payment cap, an
 		 * instalment plan — has to be built into the plan or PayPal bills past the end.
 		 *
 		 * @param int         $total_cycles 0 bills forever.
 		 * @param \WC_Product $product
 		 * @param Line_Terms  $terms        The terms being sold; its order_item() is the order line, when there is one.
 		 */
-		return max( 0, (int) apply_filters( 'subly_paypal_total_cycles', 0, $product, $terms ) );
+		return max( 0, (int) apply_filters( 'submex_paypal_total_cycles', 0, $product, $terms ) );
 	}
 
 	/**

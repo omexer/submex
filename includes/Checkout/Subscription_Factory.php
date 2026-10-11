@@ -1,14 +1,14 @@
 <?php
 
-namespace Subly\Checkout;
+namespace Submex\Checkout;
 
-use Subly\Billing\Renewal_Scheduler;
-use Subly\Data\Activity_Repository;
-use Subly\Data\Charge_Slot_Repository;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
-use Subly\Product\Line_Terms;
-use Subly\Product\Subscription_Product;
+use Submex\Billing\Renewal_Scheduler;
+use Submex\Data\Activity_Repository;
+use Submex\Data\Charge_Slot_Repository;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
+use Submex\Product\Line_Terms;
+use Submex\Product\Subscription_Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -100,7 +100,7 @@ class Subscription_Factory {
 		$subscription->set_next_payment( $first_renewal->format( 'Y-m-d H:i:s' ) );
 
 		// Pin the origin site so a cloned staging copy refuses to bill real customers.
-		$subscription->update_meta_data( '_subly_site_url', get_option( 'siteurl' ) );
+		$subscription->update_meta_data( '_submex_site_url', get_option( 'siteurl' ) );
 
 		// The recurring amount, not what the first order came to: a trial makes that zero
 		// and a one-off coupon would otherwise discount every renewal for ever.
@@ -143,7 +143,7 @@ class Subscription_Factory {
 			$this->slots->mark_paid( (int) $slot->id, $order->get_id() );
 		}
 
-		$order->update_meta_data( '_subly_subscription_id', $subscription->get_id() );
+		$order->update_meta_data( '_submex_subscription_id', $subscription->get_id() );
 		$order->save();
 
 		$this->activity->log(
@@ -160,7 +160,7 @@ class Subscription_Factory {
 		 * @param \WC_Product                 $product
 		 * @param \WC_Order_Item_Product|null $item     The order line. Null when fired from outside a checkout.
 		 */
-		do_action( 'subly_configure_subscription', $subscription, $product, $item );
+		do_action( 'submex_configure_subscription', $subscription, $product, $item );
 
 		/**
 		 * Fires when a subscription has been created from a checkout.
@@ -168,7 +168,7 @@ class Subscription_Factory {
 		 * @param Subscription $subscription
 		 * @param \WC_Order    $order
 		 */
-		do_action( 'subly_subscription_created', $subscription, $order );
+		do_action( 'submex_subscription_created', $subscription, $order );
 
 		return $subscription;
 	}
@@ -224,11 +224,11 @@ class Subscription_Factory {
 
 		$this->scheduler->schedule_next( $subscription );
 
-		do_action( 'subly_subscription_activated', $subscription );
+		do_action( 'submex_subscription_activated', $subscription );
 	}
 
 	private function existing_for_order( \WC_Order $order ): ?Subscription {
-		$id = (int) $order->get_meta( '_subly_subscription_id' );
+		$id = (int) $order->get_meta( '_submex_subscription_id' );
 
 		if ( ! $id ) {
 			return null;

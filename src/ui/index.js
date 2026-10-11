@@ -1,8 +1,8 @@
 /**
- * Subly's shared admin UI: shadcn/ui components, plus the few composites every Subly
+ * Submex's shared admin UI: shadcn/ui components, plus the few composites every Submex
  * screen needs.
  *
- * Published on a global rather than as a package. Subly Pro builds separately and cannot
+ * Published on a global rather than as a package. Submex Pro builds separately and cannot
  * import from this plugin at build time, so it consumes these as an external, the same way
  * everything consumes wp.components.
  */
@@ -93,7 +93,7 @@ export function Sparkline( { points, label } ) {
 			viewBox="0 0 100 100"
 			preserveAspectRatio="none"
 			role="img"
-			aria-label={ label || __( 'Trend over time', 'subly' ) }
+			aria-label={ label || __( 'Trend over time', 'submex' ) }
 			focusable="false"
 		>
 			<polyline
@@ -117,7 +117,7 @@ export function StatusBar( { parts } ) {
 	if ( ! total ) {
 		return (
 			<p className="sb-text-sm sb-text-muted-foreground">
-				{ __( 'Nothing to show yet.', 'subly' ) }
+				{ __( 'Nothing to show yet.', 'submex' ) }
 			</p>
 		);
 	}

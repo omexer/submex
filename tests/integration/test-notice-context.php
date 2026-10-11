@@ -1,35 +1,35 @@
 <?php
 /**
- * Subly's setup notices appear only on Subly's screens and WooCommerce → Settings (the tax repair
+ * Submex's setup notices appear only on Submex's screens and WooCommerce → Settings (the tax repair
  * notice on the orders screens too), and Dismiss keeps them away until the problem changes.
  *
- * @package Subly
+ * @package Submex
  */
 
-use Subly\Admin\Notice_Dismissals;
-use Subly\Billing\Renewal_Tax_Repair;
-use Subly\Checkout\Guest_Checkout;
+use Submex\Admin\Notice_Dismissals;
+use Submex\Billing\Renewal_Tax_Repair;
+use Submex\Checkout\Guest_Checkout;
 
 require __DIR__ . '/bootstrap.php';
 
 require_once ABSPATH . 'wp-admin/includes/class-wp-screen.php';
 require_once ABSPATH . 'wp-admin/includes/screen.php';
 
-if ( ! class_exists( 'Subly_Test_Redirected' ) ) {
-	final class Subly_Test_Redirected extends Exception {}
+if ( ! class_exists( 'Submex_Test_Redirected' ) ) {
+	final class Submex_Test_Redirected extends Exception {}
 }
 $stop_at_redirect = static function ( $to ) {
-	throw new Subly_Test_Redirected( (string) $to );
+	throw new Submex_Test_Redirected( (string) $to );
 };
 add_filter( 'wp_redirect', $stop_at_redirect, 1 );
 
-$plugin  = \Subly\Plugin::instance();
+$plugin  = \Submex\Plugin::instance();
 $options = array(
-	'subly_paypal_enabled'                              => 'yes',
-	'subly_paypal_client_id'                            => 'client-harness',
-	'subly_paypal_secret'                               => '',
-	'subly_paypal_webhook_id'                           => '',
-	'subly_guest_checkout'                              => Guest_Checkout::REQUIRE,
+	'submex_paypal_enabled'                              => 'yes',
+	'submex_paypal_client_id'                            => 'client-harness',
+	'submex_paypal_secret'                               => '',
+	'submex_paypal_webhook_id'                           => '',
+	'submex_guest_checkout'                              => Guest_Checkout::REQUIRE,
 	'woocommerce_enable_signup_and_login_from_checkout' => 'no',
 	'woocommerce_enable_checkout_login_reminder'        => 'no',
 );
@@ -41,8 +41,8 @@ foreach ( $options as $name => $value ) {
 $saved_screen   = $GLOBALS['current_screen'] ?? null;
 $tax_cache      = get_transient( Renewal_Tax_Repair::CACHE );
 set_transient( Renewal_Tax_Repair::CACHE, array( PHP_INT_MAX ), HOUR_IN_SECONDS );
-$dismissed_meta = get_user_meta( 1, 'subly_dismissed_notices', true );
-delete_user_meta( 1, 'subly_dismissed_notices' );
+$dismissed_meta = get_user_meta( 1, 'submex_dismissed_notices', true );
+delete_user_meta( 1, 'submex_dismissed_notices' );
 
 $text  = static function ( callable $callback ): string {
 	ob_start();
@@ -73,7 +73,7 @@ $dismiss = static function ( string $notice_html ) use ( $plugin ): bool {
 	$_REQUEST = $query;
 	try {
 		$plugin->get( 'notice_dismissals' )->handle();
-	} catch ( Subly_Test_Redirected $redirected ) {
+	} catch ( Submex_Test_Redirected $redirected ) {
 		$_GET     = array();
 		$_REQUEST = array();
 		return true;
@@ -90,7 +90,7 @@ foreach ( array( 'dashboard', 'edit-post', 'plugins', 'product' ) as $screen ) {
 	$check( "nothing on {$screen}", '' === $text( $gateway ) && '' === $text( $guest ) && '' === $text( $tax ), $screen );
 }
 
-foreach ( array( 'toplevel_page_subly', 'subly_page_subly-settings', 'woocommerce_page_wc-settings' ) as $screen ) {
+foreach ( array( 'toplevel_page_submex', 'submex_page_submex-settings', 'woocommerce_page_wc-settings' ) as $screen ) {
 	set_current_screen( $screen );
 	$check( "all three on {$screen}", $not_offered( $text( $gateway ) ) && $turned_away( $text( $guest ) ) && $doubled( $text( $tax ) ), $screen );
 }
@@ -103,38 +103,38 @@ foreach ( array( 'woocommerce_page_wc-orders', 'edit-shop_order', 'shop_order' )
 $check( 'no notice offers a Dismiss that only hides it until the next page', ! str_contains( $html( $gateway ) . $html( $guest ), 'is-dismissible' ) );
 
 echo "\n2. Dismiss persists, until the problem changes\n";
-set_current_screen( 'toplevel_page_subly' );
+set_current_screen( 'toplevel_page_submex' );
 
 $check( 'the gateway notice dismisses', $dismiss( $html( $gateway ) ) );
 $check( '  and stays dismissed', ! $not_offered( $text( $gateway ) ) );
 $check( '  on WooCommerce → Settings too', ( static function () use ( $gateway, $text, $not_offered ) {
 	set_current_screen( 'woocommerce_page_wc-settings' );
 	$out = $text( $gateway );
-	set_current_screen( 'toplevel_page_subly' );
+	set_current_screen( 'toplevel_page_submex' );
 	return ! $not_offered( $out );
 } )() );
 
-update_option( 'subly_paypal_client_id', '' );
-update_option( 'subly_paypal_secret', 'secret-harness' );
+update_option( 'submex_paypal_client_id', '' );
+update_option( 'submex_paypal_secret', 'secret-harness' );
 $check( 'a different field missing brings it back, though as many are missing', $not_offered( $text( $gateway ) ) );
 $check( '  and it dismisses again', $dismiss( $html( $gateway ) ) && ! $not_offered( $text( $gateway ) ) );
 
-update_option( 'subly_paypal_secret', '' );
+update_option( 'submex_paypal_secret', '' );
 $check( 'another missing field brings it back', $not_offered( $text( $gateway ) ) );
 $check( '  and it dismisses again', $dismiss( $html( $gateway ) ) && ! $not_offered( $text( $gateway ) ) );
 
-update_option( 'subly_paypal_client_id', 'client-harness' );
-update_option( 'subly_paypal_secret', 'secret-harness' );
+update_option( 'submex_paypal_client_id', 'client-harness' );
+update_option( 'submex_paypal_secret', 'secret-harness' );
 $check( 'with credentials in, the webhook notice shows', $unrecorded( $text( $gateway ) ) && ! $not_offered( $text( $gateway ) ) );
 $check( '  and dismisses', $dismiss( $html( $gateway ) ) && '' === $text( $gateway ) );
 
-update_option( 'subly_paypal_secret', '' );
+update_option( 'submex_paypal_secret', '' );
 $check( 'credentials lost again: that is news', $not_offered( $text( $gateway ) ) );
-update_option( 'subly_paypal_secret', 'secret-harness' );
+update_option( 'submex_paypal_secret', 'secret-harness' );
 
-update_option( 'subly_paypal_webhook_id', 'WH-1' );
+update_option( 'submex_paypal_webhook_id', 'WH-1' );
 $check( 'fixed, nothing shows', '' === $text( $gateway ) );
-update_option( 'subly_paypal_webhook_id', '' );
+update_option( 'submex_paypal_webhook_id', '' );
 $check( 'broken again after being fixed, it shows again', $unrecorded( $text( $gateway ) ) );
 
 $check( 'the guest checkout warning dismisses', $dismiss( $html( $guest ) ) && '' === $text( $guest ) );
@@ -154,9 +154,9 @@ wp_set_current_user( 1 );
 remove_filter( 'wp_redirect', $stop_at_redirect, 1 );
 false === $tax_cache ? delete_transient( Renewal_Tax_Repair::CACHE ) : set_transient( Renewal_Tax_Repair::CACHE, $tax_cache, HOUR_IN_SECONDS );
 $GLOBALS['current_screen'] = $saved_screen; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
-'' === $dismissed_meta ? delete_user_meta( 1, 'subly_dismissed_notices' ) : update_user_meta( 1, 'subly_dismissed_notices', $dismissed_meta );
+'' === $dismissed_meta ? delete_user_meta( 1, 'submex_dismissed_notices' ) : update_user_meta( 1, 'submex_dismissed_notices', $dismissed_meta );
 foreach ( $saved as $name => $value ) {
 	null === $value ? delete_option( $name ) : update_option( $name, $value );
 }
 
-subly_test_done( $fail );
+submex_test_done( $fail );

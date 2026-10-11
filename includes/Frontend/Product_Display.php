@@ -1,9 +1,9 @@
 <?php
 
-namespace Subly\Frontend;
+namespace Submex\Frontend;
 
-use Subly\Product\Line_Terms;
-use Subly\Product\Subscription_Product;
+use Submex\Product\Line_Terms;
+use Submex\Product\Subscription_Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -38,7 +38,7 @@ class Product_Display {
 		 *
 		 * @param string $text
 		 */
-		return (string) apply_filters( 'subly_subscribe_button_text', __( 'Subscribe', 'subly' ) );
+		return (string) apply_filters( 'submex_subscribe_button_text', __( 'Subscribe', 'submex' ) );
 	}
 
 	/**
@@ -101,12 +101,12 @@ class Product_Display {
 			return $price_html;
 		}
 
-		return $price_html . '<span class="subly-cart-terms">' . esc_html( wp_strip_all_tags( $this->disclosure->price_line( $cart_item['data'], $terms ) ) ) . '</span>';
+		return $price_html . '<span class="submex-cart-terms">' . esc_html( wp_strip_all_tags( $this->disclosure->price_line( $cart_item['data'], $terms ) ) ) . '</span>';
 	}
 
 	public function on_checkout_totals(): void {
 		foreach ( $this->subscription_lines_in_cart() as list( $product, $terms ) ) {
-			echo '<tr class="subly-recurring-total"><th>' . esc_html__( 'Recurring', 'subly' ) . '</th><td>'
+			echo '<tr class="submex-recurring-total"><th>' . esc_html__( 'Recurring', 'submex' ) . '</th><td>'
 				. wp_kses_post( $this->disclosure->price_line( $product, $terms ) ) . '</td></tr>';
 		}
 	}
@@ -124,7 +124,7 @@ class Product_Display {
 		list( $product, $terms ) = $lines[0];
 
 		// Amounts arrive wrapped in <bdi> so RTL cannot reorder them.
-		echo '<p class="subly-checkout-consent">' . wp_kses( $this->disclosure->sentence( $product, $terms ), array( 'bdi' => array() ) ) . '</p>';
+		echo '<p class="submex-checkout-consent">' . wp_kses( $this->disclosure->sentence( $product, $terms ), array( 'bdi' => array() ) ) . '</p>';
 	}
 
 	public function styles(): void {
@@ -132,18 +132,18 @@ class Product_Display {
 			return;
 		}
 
-		wp_register_style( 'subly-frontend', false, array(), SUBLY_VERSION );
-		wp_enqueue_style( 'subly-frontend' );
+		wp_register_style( 'submex-frontend', false, array(), SUBMEX_VERSION );
+		wp_enqueue_style( 'submex-frontend' );
 		wp_add_inline_style(
-			'subly-frontend',
-			'.subly-disclosure{margin:1em 0}
-			 .subly-disclosure__facts{list-style:none;margin:0;padding:0;font-size:.9em;line-height:1.6;opacity:.85}
-			 .subly-cart-terms{display:block;font-size:.85em;opacity:.8}
-			 .subly-checkout-consent{margin:0 0 1em;font-size:.9em}
-			 .subly-blocks-disclosure{padding:1em 0;border-top:1px solid rgba(0,0,0,.1)}
-			 .subly-blocks-disclosure__price{font-weight:600;margin:0 0 .35em}
-			 .subly-blocks-disclosure__facts{list-style:none;margin:0;padding:0;font-size:.9em;line-height:1.6;opacity:.85}
-			 .subly-blocks-disclosure__consent{margin:.75em 0 0;font-size:.85em}'
+			'submex-frontend',
+			'.submex-disclosure{margin:1em 0}
+			 .submex-disclosure__facts{list-style:none;margin:0;padding:0;font-size:.9em;line-height:1.6;opacity:.85}
+			 .submex-cart-terms{display:block;font-size:.85em;opacity:.8}
+			 .submex-checkout-consent{margin:0 0 1em;font-size:.9em}
+			 .submex-blocks-disclosure{padding:1em 0;border-top:1px solid rgba(0,0,0,.1)}
+			 .submex-blocks-disclosure__price{font-weight:600;margin:0 0 .35em}
+			 .submex-blocks-disclosure__facts{list-style:none;margin:0;padding:0;font-size:.9em;line-height:1.6;opacity:.85}
+			 .submex-blocks-disclosure__consent{margin:.75em 0 0;font-size:.85em}'
 		);
 	}
 

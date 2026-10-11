@@ -1,13 +1,13 @@
 <?php
 
-namespace Subly\Rest;
+namespace Submex\Rest;
 
-use Subly\Data\Activity_Repository;
-use Subly\Billing\Renewal_Processor;
-use Subly\Data\Subscription_Query;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
-use Subly\Frontend\MyAccount\Status_Presenter;
+use Submex\Data\Activity_Repository;
+use Submex\Billing\Renewal_Processor;
+use Submex\Data\Subscription_Query;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
+use Submex\Frontend\MyAccount\Status_Presenter;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Subscriptions_Controller {
 
-	public const NAMESPACE = 'subly/v1';
+	public const NAMESPACE = 'submex/v1';
 
 	private const REST_BASE = 'subscriptions';
 
@@ -176,12 +176,12 @@ class Subscriptions_Controller {
 		/**
 		 * Filter the actions the subscriptions endpoint accepts.
 		 *
-		 * An action named here must also be handled on subly_rest_subscription_action,
+		 * An action named here must also be handled on submex_rest_subscription_action,
 		 * or it will be accepted by the schema and then refused as unknown.
 		 *
 		 * @param string[] $actions
 		 */
-		return array_values( array_unique( (array) apply_filters( 'subly_rest_subscription_actions', $actions ) ) );
+		return array_values( array_unique( (array) apply_filters( 'submex_rest_subscription_actions', $actions ) ) );
 	}
 
 	public function can_read(): bool {
@@ -271,9 +271,9 @@ class Subscriptions_Controller {
 
 			if ( ! $date ) {
 				return new \WP_Error(
-					'subly_invalid_date',
+					'submex_invalid_date',
 					/* translators: %s: the field that could not be read. */
-					sprintf( __( 'Could not read %s as a date.', 'subly' ), $field ),
+					sprintf( __( 'Could not read %s as a date.', 'submex' ), $field ),
 					array( 'status' => 400 )
 				);
 			}
@@ -327,7 +327,7 @@ class Subscriptions_Controller {
 			 * @param Subscription        $subscription
 			 * @param string              $reason
 			 */
-			$done = apply_filters( 'subly_rest_subscription_action', null, $action, $subscription, $reason );
+			$done = apply_filters( 'submex_rest_subscription_action', null, $action, $subscription, $reason );
 		}
 
 		if ( $done instanceof \WP_Error ) {
@@ -336,19 +336,19 @@ class Subscriptions_Controller {
 
 		if ( null === $done ) {
 			return new \WP_Error(
-				'subly_unknown_action',
+				'submex_unknown_action',
 				/* translators: %s: the action that was asked for. */
-				sprintf( __( 'Nothing on this site can %s a subscription.', 'subly' ), $action ),
+				sprintf( __( 'Nothing on this site can %s a subscription.', 'submex' ), $action ),
 				array( 'status' => 400 )
 			);
 		}
 
 		if ( ! $done ) {
 			return new \WP_Error(
-				'subly_action_refused',
+				'submex_action_refused',
 				sprintf(
 					/* translators: 1: subscription id, 2: action, 3: current status. */
-					__( 'Subscription %1$d cannot %2$s from %3$s.', 'subly' ),
+					__( 'Subscription %1$d cannot %2$s from %3$s.', 'submex' ),
 					$subscription->get_id(),
 					$action,
 					(string) $subscription->get_status()
@@ -400,7 +400,7 @@ class Subscriptions_Controller {
 		ob_start();
 
 		/** This action is documented in includes/Admin/Menu.php */
-		do_action( 'subly_admin_subscription_detail', $subscription );
+		do_action( 'submex_admin_subscription_detail', $subscription );
 
 		return new \WP_REST_Response( array( 'html' => (string) ob_get_clean() ) );
 	}
@@ -455,8 +455,8 @@ class Subscriptions_Controller {
 	private function renew_now( Subscription $subscription ) {
 		if ( ! $this->processor instanceof Renewal_Processor ) {
 			return new \WP_Error(
-				'subly_no_processor',
-				__( 'Renewals are not available on this site.', 'subly' ),
+				'submex_no_processor',
+				__( 'Renewals are not available on this site.', 'submex' ),
 				array( 'status' => 503 )
 			);
 		}
@@ -504,7 +504,7 @@ class Subscriptions_Controller {
 		// is not a disclosure, and 404 is what makes a typo debuggable.
 		return $subscription instanceof Subscription
 			? $subscription
-			: new \WP_Error( 'subly_not_found', __( 'No subscription with that id.', 'subly' ), array( 'status' => 404 ) );
+			: new \WP_Error( 'submex_not_found', __( 'No subscription with that id.', 'submex' ), array( 'status' => 404 ) );
 	}
 
 	/**
@@ -514,7 +514,7 @@ class Subscriptions_Controller {
 		$target = Subscription_Status::tryFrom( $status ) ?? Subscription_Status::tryFrom( 'sb-' . ltrim( $status, 'sb-' ) );
 
 		if ( ! $target ) {
-			return new \WP_Error( 'subly_unknown_status', __( 'Unknown subscription status.', 'subly' ), array( 'status' => 400 ) );
+			return new \WP_Error( 'submex_unknown_status', __( 'Unknown subscription status.', 'submex' ), array( 'status' => 400 ) );
 		}
 
 		return $this->transition( $subscription, $target, $reason );
@@ -539,7 +539,7 @@ class Subscriptions_Controller {
 		// Only the My Account route announced a cancellation, so a store cancelling for a
 		// customer sent them nothing at all.
 		if ( Subscription_Status::Cancelled === $to || Subscription_Status::PendingCancel === $to ) {
-			do_action( 'subly_subscription_cancelled', $subscription, 'store' );
+			do_action( 'submex_subscription_cancelled', $subscription, 'store' );
 		}
 
 		return true;
@@ -590,7 +590,7 @@ class Subscriptions_Controller {
 				: null,
 			'parent_order_id'        => $subscription->get_parent_order_id(),
 			'date_created'           => $subscription->get_date_created() ? $subscription->get_date_created()->date( 'c' ) : null,
-			'edit_url'               => admin_url( 'admin.php?page=' . \Subly\Admin\Menu::LIST_SLUG . '&subscription=' . $subscription->get_id() ),
+			'edit_url'               => admin_url( 'admin.php?page=' . \Submex\Admin\Menu::LIST_SLUG . '&subscription=' . $subscription->get_id() ),
 		);
 
 		/**
@@ -599,7 +599,7 @@ class Subscriptions_Controller {
 		 * @param array<string, mixed> $data
 		 * @param Subscription         $subscription
 		 */
-		return (array) apply_filters( 'subly_rest_subscription_data', $data, $subscription );
+		return (array) apply_filters( 'submex_rest_subscription_data', $data, $subscription );
 	}
 
 	/**

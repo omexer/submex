@@ -1,6 +1,6 @@
 <?php
 
-namespace Subly\Admin;
+namespace Submex\Admin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

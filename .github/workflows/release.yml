@@ -84,6 +84,6 @@ jobs:
           case "$VERSION" in 0.*) prerelease="--prerelease" ;; esac
           gh release create "v$VERSION" dist/*.zip dist/*.sha256 \
             --verify-tag \
-            --title "Subly $VERSION" \
+            --title "Submex $VERSION" \
             --notes-file "$RUNNER_TEMP/notes.md" \
             $prerelease

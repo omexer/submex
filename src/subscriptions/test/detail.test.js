@@ -11,7 +11,7 @@ jest.mock( '@wordpress/api-fetch' );
 
 const SUBSCRIPTION = {
 	id: 812,
-	status: 'subly-active',
+	status: 'submex-active',
 	status_label: 'Active',
 	customer_name: 'Ada Lovelace',
 	customer_email: 'ada@example.com',
@@ -23,7 +23,7 @@ const SUBSCRIPTION = {
 	end_date: '',
 	trial_end: '',
 	payment_method_title: 'PayPal',
-	payment_method: 'subly_paypal',
+	payment_method: 'submex_paypal',
 	parent_order_id: 811,
 	billable: true,
 };
@@ -99,7 +99,7 @@ describe( 'the subscription detail screen', () => {
 			expect.stringContaining( '£24.00' )
 		);
 		expect( apiFetch.mock.calls[ 0 ][ 0 ] ).toEqual( {
-			path: '/subly/v1/subscriptions/812/actions',
+			path: '/submex/v1/subscriptions/812/actions',
 			method: 'POST',
 			data: { action: 'renew_now' },
 		} );
@@ -125,7 +125,7 @@ describe( 'the subscription detail screen', () => {
 
 		apiFetch.mockClear();
 
-		const field = container.querySelector( '#subly-next-payment' );
+		const field = container.querySelector( '#submex-next-payment' );
 
 		expect( field.value ).toBe( '2026-10-12T09:00' );
 
@@ -151,7 +151,7 @@ describe( 'the subscription detail screen', () => {
 	} );
 
 	it( 'says so when the id is not real, rather than failing the screen', async () => {
-		apiFetch.mockRejectedValue( { code: 'subly_not_found' } );
+		apiFetch.mockRejectedValue( { code: 'submex_not_found' } );
 		const onFail = jest.fn();
 
 		await render( { onFail } );
@@ -200,7 +200,7 @@ describe( 'the subscription detail screen', () => {
 		respond( {
 			...SUBSCRIPTION,
 			billable: false,
-			status: 'subly-cancelled',
+			status: 'submex-cancelled',
 			status_label: 'Cancelled',
 		} );
 		await render();

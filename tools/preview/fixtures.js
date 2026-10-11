@@ -1,11 +1,11 @@
 // Believable data for every screen, shaped exactly like the REST responses.
 const people = [
-	[ 'Ada Lovelace', 'Coffee box — Large', 'subly-active', 'Active', '£40.00' ],
-	[ 'Grace Hopper', 'Course library — Yearly', 'subly-active', 'Active', '£390.00' ],
-	[ 'Alan Turing', 'Pet food — weekly', 'subly-on-hold', 'On hold', '£80.00' ],
-	[ 'Katherine Johnson', 'Community', 'subly-trialling', 'Free trial', '£12.00' ],
-	[ 'Linus Torvalds', 'Plugin — 5 sites', 'subly-cancelling', 'Cancelling', '£149.00' ],
-	[ 'Margaret Hamilton', 'Coffee box — Small', 'subly-cancelled', 'Cancelled', '£15.00' ],
+	[ 'Ada Lovelace', 'Coffee box — Large', 'submex-active', 'Active', '£40.00' ],
+	[ 'Grace Hopper', 'Course library — Yearly', 'submex-active', 'Active', '£390.00' ],
+	[ 'Alan Turing', 'Pet food — weekly', 'submex-on-hold', 'On hold', '£80.00' ],
+	[ 'Katherine Johnson', 'Community', 'submex-trialling', 'Free trial', '£12.00' ],
+	[ 'Linus Torvalds', 'Plugin — 5 sites', 'submex-cancelling', 'Cancelling', '£149.00' ],
+	[ 'Margaret Hamilton', 'Coffee box — Small', 'submex-cancelled', 'Cancelled', '£15.00' ],
 ];
 
 const rows = people.map( ( [ name, product, status, label, total ], i ) => ( {
@@ -17,21 +17,21 @@ const rows = people.map( ( [ name, product, status, label, total ], i ) => ( {
 	total_formatted: total,
 	next_payment_formatted: [ '14 October 2026', '2 September 2027', '—', '19 September 2026', '30 September 2026', '' ][ i ],
 	payment_method_title: [ 'PayPal', 'Manual', 'PayPal', 'PayPal', 'PayPal', 'Manual' ][ i ],
-	billable: [ 'subly-active', 'subly-on-hold', 'subly-trialling' ].includes( status ),
+	billable: [ 'submex-active', 'submex-on-hold', 'submex-trialling' ].includes( status ),
 	edit_url: '#detail',
 } ) );
 
 const statuses = [
-	[ 'subly-active', 'Active', 2 ],
-	[ 'subly-trialling', 'Free trial', 1 ],
-	[ 'subly-on-hold', 'On hold', 1 ],
-	[ 'subly-cancelling', 'Cancelling', 1 ],
-	[ 'subly-cancelled', 'Cancelled', 1 ],
-	[ 'subly-expired', 'Ended', 0 ],
+	[ 'submex-active', 'Active', 2 ],
+	[ 'submex-trialling', 'Free trial', 1 ],
+	[ 'submex-on-hold', 'On hold', 1 ],
+	[ 'submex-cancelling', 'Cancelling', 1 ],
+	[ 'submex-cancelled', 'Cancelled', 1 ],
+	[ 'submex-expired', 'Ended', 0 ],
 ].map( ( [ key, label, count ] ) => ( { key, label, count } ) );
 
 export const fixtures = {
-	'/subly/v1/dashboard': ( setupDone ) => ( {
+	'/submex/v1/dashboard': ( setupDone ) => ( {
 		greeting: 'Good afternoon, Sam',
 		setup: {
 			done: setupDone ? 4 : 2,
@@ -61,9 +61,9 @@ export const fixtures = {
 		links: { new_product: '#', list: '#list', integrations: '#', settings: '#', help: '#' },
 		create: { url: '#', nonce: 'x' },
 	} ),
-	'/subly/v1/subscriptions': rows,
-	'/subly/v1/subscriptions/statuses': statuses,
-	'/subly/v1/subscriptions/812': {
+	'/submex/v1/subscriptions': rows,
+	'/submex/v1/subscriptions/statuses': statuses,
+	'/submex/v1/subscriptions/812': {
 		...rows[ 0 ],
 		billing_interval: 1,
 		billing_period: 'month',
@@ -71,13 +71,13 @@ export const fixtures = {
 		end_date: '',
 		trial_end: '',
 		parent_order_id: 801,
-		payment_method: 'subly_paypal',
+		payment_method: 'submex_paypal',
 	},
-	'/subly/v1/subscriptions/812/activity': [
+	'/submex/v1/subscriptions/812/activity': [
 		{ type: 'charge_attempt', message: 'Renewal charged £40.00 through PayPal.', actor: 'system', date: '2026-09-14 09:00:12' },
 		{ type: 'status_change', message: 'Activated after the first payment.', actor: 'system', date: '2026-08-14 10:21:40' },
 	],
-	'/subly/v1/reports': {
+	'/submex/v1/reports': {
 		currency: 'GBP',
 		tiles: [
 			[ 'mrr', 'Monthly recurring revenue', '£1,240.00' ],
@@ -94,10 +94,10 @@ export const fixtures = {
 		} ) ),
 		signups: Array.from( { length: 60 }, ( _, i ) => ( { date: `d${ i }`, label: `${ i }`, value: Math.max( 0, Math.round( 2 + Math.sin( i / 3 ) * 2 + ( i % 7 === 0 ? 3 : 0 ) ) ) } ) ),
 		statuses: [
-			{ key: 'subly-active', label: 'Active', count: 42 },
-			{ key: 'subly-trialling', label: 'Free trial', count: 5 },
-			{ key: 'subly-on-hold', label: 'On hold', count: 2 },
-			{ key: 'subly-cancelled', label: 'Cancelled', count: 9 },
+			{ key: 'submex-active', label: 'Active', count: 42 },
+			{ key: 'submex-trialling', label: 'Free trial', count: 5 },
+			{ key: 'submex-on-hold', label: 'On hold', count: 2 },
+			{ key: 'submex-cancelled', label: 'Cancelled', count: 9 },
 		],
 		reasons: [
 			{ label: 'Too expensive', count: 4 },
@@ -105,7 +105,7 @@ export const fixtures = {
 			{ label: 'Switched to a competitor', count: 1 },
 		],
 	},
-	'/subly/v1/health': {
+	'/submex/v1/health': {
 		generated_at: 1757000000,
 		scanned: 58,
 		total: 2,
@@ -123,9 +123,9 @@ export const fixtures = {
 			{ key: 'grace_ending', label: 'Grace period ending', count: 1, severity: 'warning' },
 		],
 		entries: [
-			{ id: 814, score: 40, band: 'at_risk', band_label: 'At risk', status: 'subly-on-hold', status_label: 'On hold', customer_name: 'Alan Turing', customer_email: 'alan@example.com', product_name: 'Pet food — weekly', value: '£80.00', next_payment: null, dismissed: false, edit_url: '#detail',
+			{ id: 814, score: 40, band: 'at_risk', band_label: 'At risk', status: 'submex-on-hold', status_label: 'On hold', customer_name: 'Alan Turing', customer_email: 'alan@example.com', product_name: 'Pet food — weekly', value: '£80.00', next_payment: null, dismissed: false, edit_url: '#detail',
 				signals: [ { key: 'payment_failed', label: 'Payment failed', explanation: 'The last charge was declined and the billing period is still unpaid.', remedy: 'Ask the customer to update their payment method.', severity: 'critical' } ] },
-			{ id: 819, score: 55, band: 'at_risk', band_label: 'At risk', status: 'subly-on-hold', status_label: 'On hold', customer_name: 'Ada Lovelace', customer_email: 'ada@example.com', product_name: 'Coffee box — Large', value: '£40.00', next_payment: null, dismissed: false, edit_url: '#detail',
+			{ id: 819, score: 55, band: 'at_risk', band_label: 'At risk', status: 'submex-on-hold', status_label: 'On hold', customer_name: 'Ada Lovelace', customer_email: 'ada@example.com', product_name: 'Coffee box — Large', value: '£40.00', next_payment: null, dismissed: false, edit_url: '#detail',
 				signals: [ { key: 'grace_ending', label: 'Grace period ending', explanation: 'Payment recovery is about to give up and cancel this subscription.', remedy: 'Contact the customer before the subscription is cancelled.', severity: 'warning' } ] },
 		],
 	},

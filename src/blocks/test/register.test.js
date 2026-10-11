@@ -23,7 +23,7 @@ const load = () => {
 	} );
 };
 
-describe( 'registering Subly with the block checkout', () => {
+describe( 'registering Submex with the block checkout', () => {
 	beforeEach( () => {
 		registerPaymentMethod.mockClear();
 		getSetting.mockReset();
@@ -33,7 +33,7 @@ describe( 'registering Subly with the block checkout', () => {
 		getSetting.mockImplementation(
 			( key ) =>
 				( {
-					subly_paypal_data: {
+					submex_paypal_data: {
 						title: 'PayPal',
 						description: 'Pay with PayPal.',
 						supports: [ 'products' ],
@@ -45,7 +45,7 @@ describe( 'registering Subly with the block checkout', () => {
 
 		expect( registerPaymentMethod ).toHaveBeenCalledTimes( 1 );
 		expect( registerPaymentMethod.mock.calls[ 0 ][ 0 ].name ).toBe(
-			'subly_paypal'
+			'submex_paypal'
 		);
 		expect( registerPaymentMethod.mock.calls[ 0 ][ 0 ].ariaLabel ).toBe(
 			'PayPal'
@@ -54,7 +54,7 @@ describe( 'registering Subly with the block checkout', () => {
 
 	it( 'leaves a gateway another plugin adds to that plugin', () => {
 		getSetting.mockImplementation( ( key ) =>
-			'subly_stripe_data' === key
+			'submex_stripe_data' === key
 				? { title: 'Card', description: '', supports: [ 'products' ] }
 				: null
 		);
@@ -64,7 +64,7 @@ describe( 'registering Subly with the block checkout', () => {
 		expect( registerPaymentMethod ).not.toHaveBeenCalled();
 	} );
 
-	it( 'registers nothing at all when no Subly gateway is available', () => {
+	it( 'registers nothing at all when no Submex gateway is available', () => {
 		getSetting.mockReturnValue( null );
 
 		load();
@@ -74,7 +74,7 @@ describe( 'registering Subly with the block checkout', () => {
 
 	it( 'decodes a title the server encoded', () => {
 		getSetting.mockImplementation( ( key ) =>
-			'subly_paypal_data' === key
+			'submex_paypal_data' === key
 				? {
 						title: 'PayPal &amp; Pay Later',
 						description: '',

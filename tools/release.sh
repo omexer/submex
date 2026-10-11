@@ -42,7 +42,7 @@ unrelated="$(git diff --name-only HEAD | grep -vxF -e "$main" -e tools/phpstan-b
 
 echo "== version =="
 bash tools/bump-version.sh "$version"
-bash tools/check-version.sh "$version" || fail "fix the version problems above (for Subly, write the '= $version =' changelog entry in readme.txt), then run this again"
+bash tools/check-version.sh "$version" || fail "fix the version problems above (for Submex, write the '= $version =' changelog entry in readme.txt), then run this again"
 
 echo "== checks =="
 [ -x vendor/bin/phpcs ] || fail "composer dependencies are missing; run composer install"

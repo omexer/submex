@@ -19,7 +19,7 @@
 	}
 
 	function Disclosure( props ) {
-		var data = ( props.extensions || {} ).subly;
+		var data = ( props.extensions || {} ).submex;
 
 		if ( ! data || ! data.has_subscription ) {
 			return null;
@@ -31,26 +31,26 @@
 			el(
 				'div',
 				{
-					className: 'subly-blocks-disclosure',
+					className: 'submex-blocks-disclosure',
 					role: 'group',
-					'aria-label': __( 'Subscription terms', 'subly' ),
+					'aria-label': __( 'Subscription terms', 'submex' ),
 				},
-				el( 'p', { className: 'subly-blocks-disclosure__price' }, data.price_line ),
+				el( 'p', { className: 'submex-blocks-disclosure__price' }, data.price_line ),
 				el(
 					'ul',
-					{ className: 'subly-blocks-disclosure__facts' },
+					{ className: 'submex-blocks-disclosure__facts' },
 					( data.lines || [] ).map( function ( line, index ) {
-						return el( 'li', { key: 'subly-fact-' + index }, line );
+						return el( 'li', { key: 'submex-fact-' + index }, line );
 					} )
 				),
 				data.consent
-					? el( 'p', { className: 'subly-blocks-disclosure__consent' }, data.consent )
+					? el( 'p', { className: 'submex-blocks-disclosure__consent' }, data.consent )
 					: null
 			)
 		);
 	}
 
-	wp.plugins.registerPlugin( 'subly-subscription-terms', {
+	wp.plugins.registerPlugin( 'submex-subscription-terms', {
 		render: Disclosure,
 		scope: 'woocommerce-checkout',
 	} );

@@ -1,14 +1,14 @@
 <?php
 
-namespace Subly\Admin;
+namespace Submex\Admin;
 
-use Subly\Billing\Renewal_Processor;
-use Subly\Billing\Renewal_Scheduler;
-use Subly\Data\Subscription_Query;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
-use Subly\Gateways\Test_Gateway;
-use Subly\Product\Subscription_Product;
+use Submex\Billing\Renewal_Processor;
+use Submex\Billing\Renewal_Scheduler;
+use Submex\Data\Subscription_Query;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
+use Submex\Gateways\Test_Gateway;
+use Submex\Product\Subscription_Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -22,15 +22,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Setup_Guide {
 
-	private const DISMISSED = 'subly_setup_notice_dismissed';
+	private const DISMISSED = 'submex_setup_notice_dismissed';
 
 	public function __construct( private readonly Renewal_Scheduler $scheduler ) {}
 
 	public function register(): void {
 		add_action( 'admin_notices', array( $this, 'activation_notice' ) );
-		add_action( 'admin_post_subly_dismiss_setup', array( $this, 'dismiss' ) );
-		add_action( 'admin_post_subly_test_renewal', array( $this, 'run_test_renewal' ) );
-		add_action( 'admin_post_subly_create_product', array( $this, 'create_first_product' ) );
+		add_action( 'admin_post_submex_dismiss_setup', array( $this, 'dismiss' ) );
+		add_action( 'admin_post_submex_test_renewal', array( $this, 'run_test_renewal' ) );
+		add_action( 'admin_post_submex_create_product', array( $this, 'create_first_product' ) );
 	}
 
 	/**
@@ -48,17 +48,17 @@ class Setup_Guide {
 
 		printf(
 			'<div class="notice notice-success"><p><strong>%s</strong> %s</p><p><a class="button button-primary" href="%s">%s</a> <a href="%s">%s</a></p></div>',
-			esc_html__( 'Subly is active.', 'subly' ),
-			esc_html__( 'Turn any product into a subscription in about two minutes.', 'subly' ),
+			esc_html__( 'Submex is active.', 'submex' ),
+			esc_html__( 'Turn any product into a subscription in about two minutes.', 'submex' ),
 			esc_url( add_query_arg( array( 'page' => Menu::SLUG ), admin_url( 'admin.php' ) ) ),
-			esc_html__( 'Set up subscriptions', 'subly' ),
-			esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=subly_dismiss_setup' ), 'subly_dismiss_setup' ) ),
-			esc_html__( 'Dismiss', 'subly' )
+			esc_html__( 'Set up subscriptions', 'submex' ),
+			esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=submex_dismiss_setup' ), 'submex_dismiss_setup' ) ),
+			esc_html__( 'Dismiss', 'submex' )
 		);
 	}
 
 	public function dismiss(): void {
-		if ( current_user_can( Menu::CAPABILITY ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ?? '' ) ), 'subly_dismiss_setup' ) ) {
+		if ( current_user_can( Menu::CAPABILITY ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ?? '' ) ), 'submex_dismiss_setup' ) ) {
 			update_option( self::DISMISSED, 1, false );
 		}
 
@@ -77,26 +77,26 @@ class Setup_Guide {
 		return array(
 			array(
 				'done'   => (bool) $connected,
-				'title'  => __( 'Connect a payment method', 'subly' ),
+				'title'  => __( 'Connect a payment method', 'submex' ),
 				'detail' => $connected
 					/* translators: %s: comma-separated list of connected gateways */
-					? sprintf( __( '%s can charge renewals automatically.', 'subly' ), implode( ', ', $connected ) )
-					: __( 'Subscriptions renew by themselves once a gateway such as PayPal is connected. Without one, renewals become invoices the customer pays by hand, which still works.', 'subly' ),
+					? sprintf( __( '%s can charge renewals automatically.', 'submex' ), implode( ', ', $connected ) )
+					: __( 'Subscriptions renew by themselves once a gateway such as PayPal is connected. Without one, renewals become invoices the customer pays by hand, which still works.', 'submex' ),
 				'action' => array(
-					'label' => $connected ? __( 'Change', 'subly' ) : __( 'Choose a gateway', 'subly' ),
-					'url'   => admin_url( 'admin.php?page=wc-settings&tab=subly' ),
+					'label' => $connected ? __( 'Change', 'submex' ) : __( 'Choose a gateway', 'submex' ),
+					'url'   => admin_url( 'admin.php?page=wc-settings&tab=submex' ),
 				),
 			),
 			array(
 				'done'   => (bool) $product,
-				'title'  => __( 'Create a subscription product', 'subly' ),
+				'title'  => __( 'Create a subscription product', 'submex' ),
 				'detail' => $product
 					/* translators: %s: product name */
-					? sprintf( __( '"%s" is ready to sell.', 'subly' ), $product->get_name() )
-					: __( 'Edit any simple product and tick Subscription in the Product data panel.', 'subly' ),
+					? sprintf( __( '"%s" is ready to sell.', 'submex' ), $product->get_name() )
+					: __( 'Edit any simple product and tick Subscription in the Product data panel.', 'submex' ),
 				'action' => $product
 					? array(
-						'label' => __( 'Edit', 'subly' ),
+						'label' => __( 'Edit', 'submex' ),
 						'url'   => get_edit_post_link( $product->get_id(), '' ),
 					)
 					: null,
@@ -104,19 +104,19 @@ class Setup_Guide {
 			),
 			array(
 				'done'   => $queue_ok,
-				'title'  => __( 'Check automatic renewals can run', 'subly' ),
+				'title'  => __( 'Check automatic renewals can run', 'submex' ),
 				'detail' => $queue_ok
-					? __( 'Renewals are processing normally.', 'subly' )
-					: __( 'Scheduled tasks are overdue. On a quiet site WordPress cron may not fire often enough — a real server cron fixes it.', 'subly' ),
+					? __( 'Renewals are processing normally.', 'submex' )
+					: __( 'Scheduled tasks are overdue. On a quiet site WordPress cron may not fire often enough — a real server cron fixes it.', 'submex' ),
 				'action' => null,
 			),
 			array(
-				'done'   => (bool) get_option( 'subly_test_renewal_passed' ),
-				'title'  => __( 'Run a test renewal', 'subly' ),
-				'detail' => __( 'See a renewal happen end to end, on a throwaway subscription. Nobody is charged and everything is deleted afterwards.', 'subly' ),
+				'done'   => (bool) get_option( 'submex_test_renewal_passed' ),
+				'title'  => __( 'Run a test renewal', 'submex' ),
+				'detail' => __( 'See a renewal happen end to end, on a throwaway subscription. Nobody is charged and everything is deleted afterwards.', 'submex' ),
 				'action' => array(
-					'label' => __( 'Run test renewal', 'subly' ),
-					'url'   => wp_nonce_url( admin_url( 'admin-post.php?action=subly_test_renewal' ), 'subly_test_renewal' ),
+					'label' => __( 'Run test renewal', 'submex' ),
+					'url'   => wp_nonce_url( admin_url( 'admin-post.php?action=submex_test_renewal' ), 'submex_test_renewal' ),
 				),
 			),
 		);
@@ -127,17 +127,17 @@ class Setup_Guide {
 	 * find the Product data panel to get started.
 	 */
 	public function create_first_product(): void {
-		if ( ! current_user_can( Menu::CAPABILITY ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ?? '' ) ), 'subly_create_product' ) ) {
-			wp_die( esc_html__( 'That request could not be verified.', 'subly' ) );
+		if ( ! current_user_can( Menu::CAPABILITY ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ?? '' ) ), 'submex_create_product' ) ) {
+			wp_die( esc_html__( 'That request could not be verified.', 'submex' ) );
 		}
 
-		$name  = sanitize_text_field( wp_unslash( $_POST['subly_name'] ?? '' ) );
-		$price = wc_format_decimal( sanitize_text_field( wp_unslash( $_POST['subly_price'] ?? '' ) ) );
+		$name  = sanitize_text_field( wp_unslash( $_POST['submex_name'] ?? '' ) );
+		$price = wc_format_decimal( sanitize_text_field( wp_unslash( $_POST['submex_price'] ?? '' ) ) );
 
-		$period   = sanitize_key( wp_unslash( $_POST['subly_period'] ?? 'month' ) );
+		$period   = sanitize_key( wp_unslash( $_POST['submex_period'] ?? 'month' ) );
 		$period   = in_array( $period, array( 'day', 'week', 'month', 'year' ), true ) ? $period : 'month';
-		$interval = intval( wp_unslash( $_POST['subly_interval'] ?? 1 ) );
-		$trial    = intval( wp_unslash( $_POST['subly_trial'] ?? 0 ) );
+		$interval = intval( wp_unslash( $_POST['submex_interval'] ?? 1 ) );
+		$trial    = intval( wp_unslash( $_POST['submex_trial'] ?? 0 ) );
 
 		// intval with a range check, not absint: absint would turn a posted -4 into 4.
 		if ( '' === $name || '' === $price || (float) $price <= 0 || $interval < 1 || $interval > 365 || $trial < 0 || $trial > 365 ) {
@@ -158,7 +158,7 @@ class Setup_Guide {
 	}
 
 	private function redirect_back( string $result ): void {
-		wp_safe_redirect( add_query_arg( 'subly_product', $result, admin_url( 'admin.php?page=' . Menu::SLUG ) ) );
+		wp_safe_redirect( add_query_arg( 'submex_product', $result, admin_url( 'admin.php?page=' . Menu::SLUG ) ) );
 		exit;
 	}
 
@@ -169,8 +169,8 @@ class Setup_Guide {
 	 * will trust it with real customers, and one who hasn't opens a support ticket.
 	 */
 	public function run_test_renewal(): void {
-		if ( ! current_user_can( Menu::CAPABILITY ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ?? '' ) ), 'subly_test_renewal' ) ) {
-			wp_die( esc_html__( 'That request could not be verified.', 'subly' ) );
+		if ( ! current_user_can( Menu::CAPABILITY ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ?? '' ) ), 'submex_test_renewal' ) ) {
+			wp_die( esc_html__( 'That request could not be verified.', 'submex' ) );
 		}
 
 		$result = $this->perform_test_renewal();
@@ -179,7 +179,7 @@ class Setup_Guide {
 			add_query_arg(
 				array(
 					'page'        => Menu::SLUG,
-					'subly_test' => $result ? 'pass' : 'fail',
+					'submex_test' => $result ? 'pass' : 'fail',
 				),
 				admin_url( 'admin.php' )
 			)
@@ -190,8 +190,8 @@ class Setup_Guide {
 	public function perform_test_renewal(): bool {
 		Test_Gateway::sanction();
 
-		$processor = \Subly\Plugin::instance()->get( 'processor' );
-		$registry  = \Subly\Plugin::instance()->get( 'gateways' );
+		$processor = \Submex\Plugin::instance()->get( 'processor' );
+		$registry  = \Submex\Plugin::instance()->get( 'gateways' );
 
 		if ( ! $processor instanceof Renewal_Processor || ! $registry ) {
 			return false;
@@ -204,10 +204,10 @@ class Setup_Guide {
 		$subscription->set_billing_period( 'month' );
 		$subscription->set_billing_interval( 1 );
 		$subscription->set_payment_method( Test_Gateway::ID );
-		$subscription->set_payment_method_title( __( 'Subly self-test', 'subly' ) );
+		$subscription->set_payment_method_title( __( 'Submex self-test', 'submex' ) );
 		$subscription->set_next_payment( gmdate( 'Y-m-d H:i:s', time() - MINUTE_IN_SECONDS ) );
-		$subscription->update_meta_data( '_subly_site_url', get_option( 'siteurl' ) );
-		$subscription->update_meta_data( '_subly_is_test', 'yes' );
+		$subscription->update_meta_data( '_submex_site_url', get_option( 'siteurl' ) );
+		$subscription->update_meta_data( '_submex_is_test', 'yes' );
 		$subscription->transition_to( Subscription_Status::Active );
 		$subscription->save();
 
@@ -231,7 +231,7 @@ class Setup_Guide {
 
 		$this->cleanup_test( $id );
 
-		update_option( 'subly_test_renewal_passed', $renewed ? 1 : 0, false );
+		update_option( 'submex_test_renewal_passed', $renewed ? 1 : 0, false );
 
 		return $renewed;
 	}
@@ -243,7 +243,7 @@ class Setup_Guide {
 		global $wpdb;
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		return $wpdb->get_results( $wpdb->prepare( "SELECT state FROM {$wpdb->prefix}subly_charge_slot WHERE subscription_id = %d", $id ) );
+		return $wpdb->get_results( $wpdb->prepare( "SELECT state FROM {$wpdb->prefix}submex_charge_slot WHERE subscription_id = %d", $id ) );
 	}
 
 	private function cleanup_test( int $id ): void {
@@ -253,7 +253,7 @@ class Setup_Guide {
 			array(
 				'limit'      => -1,
 				// phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- renewal orders are linked to their subscription by meta.
-				'meta_key'   => '_subly_subscription_id',
+				'meta_key'   => '_submex_subscription_id',
 				'meta_value' => $id,
 				// phpcs:enable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 			)
@@ -262,9 +262,9 @@ class Setup_Guide {
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$wpdb->delete( $wpdb->prefix . 'subly_charge_slot', array( 'subscription_id' => $id ), array( '%d' ) );
+		$wpdb->delete( $wpdb->prefix . 'submex_charge_slot', array( 'subscription_id' => $id ), array( '%d' ) );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$wpdb->delete( $wpdb->prefix . 'subly_activity', array( 'subscription_id' => $id ), array( '%d' ) );
+		$wpdb->delete( $wpdb->prefix . 'submex_activity', array( 'subscription_id' => $id ), array( '%d' ) );
 
 		$subscription = wc_get_order( $id );
 		if ( $subscription ) {
@@ -281,9 +281,9 @@ class Setup_Guide {
 	 * @return string[]
 	 */
 	private function connected_gateways(): array {
-		$registry = \Subly\Plugin::instance()->get( 'gateways' );
+		$registry = \Submex\Plugin::instance()->get( 'gateways' );
 
-		if ( ! $registry instanceof \Subly\Gateways\Gateway_Registry ) {
+		if ( ! $registry instanceof \Submex\Gateways\Gateway_Registry ) {
 			return array();
 		}
 
@@ -292,7 +292,7 @@ class Setup_Guide {
 		foreach ( $registry->all() as $gateway ) {
 			// Manual and the test gateway are always present and charge nobody by
 			// themselves, so counting them would tick this step on a store with nothing set up.
-			if ( in_array( $gateway->id(), array( 'subly_manual', Test_Gateway::ID ), true ) ) {
+			if ( in_array( $gateway->id(), array( 'submex_manual', Test_Gateway::ID ), true ) ) {
 				continue;
 			}
 

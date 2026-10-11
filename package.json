@@ -1,7 +1,7 @@
 {
-  "name": "subly",
+  "name": "submex",
   "private": true,
-  "description": "Admin interface for Subly.",
+  "description": "Admin interface for Submex.",
   "scripts": {
     "build": "wp-scripts build",
     "start": "wp-scripts start",

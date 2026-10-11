@@ -117,7 +117,7 @@ customers hate being charged four times a month.
 | **Deliver every** | `1` `Week` |
 | **Deliver on** | `Monday` |
 
-One charge a month, four deliveries. **Subly → Deliveries** prints the manifest for a given
+One charge a month, four deliveries. **Submex → Deliveries** prints the manifest for a given
 day: who is due, what, and where.
 
 **Settings that matter.**
@@ -151,7 +151,7 @@ fourth month and nobody has to remember to cancel.
 
 > **Instalment plan** divides a total. **Payment type / split payments** repeats a price.
 > £120 over 3 instalments is £40 each; £120 × 3 split payments is £360. A product cannot use
-> both — Subly refuses to save that.
+> both — Submex refuses to save that.
 
 ---
 
@@ -188,13 +188,13 @@ subscription of theirs includes the same course*. Somebody on both the library p
 single-course plan keeps that one course when the library lapses. That protection is
 automatic and is the thing that stops the angriest support tickets.
 
-> LearnDash is sold commercially, so **Subly → Integrations** links out to buy it rather than
+> LearnDash is sold commercially, so **Submex → Integrations** links out to buy it rather than
 > offering an install button. Tutor LMS and LearnPress install in place — but their enrolment
 > calls are written to the documented API and have **never been run against a live install**.
 > Check the first enrolment by hand.
 
 **Integrations — worth adding.** **FluentCRM**, with tag `student-active`. Your onboarding
-sequence triggers on the tag, not on Subly, so marketing can change the emails without
+sequence triggers on the tag, not on Submex, so marketing can change the emails without
 touching the shop.
 
 ### Example B — members-only articles, no membership plugin
@@ -239,7 +239,7 @@ win-back sequence fires on the Cancelled tag and a dunning nudge on On hold.
 **The product.** Product data → **Subscription**, **Virtual** and **Downloadable** both
 ticked, files attached exactly as on any WooCommerce product.
 
-Subly ties the downloads to the subscription: active, they can download; stopped, they
+Submex ties the downloads to the subscription: active, they can download; stopped, they
 cannot. No integration, no extra plugin.
 
 **Pro field worth knowing.** **Access ends** / **Access duration**. Set it to *Keep access for good* and
@@ -292,7 +292,7 @@ every year and nobody knows which one their site is using.
 
 > **WP Software License** does the same job for that plugin, but the call that changes licence
 > state is an **assumption** — it is guarded so it does nothing rather than failing loudly,
-> and it fires `subly_integration_unsupported`. Verify it against a real install before
+> and it fires `submex_integration_unsupported`. Verify it against a real install before
 > relying on it.
 
 **Settings that matter.**
@@ -310,7 +310,7 @@ every year and nobody knows which one their site is using.
 Virtual ticked.
 
 **Taking payment without a gateway.** You do not need one. Enable WooCommerce's **Direct bank
-transfer** and every renewal becomes an invoice the client pays by hand. Subly still tracks
+transfer** and every renewal becomes an invoice the client pays by hand. Submex still tracks
 the schedule, still marks it overdue, still shows it in Health.
 
 Leave **Automatic renewals only** *unticked* here — it is precisely the opposite of what this
@@ -462,9 +462,9 @@ starts, and the `certification-student` role drops — **except** for anything a
 subscription of theirs still grants.
 
 **The conflict to watch.** *Access ends: Keep access for good* and LearnDash un-enrolment are pulling in
-opposite directions. Lifetime access is Subly's own downloadable-content rule; LearnDash
+opposite directions. Lifetime access is Submex's own downloadable-content rule; LearnDash
 enrolment is LearnDash's. If the courses must survive non-payment, do not list them in the
-LearnDash field — grant them at enrolment and let Subly's role and downloads carry the
+LearnDash field — grant them at enrolment and let Submex's role and downloads carry the
 lifetime part.
 
 ### A meal-kit service — delivery, roles, CRM and per-status automation
@@ -496,7 +496,7 @@ each member's state, and AutomatorWP acts on the kitchen's behalf. Each answers 
 question. If you only want one, take WP Fusion — its per-status tags can drive the other two
 from inside your CRM.
 
-**Running it day to day.** **Subly → Deliveries** on Monday prints Tuesday's manifest. Health
+**Running it day to day.** **Submex → Deliveries** on Monday prints Tuesday's manifest. Health
 shows whose payment failed before their box is packed. A member going on holiday uses
 **Pause**, their remaining time is preserved, and the kitchen stops seeing them.
 
@@ -531,7 +531,7 @@ The reverse lookup. Find what you sell; connect what is in the second column.
    granting the same course, one cancelled: the course stays.
 
 An integration whose plugin is not active registers no hooks and takes no action. If one
-seems not to fire, **Subly → Integrations** is the first place to look — it will say *Plugin
+seems not to fire, **Submex → Integrations** is the first place to look — it will say *Plugin
 not active*.
 
 ---
@@ -541,7 +541,7 @@ not active*.
 Whatever you are building, in this order:
 
 1. **Every gateway starts in Test/Sandbox.** Buy your own product with a test card and watch
-   the subscription appear under **Subly → All subscriptions**.
+   the subscription appear under **Submex → All subscriptions**.
 2. **Force one renewal** before going live. `tools/` has the scripts; see
    [TESTING.md](TESTING.md).
 3. **Check Settings → General → Health.** Renewal queue green, no unresolved charges,
@@ -549,7 +549,7 @@ Whatever you are building, in this order:
    all — on a quiet site, ask your host for a server cron.
 4. **Cancel one, yourself, as a customer.** Confirm the access you expected to be removed is
    removed, and the access you expected to survive survives.
-5. **If you use PayPal, paste the Webhook ID back.** Without it Subly rejects every webhook —
+5. **If you use PayPal, paste the Webhook ID back.** Without it Submex rejects every webhook —
    PayPal takes money and nothing updates.
 6. **If you use an integration, verify the first one by hand.** Especially Tutor LMS,
    LearnPress and WP Software License — see

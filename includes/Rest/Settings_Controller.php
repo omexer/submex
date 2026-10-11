@@ -1,10 +1,10 @@
 <?php
 
-namespace Subly\Rest;
+namespace Submex\Rest;
 
-use Subly\Admin\Menu;
-use Subly\Admin\Settings_Page;
-use Subly\Emails\Notification_Settings;
+use Submex\Admin\Menu;
+use Submex\Admin\Settings_Page;
+use Submex\Emails\Notification_Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Settings_Controller {
 
-	public const NAMESPACE = 'subly/v1';
+	public const NAMESPACE = 'submex/v1';
 
 	/**
 	 * WooCommerce's default section has an empty id, which a URL path cannot carry.
@@ -142,9 +142,9 @@ final class Settings_Controller {
 
 		if ( $unknown ) {
 			return new \WP_Error(
-				'subly_unknown_setting',
+				'submex_unknown_setting',
 				/* translators: %s: comma-separated option names */
-				sprintf( __( 'Not saved: %s is not a setting on this page.', 'subly' ), implode( ', ', array_map( 'strval', $unknown ) ) ),
+				sprintf( __( 'Not saved: %s is not a setting on this page.', 'submex' ), implode( ', ', array_map( 'strval', $unknown ) ) ),
 				array( 'status' => 400 )
 			);
 		}
@@ -153,9 +153,9 @@ final class Settings_Controller {
 
 		if ( $invalid ) {
 			return new \WP_Error(
-				'subly_invalid_setting',
+				'submex_invalid_setting',
 				/* translators: %s: comma-separated option names */
-				sprintf( __( 'Not saved: %s needs a single value.', 'subly' ), implode( ', ', array_map( 'strval', $invalid ) ) ),
+				sprintf( __( 'Not saved: %s needs a single value.', 'submex' ), implode( ', ', array_map( 'strval', $invalid ) ) ),
 				array( 'status' => 400 )
 			);
 		}
@@ -248,10 +248,10 @@ final class Settings_Controller {
 			'value'             => $this->value( $field ),
 			'placeholder'       => (string) ( $field['placeholder'] ?? '' ),
 			'custom_attributes' => (object) array_map( 'strval', (array) ( $field['custom_attributes'] ?? array() ) ),
-			'subly_show_if'    => (string) ( $field['subly_show_if'] ?? '' ),
-			'subly_joins'      => (string) ( $field['subly_joins'] ?? '' ),
-			'subly_email'      => (string) ( $field['subly_email'] ?? '' ),
-			'preview_url'       => Notification_Settings::preview_url( (string) ( $field['subly_email'] ?? '' ) ),
+			'submex_show_if'    => (string) ( $field['submex_show_if'] ?? '' ),
+			'submex_joins'      => (string) ( $field['submex_joins'] ?? '' ),
+			'submex_email'      => (string) ( $field['submex_email'] ?? '' ),
+			'preview_url'       => Notification_Settings::preview_url( (string) ( $field['submex_email'] ?? '' ) ),
 		);
 	}
 
@@ -293,8 +293,8 @@ final class Settings_Controller {
 		$sections = $this->page->sections();
 
 		return $sections ? $sections : new \WP_Error(
-			'subly_settings_unavailable',
-			__( "WooCommerce's settings could not be loaded, so Subly's settings cannot be shown. Check that WooCommerce is active.", 'subly' ),
+			'submex_settings_unavailable',
+			__( "WooCommerce's settings could not be loaded, so Submex's settings cannot be shown. Check that WooCommerce is active.", 'submex' ),
 			array( 'status' => 503 )
 		);
 	}
@@ -308,8 +308,8 @@ final class Settings_Controller {
 		$section = self::GENERAL === $asked ? '' : $asked;
 
 		return isset( $sections[ $section ] ) ? $section : new \WP_Error(
-			'subly_unknown_section',
-			__( 'There is no such settings section.', 'subly' ),
+			'submex_unknown_section',
+			__( 'There is no such settings section.', 'submex' ),
 			array( 'status' => 404 )
 		);
 	}

@@ -1,8 +1,8 @@
 <?php
 
-namespace Subly\Billing;
+namespace Submex\Billing;
 
-use Subly\Domain\Subscription;
+use Submex\Domain\Subscription;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -24,7 +24,7 @@ class Renewal_Order_Factory {
 		$order = wc_create_order(
 			array(
 				'customer_id' => $subscription->get_customer_id(),
-				'created_via' => 'subly_renewal',
+				'created_via' => 'submex_renewal',
 			)
 		);
 
@@ -61,11 +61,11 @@ class Renewal_Order_Factory {
 		$order->set_payment_method( $subscription->get_payment_method() );
 		$order->set_payment_method_title( $subscription->get_payment_method_title() );
 
-		$order->update_meta_data( '_subly_subscription_id', $subscription->get_id() );
-		$order->update_meta_data( '_subly_period_index', (int) $slot->period_index );
-		$order->update_meta_data( '_subly_charge_slot_id', (int) $slot->id );
-		$order->update_meta_data( '_subly_covers_from', $slot->covers_from_gmt );
-		$order->update_meta_data( '_subly_covers_to', $slot->covers_to_gmt );
+		$order->update_meta_data( '_submex_subscription_id', $subscription->get_id() );
+		$order->update_meta_data( '_submex_period_index', (int) $slot->period_index );
+		$order->update_meta_data( '_submex_charge_slot_id', (int) $slot->id );
+		$order->update_meta_data( '_submex_covers_from', $slot->covers_from_gmt );
+		$order->update_meta_data( '_submex_covers_to', $slot->covers_to_gmt );
 		$order->update_meta_data( 'is_vat_exempt', $this->is_vat_exempt( $subscription ) ? 'yes' : 'no' );
 
 		$order->calculate_taxes();
@@ -80,7 +80,7 @@ class Renewal_Order_Factory {
 		 * @param Subscription $subscription
 		 * @param object       $slot
 		 */
-		do_action( 'subly_renewal_order_created', $order, $subscription, $slot );
+		do_action( 'submex_renewal_order_created', $order, $subscription, $slot );
 
 		return $order;
 	}

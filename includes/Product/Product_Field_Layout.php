@@ -1,20 +1,20 @@
 <?php
 
-namespace Subly\Product;
+namespace Submex\Product;
 
-use Subly\Admin\Allowed_Html;
+use Submex\Admin\Allowed_Html;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
- * Building blocks for the subscription panel, shared with Subly Pro so its rows match.
+ * Building blocks for the subscription panel, shared with Submex Pro so its rows match.
  */
 final class Product_Field_Layout {
 
 	// Pro's payment type select carries this; without one, the product is recurring.
-	public const PAYMENT_TYPE_CLASS = 'subly-payment-type';
+	public const PAYMENT_TYPE_CLASS = 'submex-payment-type';
 
 	/**
 	 * A titled group whose rows come from $action. Prints nothing when no row does, so a
@@ -24,7 +24,7 @@ final class Product_Field_Layout {
 	 */
 	public static function section( string $id, string $title, string $action, $product, string $wrapper_class = '', bool $collapsed = false ): void {
 		ob_start();
-		do_action( $action, $product ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- callers pass subly_ hooks.
+		do_action( $action, $product ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- callers pass submex_ hooks.
 		$rows = (string) ob_get_clean();
 
 		if ( '' === trim( $rows ) ) {
@@ -33,7 +33,7 @@ final class Product_Field_Layout {
 
 		if ( ! $collapsed ) {
 			printf(
-				'<div class="options_group subly-section subly-section--%1$s %2$s"><h4 class="subly-section__title">%3$s</h4>%4$s</div>',
+				'<div class="options_group submex-section submex-section--%1$s %2$s"><h4 class="submex-section__title">%3$s</h4>%4$s</div>',
 				esc_attr( $id ),
 				esc_attr( $wrapper_class ),
 				esc_html( $title ),
@@ -46,9 +46,9 @@ final class Product_Field_Layout {
 		// A button, not <details>: WooCommerce's panel styles the summary marker badly and
 		// the fields must stay in the form either way.
 		printf(
-			'<div class="options_group subly-section subly-section--%1$s subly-section--collapsed %2$s">'
-			. '<h4 class="subly-section__title"><button type="button" class="subly-section__toggle" aria-expanded="false" aria-controls="subly-section-%1$s">%3$s</button></h4>'
-			. '<div class="subly-section__body" id="subly-section-%1$s" hidden>%4$s</div></div>',
+			'<div class="options_group submex-section submex-section--%1$s submex-section--collapsed %2$s">'
+			. '<h4 class="submex-section__title"><button type="button" class="submex-section__toggle" aria-expanded="false" aria-controls="submex-section-%1$s">%3$s</button></h4>'
+			. '<div class="submex-section__body" id="submex-section-%1$s" hidden>%4$s</div></div>',
 			esc_attr( $id ),
 			esc_attr( $wrapper_class ),
 			esc_html( $title ),
@@ -60,7 +60,7 @@ final class Product_Field_Layout {
 	 * The class that shows a row only for one payment type.
 	 */
 	public static function for_type( string $payment_type ): string {
-		return 'subly-for-' . sanitize_html_class( $payment_type );
+		return 'submex-for-' . sanitize_html_class( $payment_type );
 	}
 
 	/**
@@ -70,10 +70,10 @@ final class Product_Field_Layout {
 	 */
 	public static function period_choices(): array {
 		return array(
-			'day'   => __( 'Day(s)', 'subly' ),
-			'week'  => __( 'Week(s)', 'subly' ),
-			'month' => __( 'Month(s)', 'subly' ),
-			'year'  => __( 'Year(s)', 'subly' ),
+			'day'   => __( 'Day(s)', 'submex' ),
+			'week'  => __( 'Week(s)', 'submex' ),
+			'month' => __( 'Month(s)', 'submex' ),
+			'year'  => __( 'Year(s)', 'submex' ),
 		);
 	}
 
@@ -99,10 +99,10 @@ final class Product_Field_Layout {
 	public static function duration( array $args ): void {
 		$units = $args['units'] ?? self::period_choices();
 
-		echo '<p class="form-field subly-duration ' . esc_attr( $args['wrapper_class'] ?? '' ) . '">';
+		echo '<p class="form-field submex-duration ' . esc_attr( $args['wrapper_class'] ?? '' ) . '">';
 		printf( '<label for="%1$s">%2$s</label>', esc_attr( $args['number_id'] ), esc_html( $args['label'] ) );
 		// WooCommerce's "short" sizes the pair like a single field, at every breakpoint it defines.
-		echo '<span class="subly-duration__inputs short">';
+		echo '<span class="submex-duration__inputs short">';
 
 		printf(
 			'<input type="number" class="short" id="%1$s" name="%1$s" value="%2$s" min="%3$d" step="1"%4$s placeholder="%5$s"%6$s />',
@@ -111,14 +111,14 @@ final class Product_Field_Layout {
 			(int) ( $args['min'] ?? 0 ),
 			isset( $args['max'] ) ? ' max="' . (int) $args['max'] . '"' : '',
 			esc_attr( $args['placeholder'] ?? '' ),
-			isset( $args['when'] ) ? ' data-subly-when="' . esc_attr( $args['when'] ) . '"' : ''
+			isset( $args['when'] ) ? ' data-submex-when="' . esc_attr( $args['when'] ) . '"' : ''
 		);
 
 		printf(
 			'<select id="%1$s" name="%1$s" aria-label="%2$s">',
 			esc_attr( $args['unit_id'] ),
 			/* translators: %s: field label such as "Bill every" */
-			esc_attr( sprintf( __( '%s unit', 'subly' ), $args['label'] ) )
+			esc_attr( sprintf( __( '%s unit', 'submex' ), $args['label'] ) )
 		);
 		foreach ( $units as $value => $label ) {
 			printf( '<option value="%1$s"%2$s>%3$s</option>', esc_attr( $value ), selected( $args['unit_value'], $value, false ), esc_html( $label ) );
@@ -130,7 +130,7 @@ final class Product_Field_Layout {
 		}
 
 		if ( ! empty( $args['note'] ) ) {
-			echo '<span class="description subly-field-note">' . esc_html( $args['note'] ) . '</span>';
+			echo '<span class="description submex-field-note">' . esc_html( $args['note'] ) . '</span>';
 		}
 
 		echo '</p>';

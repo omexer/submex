@@ -1,6 +1,6 @@
 import { Fragment } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import { cn } from '@subly/ui';
+import { cn } from '@submex/ui';
 
 const RENAMED = { readonly: 'readOnly', maxlength: 'maxLength' };
 
@@ -33,7 +33,7 @@ export function Control( { field, value, onChange, described } ) {
 
 	if ( field.type === 'checkbox' ) {
 		return (
-			<span className="subly-switch">
+			<span className="submex-switch">
 				<input
 					{ ...common }
 					type="checkbox"
@@ -43,7 +43,7 @@ export function Control( { field, value, onChange, described } ) {
 						onChange( event.target.checked ? 'yes' : 'no' )
 					}
 				/>
-				<span className="subly-switch__track" aria-hidden="true" />
+				<span className="submex-switch__track" aria-hidden="true" />
 			</span>
 		);
 	}
@@ -52,7 +52,7 @@ export function Control( { field, value, onChange, described } ) {
 		return (
 			<select
 				{ ...common }
-				className="subly-input"
+				className="submex-input"
 				value={ value }
 				onChange={ ( event ) => onChange( event.target.value ) }
 			>
@@ -72,7 +72,7 @@ export function Control( { field, value, onChange, described } ) {
 			<textarea
 				{ ...common }
 				{ ...extra }
-				className="subly-input subly-input--wide"
+				className="submex-input submex-input--wide"
 				rows="4"
 				value={ value }
 				onChange={ ( event ) => onChange( event.target.value ) }
@@ -86,10 +86,10 @@ export function Control( { field, value, onChange, described } ) {
 			{ ...extra }
 			type={ field.type }
 			className={ cn(
-				'subly-input',
+				'submex-input',
 				field.type === 'number'
-					? 'subly-input--short'
-					: 'subly-input--wide'
+					? 'submex-input--short'
+					: 'submex-input--wide'
 			) }
 			value={ value }
 			onFocus={
@@ -104,54 +104,54 @@ export function Row( { field, valueOf, onChange, onEdit, stacked } ) {
 	return (
 		<div
 			className={ cn(
-				'subly-settings__row',
-				stacked && 'subly-settings__row--stacked'
+				'submex-settings__row',
+				stacked && 'submex-settings__row--stacked'
 			) }
 		>
-			<div className="subly-settings__label">
-				<label className="subly-settings__title" htmlFor={ field.id }>
+			<div className="submex-settings__label">
+				<label className="submex-settings__title" htmlFor={ field.id }>
 					{ field.title }
 				</label>
 				{ field.help ? (
 					<p
-						className="subly-settings__help"
+						className="submex-settings__help"
 						id={ `${ field.id }-help` }
 						// Kept to wp_kses_post() by the server, as the PHP page prints it.
 						dangerouslySetInnerHTML={ { __html: field.help } }
 					/>
 				) : null }
 			</div>
-			<div className="subly-settings__control">
+			<div className="submex-settings__control">
 				{ field.preview_url ? (
 					<a
-						className="subly-btn subly-btn--sm"
+						className="submex-btn submex-btn--sm"
 						href={ field.preview_url }
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						{ __( 'Preview', 'subly' ) }
+						{ __( 'Preview', 'submex' ) }
 						<span className="screen-reader-text">
 							{ ' ' }
 							{ sprintf(
 								/* translators: %s: the email's name, such as "Renewal reminder" */
-								__( '%s (opens in a new tab)', 'subly' ),
+								__( '%s (opens in a new tab)', 'submex' ),
 								field.title
 							) }
 						</span>
 					</a>
 				) : null }
-				{ field.subly_email && onEdit ? (
+				{ field.submex_email && onEdit ? (
 					<button
 						type="button"
-						className="subly-btn subly-btn--sm"
+						className="submex-btn submex-btn--sm"
 						aria-label={ sprintf(
 							/* translators: %s: the email's name, such as "Renewal reminder" */
-							__( 'Edit %s', 'subly' ),
+							__( 'Edit %s', 'submex' ),
 							field.title
 						) }
-						onClick={ () => onEdit( field.subly_email ) }
+						onClick={ () => onEdit( field.submex_email ) }
 					>
-						{ __( 'Edit', 'subly' ) }
+						{ __( 'Edit', 'submex' ) }
 					</button>
 				) : null }
 				<Control
@@ -177,7 +177,7 @@ export function Row( { field, valueOf, onChange, onEdit, stacked } ) {
 				) ) }
 				{ field.suffix ? (
 					<span
-						className="subly-settings__suffix"
+						className="submex-settings__suffix"
 						dangerouslySetInnerHTML={ { __html: field.suffix } }
 					/>
 				) : null }

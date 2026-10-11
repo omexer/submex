@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<ruleset name="Subly">
-	<description>WordPress coding standards for Subly.</description>
+<ruleset name="Submex">
+	<description>WordPress coding standards for Submex.</description>
 
-	<file>subly.php</file>
+	<file>submex.php</file>
 	<file>includes</file>
 	<file>templates</file>
 
@@ -50,7 +50,7 @@
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
-				<element value="subly"/>
+				<element value="submex"/>
 			</property>
 		</properties>
 	</rule>

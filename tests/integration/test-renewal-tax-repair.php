@@ -2,34 +2,34 @@
 /**
  * Subscriptions created before lines were stored without tax are listed, and a repair makes their renewals match checkout.
  *
- * @package Subly
+ * @package Submex
  */
 
-use Subly\Billing\Renewal_Tax_Repair;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
-use Subly\Gateways\Charge_Result;
-use Subly\Gateways\Gateway_Model;
-use Subly\Gateways\Recurring_Gateway;
+use Submex\Billing\Renewal_Tax_Repair;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
+use Submex\Gateways\Charge_Result;
+use Submex\Gateways\Gateway_Model;
+use Submex\Gateways\Recurring_Gateway;
 
 require __DIR__ . '/bootstrap.php';
 
-$plugin = \Subly\Plugin::instance();
+$plugin = \Submex\Plugin::instance();
 $repair = $plugin->get( 'tax_repair' );
 
 if ( ! $repair instanceof Renewal_Tax_Repair ) {
-	subly_test_abort( 'the repair service is not registered' );
+	submex_test_abort( 'the repair service is not registered' );
 }
 
 $since = strtotime( (string) get_option( Renewal_Tax_Repair::OPTION_SINCE, '' ) . ' UTC' );
 if ( ! $since ) {
-	subly_test_abort( 'the cut-over time was never recorded' );
+	submex_test_abort( 'the cut-over time was never recorded' );
 }
 
 $gateway = new class() implements Recurring_Gateway {
 	/** @var string[] */
 	public array $charged = array();
-	public function id(): string { return 'subly_test_tax_repair'; }
+	public function id(): string { return 'submex_test_tax_repair'; }
 	public function title(): string { return 'Tax repair harness'; }
 	public function model(): Gateway_Model { return Gateway_Model::Tokenized; }
 	public function supports( string $f ): bool { return true; }
@@ -45,7 +45,7 @@ $gateway = new class() implements Recurring_Gateway {
 $plugin->get( 'gateways' )->add( $gateway );
 
 if ( WC_Tax::find_rates( array( 'country' => 'GB' ) ) ) {
-	subly_test_abort( 'this site already has tax rates for GB; the expected totals would be wrong' );
+	submex_test_abort( 'this site already has tax rates for GB; the expected totals would be wrong' );
 }
 
 $options = array(
@@ -62,12 +62,12 @@ foreach ( $options as $name => $value ) {
 $rate = WC_Tax::_insert_tax_rate( array( 'tax_rate_country' => 'GB', 'tax_rate' => '20.0000', 'tax_rate_name' => 'VAT', 'tax_rate_priority' => 1, 'tax_rate_compound' => 0, 'tax_rate_shipping' => 1, 'tax_rate_order' => 0, 'tax_rate_class' => '' ) );
 WC_Cache_Helper::invalidate_cache_group( 'taxes' );
 
-$p = new \Subly\Product\Simple_Subscription();
+$p = new \Submex\Product\Simple_Subscription();
 $p->set_name( 'SK tax repair probe' );
 $p->set_status( 'publish' );
 $p->set_regular_price( '12.00' );
-$p->update_meta_data( \Subly\Product\Subscription_Product::META_PERIOD, 'month' );
-$p->update_meta_data( \Subly\Product\Subscription_Product::META_INTERVAL, 1 );
+$p->update_meta_data( \Submex\Product\Subscription_Product::META_PERIOD, 'month' );
+$p->update_meta_data( \Submex\Product\Subscription_Product::META_INTERVAL, 1 );
 $p->save();
 
 $orders = array();
@@ -84,16 +84,16 @@ $buy = static function () use ( $plugin, $gateway, $p, &$orders ): Subscription 
 	$order_id = WC()->checkout()->create_order( array( 'billing_country' => 'GB', 'billing_email' => 'taxrepair@example.test', 'payment_method' => '' ) );
 	WC()->cart->empty_cart();
 	if ( is_wp_error( $order_id ) ) {
-		subly_test_abort( 'checkout failed: ' . $order_id->get_error_message() );
+		submex_test_abort( 'checkout failed: ' . $order_id->get_error_message() );
 	}
 	$order = wc_get_order( $order_id );
 	$order->set_payment_method( $gateway->id() );
 	$order->save();
 	$orders[] = $order_id;
 	$plugin->get( 'subscription_factory' )->from_checkout( $order_id );
-	$sub = wc_get_order( (int) wc_get_order( $order_id )->get_meta( '_subly_subscription_id' ) );
+	$sub = wc_get_order( (int) wc_get_order( $order_id )->get_meta( '_submex_subscription_id' ) );
 	if ( ! $sub instanceof Subscription ) {
-		subly_test_abort( 'no subscription was created from the checkout' );
+		submex_test_abort( 'no subscription was created from the checkout' );
 	}
 	$sub->transition_to( Subscription_Status::Active );
 	$sub->save();
@@ -125,7 +125,7 @@ $renew = static function ( Subscription $sub ) use ( $plugin, $gateway, &$orders
 	$plugin->get( 'processor' )->process( $sub->get_id() );
 	global $wpdb;
 	$hpos = \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled();
-	foreach ( $wpdb->get_col( $wpdb->prepare( $hpos ? "SELECT order_id FROM {$wpdb->prefix}wc_orders_meta WHERE meta_key = '_subly_subscription_id' AND meta_value = %d" : "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_subly_subscription_id' AND meta_value = %d", $sub->get_id() ) ) as $id ) {
+	foreach ( $wpdb->get_col( $wpdb->prepare( $hpos ? "SELECT order_id FROM {$wpdb->prefix}wc_orders_meta WHERE meta_key = '_submex_subscription_id' AND meta_value = %d" : "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_submex_subscription_id' AND meta_value = %d", $sub->get_id() ) ) as $id ) {
 		$orders[] = (int) $id;
 	}
 	return $gateway->charged[ $before ] ?? 'none';
@@ -148,7 +148,7 @@ echo "\nListing\n";
 $old      = $make_old( $buy() );
 $new      = $buy();
 $repriced = $make_old( $buy() );
-$repriced->update_meta_data( '_subly_renewal_price_applied', 'yes' );
+$repriced->update_meta_data( '_submex_renewal_price_applied', 'yes' );
 $repriced->save();
 
 $ids = $listed();
@@ -225,4 +225,4 @@ foreach ( $saved as $name => $value ) {
 WC_Cache_Helper::invalidate_cache_group( 'taxes' );
 delete_transient( Renewal_Tax_Repair::CACHE );
 
-subly_test_done( $fail );
+submex_test_done( $fail );

@@ -1,8 +1,8 @@
 <?php
 
-namespace Subly\Checkout;
+namespace Submex\Checkout;
 
-use Subly\Product\Subscription_Product;
+use Submex\Product\Subscription_Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Cart_Validation {
 
-	public const OPTION_MIXED = 'subly_allow_mixed_checkout';
+	public const OPTION_MIXED = 'submex_allow_mixed_checkout';
 
 	public function register(): void {
 		// The Store API runs this filter too, turning the notice into its error.
@@ -73,11 +73,11 @@ class Cart_Validation {
 		}
 
 		if ( self::holds_more_than_one() ) {
-			$errors->add( 'subly_one_subscription_per_order', self::one_at_a_time_message() );
+			$errors->add( 'submex_one_subscription_per_order', self::one_at_a_time_message() );
 		}
 
 		if ( $this->is_mixed_and_refused() ) {
-			$errors->add( 'subly_mixed_cart', self::mixed_cart_message() );
+			$errors->add( 'submex_mixed_cart', self::mixed_cart_message() );
 		}
 	}
 
@@ -91,11 +91,11 @@ class Cart_Validation {
 		}
 
 		if ( $recurring && self::cart_has_one_time_item() ) {
-			return __( 'Subscriptions are checked out on their own. Please complete the order in your cart first, or empty your cart, then add the subscription.', 'subly' );
+			return __( 'Subscriptions are checked out on their own. Please complete the order in your cart first, or empty your cart, then add the subscription.', 'submex' );
 		}
 
 		if ( ! $recurring && Subscription_Product::cart_has_subscription() ) {
-			return __( 'Subscriptions are checked out on their own. Please complete your subscription order first, then add other products.', 'subly' );
+			return __( 'Subscriptions are checked out on their own. Please complete your subscription order first, then add other products.', 'submex' );
 		}
 
 		return null;
@@ -107,7 +107,7 @@ class Cart_Validation {
 	}
 
 	public static function one_subscription_message(): string {
-		return __( 'You can only sign up for one subscription at a time. Please complete this order first, then start the next subscription.', 'subly' );
+		return __( 'You can only sign up for one subscription at a time. Please complete this order first, then start the next subscription.', 'submex' );
 	}
 
 	// Lines are added one at a time and each is checked, but a saved cart merged at login is not.
@@ -116,11 +116,11 @@ class Cart_Validation {
 	}
 
 	private static function one_at_a_time_message(): string {
-		return __( 'You can only sign up for one subscription at a time. Please remove all but one subscription from your cart.', 'subly' );
+		return __( 'You can only sign up for one subscription at a time. Please remove all but one subscription from your cart.', 'submex' );
 	}
 
 	private static function mixed_cart_message(): string {
-		return __( 'Subscriptions are checked out on their own. Please remove either the subscription or the other products from your cart.', 'subly' );
+		return __( 'Subscriptions are checked out on their own. Please remove either the subscription or the other products from your cart.', 'submex' );
 	}
 
 	/**
@@ -137,7 +137,7 @@ class Cart_Validation {
 		 * @param int   $variation_id
 		 * @param array $item_data    The cart item data being added, where the route passes it.
 		 */
-		return (bool) apply_filters( 'subly_adding_subscription', Subscription_Product::is_subscription( $product_id ), $product_id, $variation_id, $item_data );
+		return (bool) apply_filters( 'submex_adding_subscription', Subscription_Product::is_subscription( $product_id ), $product_id, $variation_id, $item_data );
 	}
 
 	/**

@@ -1,13 +1,13 @@
 /* The subscription panel on the product edit screen, in WooCommerce's own panel styles. */
 
-#woocommerce-product-data .subly-section__title {
+#woocommerce-product-data .submex-section__title {
 	margin: 0;
 	padding: 12px 12px 2px;
 	font-size: 13px;
 	font-weight: 600;
 }
 
-#woocommerce-product-data .subly-section__toggle {
+#woocommerce-product-data .submex-section__toggle {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
@@ -19,7 +19,7 @@
 	cursor: pointer;
 }
 
-#woocommerce-product-data .subly-section__toggle::before {
+#woocommerce-product-data .submex-section__toggle::before {
 	content: "";
 	width: 0;
 	height: 0;
@@ -28,31 +28,31 @@
 	border-left: 5px solid currentColor;
 }
 
-#woocommerce-product-data .subly-section__toggle[aria-expanded="true"]::before {
+#woocommerce-product-data .submex-section__toggle[aria-expanded="true"]::before {
 	border-top: 5px solid currentColor;
 	border-right: 4px solid transparent;
 	border-bottom: 0;
 	border-left: 4px solid transparent;
 }
 
-#woocommerce-product-data .subly-section--collapsed .subly-section__body {
+#woocommerce-product-data .submex-section--collapsed .submex-section__body {
 	padding-top: 4px;
 }
 
-#woocommerce-product-data .subly-section--empty,
-#woocommerce-product-data .subly-type-hidden {
+#woocommerce-product-data .submex-section--empty,
+#woocommerce-product-data .submex-type-hidden {
 	display: none !important;
 }
 
 /* Width comes from WooCommerce's .short on the same element. */
-.woocommerce_options_panel .subly-duration__inputs {
+.woocommerce_options_panel .submex-duration__inputs {
 	display: inline-flex;
 	float: left;
 	gap: 8px;
 }
 
-.woocommerce_options_panel .subly-duration__inputs input.short,
-.woocommerce_options_panel .subly-duration__inputs select {
+.woocommerce_options_panel .submex-duration__inputs input.short,
+.woocommerce_options_panel .submex-duration__inputs select {
 	flex: 1 1 0;
 	float: none;
 	min-width: 0;
@@ -60,7 +60,7 @@
 	margin: 0;
 }
 
-.woocommerce_options_panel .subly-field-note {
+.woocommerce_options_panel .submex-field-note {
 	display: block;
 	clear: both;
 	margin: 0;

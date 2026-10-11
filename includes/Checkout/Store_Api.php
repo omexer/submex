@@ -1,10 +1,10 @@
 <?php
 
-namespace Subly\Checkout;
+namespace Submex\Checkout;
 
-use Subly\Frontend\Disclosure;
-use Subly\Product\Line_Terms;
-use Subly\Product\Subscription_Product;
+use Submex\Frontend\Disclosure;
+use Submex\Product\Line_Terms;
+use Submex\Product\Subscription_Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -40,7 +40,7 @@ class Store_Api {
 		woocommerce_store_api_register_endpoint_data(
 			array(
 				'endpoint'        => \Automattic\WooCommerce\StoreApi\Schemas\V1\CartSchema::IDENTIFIER,
-				'namespace'       => 'subly',
+				'namespace'       => 'submex',
 				'data_callback'   => array( $this, 'cart_data' ),
 				'schema_callback' => array( $this, 'cart_schema' ),
 				'schema_type'     => ARRAY_A,
@@ -94,23 +94,23 @@ class Store_Api {
 	public function cart_schema(): array {
 		return array(
 			'has_subscription' => array(
-				'description' => __( 'Whether the cart contains a subscription.', 'subly' ),
+				'description' => __( 'Whether the cart contains a subscription.', 'submex' ),
 				'type'        => 'boolean',
 				'readonly'    => true,
 			),
 			'price_line'       => array(
-				'description' => __( 'Headline recurring price.', 'subly' ),
+				'description' => __( 'Headline recurring price.', 'submex' ),
 				'type'        => 'string',
 				'readonly'    => true,
 			),
 			'lines'            => array(
-				'description' => __( 'Subscription terms, one self-contained fact per line.', 'subly' ),
+				'description' => __( 'Subscription terms, one self-contained fact per line.', 'submex' ),
 				'type'        => 'array',
 				'items'       => array( 'type' => 'string' ),
 				'readonly'    => true,
 			),
 			'consent'          => array(
-				'description' => __( 'The sentence shown before the customer places the order.', 'subly' ),
+				'description' => __( 'The sentence shown before the customer places the order.', 'submex' ),
 				'type'        => 'string',
 				'readonly'    => true,
 			),
@@ -140,7 +140,7 @@ class Store_Api {
 		}
 
 		throw new \Automattic\WooCommerce\StoreApi\Exceptions\RouteException(
-			'subly_one_subscription_per_order',
+			'submex_one_subscription_per_order',
 			esc_html( Cart_Validation::one_subscription_message() ),
 			400
 		);
@@ -152,10 +152,10 @@ class Store_Api {
 		}
 
 		wp_enqueue_script(
-			'subly-blocks-checkout',
-			SUBLY_URL . 'assets/js/blocks-checkout.js',
+			'submex-blocks-checkout',
+			SUBMEX_URL . 'assets/js/blocks-checkout.js',
 			array( 'wp-element', 'wp-plugins', 'wp-i18n', 'wc-blocks-checkout' ),
-			SUBLY_VERSION,
+			SUBMEX_VERSION,
 			true
 		);
 	}

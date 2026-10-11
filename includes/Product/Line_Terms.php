@@ -1,9 +1,9 @@
 <?php
 
-namespace Subly\Product;
+namespace Submex\Product;
 
-use Subly\Domain\Billing_Schedule;
-use Subly\Domain\Money;
+use Submex\Domain\Billing_Schedule;
+use Submex\Domain\Money;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * What one cart or order line is sold on: its cycle, trial, sign-up fee and price per period.
  *
- * The product's own subscription settings by default. The `subly_line_terms` filter lets a
+ * The product's own subscription settings by default. The `submex_line_terms` filter lets a
  * line carry terms of its own, so one product can be sold on more than one schedule.
  */
 final class Line_Terms {
@@ -62,7 +62,7 @@ final class Line_Terms {
 		 * @param array       $item    The cart item.
 		 * @param string      $key     Its cart key.
 		 */
-		$price = (float) apply_filters( 'subly_cart_recurring_price', (float) $product->get_price( 'edit' ), $product, $item, $key );
+		$price = (float) apply_filters( 'submex_cart_recurring_price', (float) $product->get_price( 'edit' ), $product, $item, $key );
 
 		// Kept for the request: the cart lowers this line's price to what is due today, and a second read would start from that.
 		self::$cart_lines[ $product ] = self::resolve( $product, $price, $item, null );
@@ -151,7 +151,7 @@ final class Line_Terms {
 		 * @param array|null                  $cart_item
 		 * @param \WC_Order_Item_Product|null $order_item
 		 */
-		$terms = apply_filters( 'subly_line_terms', $defaults, $product, $cart_item, $order_item );
+		$terms = apply_filters( 'submex_line_terms', $defaults, $product, $cart_item, $order_item );
 		$terms = is_array( $terms ) ? $terms + $defaults : $defaults;
 
 		return new self(

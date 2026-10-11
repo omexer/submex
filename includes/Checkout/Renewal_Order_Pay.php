@@ -1,11 +1,11 @@
 <?php
 
-namespace Subly\Checkout;
+namespace Submex\Checkout;
 
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
-use Subly\Gateways\Gateway_Model;
-use Subly\Gateways\Gateway_Registry;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
+use Submex\Gateways\Gateway_Model;
+use Submex\Gateways\Gateway_Registry;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -35,7 +35,7 @@ final class Renewal_Order_Pay {
 		$order_id = is_array( $available ) && isset( $wp->query_vars['order-pay'] ) ? absint( $wp->query_vars['order-pay'] ) : 0;
 		$order    = $order_id ? wc_get_order( $order_id ) : null;
 
-		if ( ! $order instanceof \WC_Order || 'subly_renewal' !== $order->get_created_via() ) {
+		if ( ! $order instanceof \WC_Order || 'submex_renewal' !== $order->get_created_via() ) {
 			return $available;
 		}
 
@@ -57,7 +57,7 @@ final class Renewal_Order_Pay {
 	 * @return string[]
 	 */
 	public function payable_statuses( $statuses, $order = null ) {
-		if ( ! $order instanceof \WC_Order || 'subly_renewal' !== $order->get_created_via() ) {
+		if ( ! $order instanceof \WC_Order || 'submex_renewal' !== $order->get_created_via() ) {
 			return $statuses;
 		}
 
@@ -69,7 +69,7 @@ final class Renewal_Order_Pay {
 		}
 
 		// Held for the customer to act (an invoice, a bank's confirmation), which they do on this page.
-		if ( '' !== (string) $order->get_meta( '_subly_action_url' ) ) {
+		if ( '' !== (string) $order->get_meta( '_submex_action_url' ) ) {
 			$statuses   = (array) $statuses;
 			$statuses[] = 'on-hold';
 		}
@@ -78,7 +78,7 @@ final class Renewal_Order_Pay {
 	}
 
 	private static function subscription_for( \WC_Order $order ): ?Subscription {
-		$subscription = wc_get_order( (int) $order->get_meta( '_subly_subscription_id' ) );
+		$subscription = wc_get_order( (int) $order->get_meta( '_submex_subscription_id' ) );
 
 		return $subscription instanceof Subscription ? $subscription : null;
 	}

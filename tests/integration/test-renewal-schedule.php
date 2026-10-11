@@ -8,21 +8,21 @@
  * forced the due date into the past before each payment, overwriting the wrong answer
  * before anything read it — so this asserts on the date the code chose, untouched.
  *
- * @package Subly
+ * @package Submex
  */
 
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
-use Subly\Gateways\Charge_Result;
-use Subly\Gateways\Gateway_Model;
-use Subly\Gateways\Recurring_Gateway;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
+use Submex\Gateways\Charge_Result;
+use Submex\Gateways\Gateway_Model;
+use Submex\Gateways\Recurring_Gateway;
 
 require __DIR__ . '/bootstrap.php';
 
-\Subly\Plugin::instance()->get( 'gateways' )->add(
+\Submex\Plugin::instance()->get( 'gateways' )->add(
 	new class() implements Recurring_Gateway {
 		public function id(): string {
-			return 'subly_test_schedule';
+			return 'submex_test_schedule';
 		}
 		public function title(): string {
 			return 'Schedule test approver';
@@ -51,7 +51,7 @@ require __DIR__ . '/bootstrap.php';
 	}
 );
 
-$product = subly_test_product();
+$product = submex_test_product();
 
 $subscribe = static function ( string $period, int $interval, string $due ) use ( $product ): Subscription {
 	$s = new Subscription();
@@ -59,8 +59,8 @@ $subscribe = static function ( string $period, int $interval, string $due ) use 
 	$s->set_currency( 'USD' );
 	$s->set_billing_period( $period );
 	$s->set_billing_interval( $interval );
-	$s->set_payment_method( 'subly_test_schedule' );
-	$s->update_meta_data( '_subly_site_url', get_option( 'siteurl' ) );
+	$s->set_payment_method( 'submex_test_schedule' );
+	$s->update_meta_data( '_submex_site_url', get_option( 'siteurl' ) );
 
 	$item = new WC_Order_Item_Product();
 	$item->set_props(
@@ -94,7 +94,7 @@ $orders_for = static function ( Subscription $s ): array {
 			$wpdb->prepare(
 				'SELECT order_id FROM %i WHERE meta_key = %s AND meta_value = %d AND order_id <> %d',
 				$wpdb->prefix . 'wc_orders_meta',
-				'_subly_subscription_id',
+				'_submex_subscription_id',
 				$s->get_id(),
 				$s->get_id()
 			)
@@ -103,7 +103,7 @@ $orders_for = static function ( Subscription $s ): array {
 };
 
 $renew = static function ( Subscription $s ): string {
-	\Subly\Plugin::instance()->get( 'processor' )->process( $s->get_id() );
+	\Submex\Plugin::instance()->get( 'processor' )->process( $s->get_id() );
 
 	return (string) wc_get_order( $s->get_id() )->get_next_payment();
 };
@@ -118,11 +118,11 @@ $cases = array(
 );
 
 $made   = array();
-$policy = get_option( 'subly_catch_up_policy', null );
+$policy = get_option( 'submex_catch_up_policy', null );
 
 // One period per charge, isolated from the catch-up policy: these due dates are in the past,
 // and under the default policy a past date moves further, which is tested below.
-update_option( 'subly_catch_up_policy', 'charge_all' );
+update_option( 'submex_catch_up_policy', 'charge_all' );
 
 foreach ( $cases as list( $period, $interval, $due, $want, $label ) ) {
 	$s      = $subscribe( $period, $interval, $due );
@@ -147,7 +147,7 @@ $check( 'two renewals in a row land two months on', '2026-05-05 09:00:00' === $s
 $overdue = gmdate( 'Y-m-d H:i:s', strtotime( '-3 months -2 days' ) );
 $now     = time();
 
-update_option( 'subly_catch_up_policy', 'rebase' );
+update_option( 'submex_catch_up_policy', 'rebase' );
 $s      = $subscribe( 'month', 1, $overdue );
 $made[] = $s;
 $next   = $renew( $s );
@@ -158,14 +158,14 @@ $check( 'on the original day of the month', substr( $overdue, 8, 2 ) === substr(
 $renew( $s );
 $check( 'so running again charges nothing', 1 === count( $orders_for( $s ) ), count( $orders_for( $s ) ) );
 
-update_option( 'subly_catch_up_policy', 'charge_all' );
+update_option( 'submex_catch_up_policy', 'charge_all' );
 $s      = $subscribe( 'month', 1, $overdue );
 $made[] = $s;
 $renew( $s );
 $renew( $s );
 $check( 'charge-every-period policy: each run charges the next missed month', 2 === count( $orders_for( $s ) ), count( $orders_for( $s ) ) );
 
-null === $policy ? delete_option( 'subly_catch_up_policy' ) : update_option( 'subly_catch_up_policy', $policy );
+null === $policy ? delete_option( 'submex_catch_up_policy' ) : update_option( 'submex_catch_up_policy', $policy );
 
 foreach ( $made as $s ) {
 	foreach ( $orders_for( $s ) as $order_id ) {
@@ -174,4 +174,4 @@ foreach ( $made as $s ) {
 	$s->delete( true );
 }
 
-subly_test_done( $fail );
+submex_test_done( $fail );

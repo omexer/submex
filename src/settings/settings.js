@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
-import { Skeleton, cn } from '@subly/ui';
+import { Skeleton, cn } from '@submex/ui';
 import { Row } from './field';
 import { getEmailEditor } from './extend';
 import { fieldsOf, isShown } from './visibility';
 
-export const PAGE = 'subly-settings';
+export const PAGE = 'submex-settings';
 
 const GENERAL = 'general';
 const SAVED_FOR = 4000;
@@ -43,7 +43,7 @@ function isPlainClick( event ) {
 }
 
 function messageOf( error ) {
-	return error?.message || __( 'That did not work. Try again.', 'subly' );
+	return error?.message || __( 'That did not work. Try again.', 'submex' );
 }
 
 function Nav( { groups, section, group, onPick } ) {
@@ -60,8 +60,8 @@ function Nav( { groups, section, group, onPick } ) {
 
 	return (
 		<nav
-			className="subly-settings__nav"
-			aria-label={ __( 'Settings sections', 'subly' ) }
+			className="submex-settings__nav"
+			aria-label={ __( 'Settings sections', 'submex' ) }
 		>
 			<ul>
 				{ groups.map( ( item ) => {
@@ -71,7 +71,7 @@ function Nav( { groups, section, group, onPick } ) {
 						<li key={ item.id }>
 							<a
 								className={ cn(
-									'subly-settings__tab',
+									'submex-settings__tab',
 									here && 'is-current'
 								) }
 								href={ sectionUrl( item.sections[ 0 ].id ) }
@@ -99,12 +99,12 @@ function Nav( { groups, section, group, onPick } ) {
 								<span>{ item.label }</span>
 							</a>
 							{ here && item.list ? (
-								<ul className="subly-settings__subnav">
+								<ul className="submex-settings__subnav">
 									{ item.sections.map( ( entry ) => (
 										<li key={ entry.id }>
 											<a
 												className={ cn(
-													'subly-settings__subtab',
+													'submex-settings__subtab',
 													entry.id === section &&
 														'is-current'
 												) }
@@ -136,24 +136,24 @@ function Cards( { page, valueOf, onChange, onEdit } ) {
 	return page.cards.map( ( card, index ) => (
 		<section
 			key={ `${ card.anchor }-${ index }` }
-			className="subly-settings__card"
-			id={ card.anchor ? `subly-section-${ card.anchor }` : undefined }
+			className="submex-settings__card"
+			id={ card.anchor ? `submex-section-${ card.anchor }` : undefined }
 		>
 			{ card.title || card.desc ? (
-				<header className="subly-settings__card-head">
+				<header className="submex-settings__card-head">
 					{ card.title ? <h2>{ card.title }</h2> : null }
 					{ card.desc ? (
 						<p dangerouslySetInnerHTML={ { __html: card.desc } } />
 					) : null }
 				</header>
 			) : null }
-			<div className="subly-settings__rows">
+			<div className="submex-settings__rows">
 				{ card.rows.map( ( row, at ) => {
 					if ( ! row.id ) {
 						return (
 							<div
 								key={ `html-${ at }` }
-								className="subly-settings__row subly-settings__row--wide"
+								className="submex-settings__row submex-settings__row--wide"
 								// Drawn and escaped by the same PHP callbacks as the PHP page.
 								dangerouslySetInnerHTML={ { __html: row.html } }
 							/>
@@ -177,9 +177,9 @@ function Cards( { page, valueOf, onChange, onEdit } ) {
 
 function Loading() {
 	return (
-		<section className="subly-settings__card" aria-busy="true">
+		<section className="submex-settings__card" aria-busy="true">
 			{ [ 0, 1, 2 ].map( ( key ) => (
-				<div key={ key } className="subly-settings__row">
+				<div key={ key } className="submex-settings__row">
 					<Skeleton className="sb-h-10 sb-w-3/5" />
 					<Skeleton className="sb-h-6 sb-w-10" />
 				</div>
@@ -206,7 +206,7 @@ export function Settings( { params, setParams } ) {
 
 	useEffect( () => {
 		apiFetch( {
-			path: withQuery( '/subly/v1/settings', query.current ),
+			path: withQuery( '/submex/v1/settings', query.current ),
 		} ).then( setMenu, ( error ) => setFailure( messageOf( error ) ) );
 	}, [] );
 
@@ -219,7 +219,7 @@ export function Settings( { params, setParams } ) {
 
 		apiFetch( {
 			path: withQuery(
-				`/subly/v1/settings/${ encodeURIComponent( section ) }`,
+				`/submex/v1/settings/${ encodeURIComponent( section ) }`,
 				query.current
 			),
 		} ).then(
@@ -285,7 +285,7 @@ export function Settings( { params, setParams } ) {
 		! window.confirm(
 			__(
 				'You have unsaved changes to this email. Leave without saving them?',
-				'subly'
+				'submex'
 			)
 		);
 
@@ -321,7 +321,7 @@ export function Settings( { params, setParams } ) {
 		setToast( '' );
 
 		apiFetch( {
-			path: `/subly/v1/settings/${ encodeURIComponent( section ) }`,
+			path: `/submex/v1/settings/${ encodeURIComponent( section ) }`,
 			method: 'POST',
 			data: { values: changed },
 		} )
@@ -339,7 +339,7 @@ export function Settings( { params, setParams } ) {
 					if ( result.errors?.length ) {
 						setErrors( result.errors );
 					} else {
-						setToast( __( 'Settings saved.', 'subly' ) );
+						setToast( __( 'Settings saved.', 'submex' ) );
 					}
 				},
 				( error ) => setErrors( [ messageOf( error ) ] )
@@ -359,7 +359,7 @@ export function Settings( { params, setParams } ) {
 
 	if ( failure ) {
 		return (
-			<div className="subly-notice subly-notice--bad" role="alert">
+			<div className="submex-notice submex-notice--bad" role="alert">
 				{ failure }
 			</div>
 		);
@@ -377,12 +377,12 @@ export function Settings( { params, setParams } ) {
 			{ ( menu?.notices || [] ).map( ( notice ) => (
 				<div
 					key={ notice.message }
-					className={ `subly-notice subly-notice--${ notice.type }` }
+					className={ `submex-notice submex-notice--${ notice.type }` }
 				>
 					{ notice.message }
 				</div>
 			) ) }
-			<div className="subly-settings">
+			<div className="submex-settings">
 				{ menu ? (
 					<Nav
 						groups={ menu.groups }
@@ -391,7 +391,7 @@ export function Settings( { params, setParams } ) {
 						onPick={ pick }
 					/>
 				) : (
-					<nav className="subly-settings__nav" aria-busy="true">
+					<nav className="submex-settings__nav" aria-busy="true">
 						<Skeleton className="sb-h-64 sb-w-full" />
 					</nav>
 				) }
@@ -403,7 +403,7 @@ export function Settings( { params, setParams } ) {
 					/>
 				) : (
 					<form
-						className="subly-settings__main"
+						className="submex-settings__main"
 						method="post"
 						action=""
 						onSubmit={ onSubmit }
@@ -420,7 +420,7 @@ export function Settings( { params, setParams } ) {
 						) }
 						{ errors.length ? (
 							<div
-								className="subly-notice subly-notice--bad"
+								className="submex-notice submex-notice--bad"
 								role="alert"
 							>
 								{ errors.map( ( error ) => (
@@ -430,23 +430,26 @@ export function Settings( { params, setParams } ) {
 								) ) }
 							</div>
 						) : null }
-						<div className="subly-settings__save">
-							<span className="subly-settings__save-note">
+						<div className="submex-settings__save">
+							<span className="submex-settings__save-note">
 								{ dirty
-									? __( 'You have unsaved changes.', 'subly' )
+									? __(
+											'You have unsaved changes.',
+											'submex'
+									  )
 									: __(
 											'Changes apply to new renewals and purchases from the moment you save.',
-											'subly'
+											'submex'
 									  ) }
 							</span>
 							<button
 								type="submit"
-								className="button button-primary subly-btn subly-btn--primary"
+								className="button button-primary submex-btn submex-btn--primary"
 								disabled={ ! pending || saving }
 							>
 								{ saving
-									? __( 'Saving…', 'subly' )
-									: __( 'Save changes', 'subly' ) }
+									? __( 'Saving…', 'submex' )
+									: __( 'Save changes', 'submex' ) }
 							</button>
 						</div>
 					</form>
@@ -458,7 +461,7 @@ export function Settings( { params, setParams } ) {
 				aria-live="polite"
 			>
 				{ toast ? (
-					<div className="subly-notice subly-notice--good sb-m-0 sb-shadow-lg">
+					<div className="submex-notice submex-notice--good sb-m-0 sb-shadow-lg">
 						{ toast }
 					</div>
 				) : null }
@@ -499,7 +502,7 @@ function useLeaveGuard( dirty ) {
 			const leave = window.confirm(
 				__(
 					'You have unsaved changes. Leave without saving them?',
-					'subly'
+					'submex'
 				)
 			);
 

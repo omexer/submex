@@ -1,12 +1,12 @@
-/* global jQuery, sublyProductFields */
+/* global jQuery, submexProductFields */
 jQuery( function ( $ ) {
-	var config = window.sublyProductFields || {},
+	var config = window.submexProductFields || {},
 		$panel = $( '#woocommerce-product-data' ),
-		$options = $panel.find( '.subly-product-options' ),
-		$pricingSection = $panel.find( '.subly-section--pricing' ),
+		$options = $panel.find( '.submex-product-options' ),
+		$pricingSection = $panel.find( '.submex-section--pricing' ),
 		$pricingRows = $pricingSection.find( '.form-field' ),
 		$wooPricing = $panel.find( '#general_product_data .options_group.pricing' ).first(),
-		$pricingTitle = $( '<h4 class="subly-section__title subly-pricing-title"></h4>' ).text( config.pricingTitle || '' );
+		$pricingTitle = $( '<h4 class="submex-section__title submex-pricing-title"></h4>' ).text( config.pricingTitle || '' );
 
 	function paymentType() {
 		var $select = $panel.find( '.' + config.paymentTypeClass + ' select' );
@@ -23,12 +23,12 @@ jQuery( function ( $ ) {
 		return String( $field.val() );
 	}
 
-	// data-subly-when="field_id=a|b" on any input in a row shows the row only for those values.
+	// data-submex-when="field_id=a|b" on any input in a row shows the row only for those values.
 	function conditionsMet( $row ) {
 		var met = true;
 
-		$row.find( '[data-subly-when]' ).each( function () {
-			var rule = String( $( this ).attr( 'data-subly-when' ) ).split( '=' ),
+		$row.find( '[data-submex-when]' ).each( function () {
+			var rule = String( $( this ).attr( 'data-submex-when' ) ).split( '=' ),
 				$field = $( '#' + rule[ 0 ] ),
 				allowed = ( rule[ 1 ] || '' ).split( '|' );
 
@@ -42,21 +42,21 @@ jQuery( function ( $ ) {
 
 	// Hidden rows are disabled as well, so a value the merchant cannot see is never saved.
 	function syncRows() {
-		var current = 'subly-for-' + paymentType();
+		var current = 'submex-for-' + paymentType();
 
 		$options.find( '.form-field' ).each( function () {
 			var $row = $( this ),
-				typed = /(^|\s)subly-for-/.test( this.className ),
+				typed = /(^|\s)submex-for-/.test( this.className ),
 				shown = ( ! typed || $row.hasClass( current ) ) && conditionsMet( $row );
 
-			$row.toggleClass( 'subly-type-hidden', ! shown );
+			$row.toggleClass( 'submex-type-hidden', ! shown );
 			$row.find( 'input, select, textarea' ).each( function () {
 				var $input = $( this );
 
 				if ( ! shown && ! $input.prop( 'disabled' ) ) {
-					$input.prop( 'disabled', true ).attr( 'data-subly-disabled', '1' );
-				} else if ( shown && $input.attr( 'data-subly-disabled' ) ) {
-					$input.prop( 'disabled', false ).removeAttr( 'data-subly-disabled' );
+					$input.prop( 'disabled', true ).attr( 'data-submex-disabled', '1' );
+				} else if ( shown && $input.attr( 'data-submex-disabled' ) ) {
+					$input.prop( 'disabled', false ).removeAttr( 'data-submex-disabled' );
 				}
 			} );
 		} );
@@ -75,13 +75,13 @@ jQuery( function ( $ ) {
 	}
 
 	function syncSections() {
-		$panel.find( '.subly-section' ).each( function () {
+		$panel.find( '.submex-section' ).each( function () {
 			var $section = $( this ),
 				visible = $section.find( '.form-field' ).filter( function () {
 					return $( this ).css( 'display' ) !== 'none';
 				} );
 
-			$section.toggleClass( 'subly-section--empty', ! visible.length );
+			$section.toggleClass( 'submex-section--empty', ! visible.length );
 		} );
 	}
 
@@ -91,12 +91,12 @@ jQuery( function ( $ ) {
 		syncSections();
 	}
 
-	$panel.on( 'click', '.subly-section__toggle', function () {
+	$panel.on( 'click', '.submex-section__toggle', function () {
 		var $button = $( this ),
 			open = $button.attr( 'aria-expanded' ) !== 'true';
 
 		$button.attr( 'aria-expanded', open ? 'true' : 'false' );
-		$button.closest( '.subly-section' ).find( '.subly-section__body' ).prop( 'hidden', ! open );
+		$button.closest( '.submex-section' ).find( '.submex-section__body' ).prop( 'hidden', ! open );
 	} );
 
 	$options.on( 'change', 'select, input', function () {

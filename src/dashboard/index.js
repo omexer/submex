@@ -1,5 +1,5 @@
 /**
- * The Subly home screen.
+ * The Submex home screen.
  *
  * What a merchant needs on arrival, in the order they need it: finish setting up, see
  * how the business is doing, see what needs them, and get to everything else.
@@ -18,8 +18,8 @@ import {
 	Select,
 	Skeleton,
 	Stat,
-} from '@subly/ui';
-import { registerRoute } from '@subly/shell';
+} from '@submex/ui';
+import { registerRoute } from '@submex/shell';
 
 const TONE = {
 	bad: 'sb-bg-destructive',
@@ -28,11 +28,11 @@ const TONE = {
 };
 
 function statusVariant( status ) {
-	if ( 'subly-active' === status || 'subly-trialling' === status ) {
+	if ( 'submex-active' === status || 'submex-trialling' === status ) {
 		return 'success';
 	}
 
-	return 'subly-on-hold' === status ? 'destructive' : 'secondary';
+	return 'submex-on-hold' === status ? 'destructive' : 'secondary';
 }
 
 function initials( name ) {
@@ -55,41 +55,41 @@ function CreateProduct( { create } ) {
 			className="sb-mt-3 sb-flex sb-flex-wrap sb-items-end sb-gap-2"
 		>
 			<input type="hidden" name="_wpnonce" value={ create.nonce } />
-			<input type="hidden" name="action" value="subly_create_product" />
+			<input type="hidden" name="action" value="submex_create_product" />
 			<label
-				htmlFor="subly-new-name"
+				htmlFor="submex-new-name"
 				className="sb-flex sb-flex-col sb-gap-1 sb-text-xs sb-text-muted-foreground"
 			>
-				{ __( 'Name', 'subly' ) }
+				{ __( 'Name', 'submex' ) }
 				<Input
-					id="subly-new-name"
-					name="subly_name"
+					id="submex-new-name"
+					name="submex_name"
 					required
 					className="sb-w-48"
 				/>
 			</label>
 			<label
-				htmlFor="subly-new-price"
+				htmlFor="submex-new-price"
 				className="sb-flex sb-flex-col sb-gap-1 sb-text-xs sb-text-muted-foreground"
 			>
-				{ __( 'Price', 'subly' ) }
+				{ __( 'Price', 'submex' ) }
 				<Input
-					id="subly-new-price"
-					name="subly_price"
+					id="submex-new-price"
+					name="submex_price"
 					required
 					inputMode="decimal"
 					className="sb-w-24"
 				/>
 			</label>
 			<label
-				htmlFor="subly-new-interval"
+				htmlFor="submex-new-interval"
 				className="sb-flex sb-flex-col sb-gap-1 sb-text-xs sb-text-muted-foreground"
 			>
-				{ __( 'Every', 'subly' ) }
+				{ __( 'Every', 'submex' ) }
 				<span className="sb-flex sb-gap-1">
 					<Input
-						id="subly-new-interval"
-						name="subly_interval"
+						id="submex-new-interval"
+						name="submex_interval"
 						type="number"
 						min="1"
 						max="365"
@@ -97,27 +97,31 @@ function CreateProduct( { create } ) {
 						className="sb-w-16"
 					/>
 					<Select
-						name="subly_period"
+						name="submex_period"
 						defaultValue="month"
-						aria-label={ __( 'Billing period', 'subly' ) }
+						aria-label={ __( 'Billing period', 'submex' ) }
 					>
-						<option value="day">{ __( 'Days', 'subly' ) }</option>
-						<option value="week">{ __( 'Weeks', 'subly' ) }</option>
-						<option value="month">
-							{ __( 'Months', 'subly' ) }
+						<option value="day">{ __( 'Days', 'submex' ) }</option>
+						<option value="week">
+							{ __( 'Weeks', 'submex' ) }
 						</option>
-						<option value="year">{ __( 'Years', 'subly' ) }</option>
+						<option value="month">
+							{ __( 'Months', 'submex' ) }
+						</option>
+						<option value="year">
+							{ __( 'Years', 'submex' ) }
+						</option>
 					</Select>
 				</span>
 			</label>
 			<label
-				htmlFor="subly-new-trial"
+				htmlFor="submex-new-trial"
 				className="sb-flex sb-flex-col sb-gap-1 sb-text-xs sb-text-muted-foreground"
 			>
-				{ __( 'Free trial (days)', 'subly' ) }
+				{ __( 'Free trial (days)', 'submex' ) }
 				<Input
-					id="subly-new-trial"
-					name="subly_trial"
+					id="submex-new-trial"
+					name="submex_trial"
 					type="number"
 					min="0"
 					max="365"
@@ -126,7 +130,7 @@ function CreateProduct( { create } ) {
 				/>
 			</label>
 			<Button type="submit" size="sm">
-				{ __( 'Create it', 'subly' ) }
+				{ __( 'Create it', 'submex' ) }
 			</Button>
 		</form>
 	);
@@ -143,12 +147,15 @@ function Setup( { setup, create } ) {
 			<div className="sb-flex sb-flex-wrap sb-items-center sb-justify-between sb-gap-4 sb-border-b sb-border-border sb-bg-accent/40 sb-px-5 sb-py-4">
 				<div>
 					<h2 className="sb-text-base sb-font-semibold">
-						{ __( 'Get your first subscription running', 'subly' ) }
+						{ __(
+							'Get your first subscription running',
+							'submex'
+						) }
 					</h2>
 					<p className="sb-mt-1 sb-text-sm sb-text-muted-foreground">
 						{ sprintf(
 							/* translators: 1: steps done, 2: steps in total. */
-							__( '%1$d of %2$d done', 'subly' ),
+							__( '%1$d of %2$d done', 'submex' ),
 							setup.done,
 							setup.total
 						) }
@@ -160,7 +167,7 @@ function Setup( { setup, create } ) {
 					aria-valuenow={ percent }
 					aria-valuemin="0"
 					aria-valuemax="100"
-					aria-label={ __( 'Setup progress', 'subly' ) }
+					aria-label={ __( 'Setup progress', 'submex' ) }
 				>
 					<div
 						className="sb-h-full sb-rounded-full sb-bg-primary sb-transition-all"
@@ -197,7 +204,7 @@ function Setup( { setup, create } ) {
 								{ step.done ? (
 									<span className="sb-sr-only">
 										{ ' ' }
-										({ __( 'done', 'subly' ) })
+										({ __( 'done', 'submex' ) })
 									</span>
 								) : null }
 							</p>
@@ -235,7 +242,7 @@ export function Dashboard( { onFail } ) {
 	useEffect( () => {
 		let live = true;
 
-		apiFetch( { path: '/subly/v1/dashboard' } )
+		apiFetch( { path: '/submex/v1/dashboard' } )
 			.then( ( result ) => {
 				if ( live ) {
 					setData( result );
@@ -277,19 +284,19 @@ export function Dashboard( { onFail } ) {
 					<p className="sb-mt-1 sb-text-sm sb-text-muted-foreground">
 						{ __(
 							'Here is how your subscriptions are doing.',
-							'subly'
+							'submex'
 						) }
 					</p>
 				</div>
 				<div className="sb-flex sb-flex-wrap sb-gap-2">
 					<Button asChild variant="outline">
 						<a href={ links.list }>
-							{ __( 'All subscriptions', 'subly' ) }
+							{ __( 'All subscriptions', 'submex' ) }
 						</a>
 					</Button>
 					<Button asChild>
 						<a href={ links.new_product }>
-							{ __( 'New subscription product', 'subly' ) }
+							{ __( 'New subscription product', 'submex' ) }
 						</a>
 					</Button>
 				</div>
@@ -299,24 +306,24 @@ export function Dashboard( { onFail } ) {
 
 			<div className="sb-mb-6 sb-grid sb-gap-4 sb-grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
 				<Stat
-					label={ __( 'Monthly recurring revenue', 'subly' ) }
+					label={ __( 'Monthly recurring revenue', 'submex' ) }
 					value={ stats.mrr }
 				/>
 				<Stat
-					label={ __( 'Active subscriptions', 'subly' ) }
+					label={ __( 'Active subscriptions', 'submex' ) }
 					value={ stats.active }
 				/>
 				<Stat
-					label={ __( 'On a free trial', 'subly' ) }
+					label={ __( 'On a free trial', 'submex' ) }
 					value={ stats.trialling }
 				/>
 				<Stat
-					label={ __( 'On hold', 'subly' ) }
+					label={ __( 'On hold', 'submex' ) }
 					value={ stats.on_hold }
 					meta={
 						stats.on_hold
-							? __( 'Payments failed', 'subly' )
-							: __( 'Nothing failing', 'subly' )
+							? __( 'Payments failed', 'submex' )
+							: __( 'Nothing failing', 'submex' )
 					}
 					delta={ stats.on_hold ? -1 : undefined }
 				/>
@@ -326,7 +333,7 @@ export function Dashboard( { onFail } ) {
 				<Card>
 					<CardHeader>
 						<CardTitle>
-							{ __( 'Needs your attention', 'subly' ) }
+							{ __( 'Needs your attention', 'submex' ) }
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
@@ -369,13 +376,13 @@ export function Dashboard( { onFail } ) {
 								<p className="sb-text-sm sb-font-medium">
 									{ __(
 										'Nothing needs you right now',
-										'subly'
+										'submex'
 									) }
 								</p>
 								<p className="sb-mt-1 sb-text-sm sb-text-muted-foreground">
 									{ __(
 										'Failed payments and subscriptions about to end will show up here.',
-										'subly'
+										'submex'
 									) }
 								</p>
 							</div>
@@ -386,13 +393,13 @@ export function Dashboard( { onFail } ) {
 				<Card>
 					<CardHeader className="sb-flex-row sb-items-center sb-justify-between sb-space-y-0">
 						<CardTitle>
-							{ __( 'Recent subscriptions', 'subly' ) }
+							{ __( 'Recent subscriptions', 'submex' ) }
 						</CardTitle>
 						<a
 							href={ links.list }
 							className="sb-text-sm sb-font-medium sb-text-primary sb-no-underline hover:sb-underline"
 						>
-							{ __( 'View all', 'subly' ) }
+							{ __( 'View all', 'submex' ) }
 						</a>
 					</CardHeader>
 					<CardContent className="sb-px-2">
@@ -438,7 +445,7 @@ export function Dashboard( { onFail } ) {
 							<p className="sb-px-3 sb-py-6 sb-text-center sb-text-sm sb-text-muted-foreground">
 								{ __(
 									'Your first subscription will appear here the moment someone buys one.',
-									'subly'
+									'submex'
 								) }
 							</p>
 						) }
@@ -450,26 +457,26 @@ export function Dashboard( { onFail } ) {
 				{ [
 					{
 						href: links.integrations,
-						title: __( 'Integrations', 'subly' ),
+						title: __( 'Integrations', 'submex' ),
 						body: __(
 							'Connect courses, mailing lists and licence keys to a subscription.',
-							'subly'
+							'submex'
 						),
 					},
 					{
 						href: links.settings,
-						title: __( 'Settings', 'subly' ),
+						title: __( 'Settings', 'submex' ),
 						body: __(
 							'Payment methods, renewals, grace periods and customer access.',
-							'subly'
+							'submex'
 						),
 					},
 					{
 						href: links.help,
-						title: __( 'Help', 'subly' ),
+						title: __( 'Help', 'submex' ),
 						body: __(
 							'Guides, the system report, and what to check before you ask.',
-							'subly'
+							'submex'
 						),
 					},
 				].map( ( link ) => (
@@ -498,7 +505,7 @@ export function Dashboard( { onFail } ) {
 }
 
 registerRoute( {
-	page: 'subly',
-	title: __( 'Home', 'subly' ),
+	page: 'submex',
+	title: __( 'Home', 'submex' ),
 	render: ( ctx ) => <Dashboard onFail={ ctx.fail } />,
 } );

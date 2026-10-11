@@ -1,9 +1,9 @@
 <?php
 
-namespace Subly\Lifecycle;
+namespace Submex\Lifecycle;
 
-use Subly\Data\Activity_Repository;
-use Subly\Domain\Subscription;
+use Submex\Data\Activity_Repository;
+use Submex\Domain\Subscription;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -18,14 +18,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Auto_Renewal {
 
-	public const META = '_subly_auto_renew';
+	public const META = '_submex_auto_renew';
 
-	private const OPTION = 'subly_allow_auto_renew_toggle';
+	private const OPTION = 'submex_allow_auto_renew_toggle';
 
 	public function __construct( private readonly Activity_Repository $activity ) {}
 
 	public function register(): void {
-		add_filter( 'subly_stop_billing', array( $this, 'stop_when_off' ), 5, 2 );
+		add_filter( 'submex_stop_billing', array( $this, 'stop_when_off' ), 5, 2 );
 	}
 
 	public static function is_offered(): bool {
@@ -64,6 +64,6 @@ class Auto_Renewal {
 
 		return self::is_on( $subscription )
 			? $stop
-			: __( 'Automatic renewal was turned off.', 'subly' );
+			: __( 'Automatic renewal was turned off.', 'submex' );
 	}
 }

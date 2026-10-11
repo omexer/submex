@@ -1,9 +1,9 @@
 <?php
 
-namespace Subly\Product;
+namespace Submex\Product;
 
-use Subly\Admin\Assets;
-use Subly\Domain\Billing_Schedule;
+use Submex\Admin\Assets;
+use Submex\Domain\Billing_Schedule;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -17,12 +17,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Product_Meta_Fields {
 
-	public const ACTION_PRICING  = 'subly_product_fields_pricing';
-	public const ACTION_RENEWAL  = 'subly_product_fields_renewal_pricing';
-	public const ACTION_BILLING  = 'subly_product_fields_billing';
-	public const ACTION_SHIPPING = 'subly_product_fields_shipping';
+	public const ACTION_PRICING  = 'submex_product_fields_pricing';
+	public const ACTION_RENEWAL  = 'submex_product_fields_renewal_pricing';
+	public const ACTION_BILLING  = 'submex_product_fields_billing';
+	public const ACTION_SHIPPING = 'submex_product_fields_shipping';
 	// The original single hook; it now fills "More settings".
-	public const ACTION_MORE = 'subly_product_subscription_fields';
+	public const ACTION_MORE = 'submex_product_subscription_fields';
 
 	public const PRIORITY_PAYMENT_TYPE = 10;
 	public const PRIORITY_SCHEDULE     = 20;
@@ -49,7 +49,7 @@ class Product_Meta_Fields {
 		global $product_object;
 
 		printf(
-			'<div class="subly-product-options show_if_%s show_if_%s">',
+			'<div class="submex-product-options show_if_%s show_if_%s">',
 			esc_attr( Product_Types::SIMPLE ),
 			esc_attr( Product_Types::VARIABLE )
 		);
@@ -58,15 +58,15 @@ class Product_Meta_Fields {
 		if ( $product_object && 'yes' === $product_object->get_meta( Subscription_Product::META_ENABLED ) && ! Product_Types::is_subscription_type( $product_object ) ) {
 			printf(
 				'<p class="form-field"><span class="description">%s</span></p>',
-				esc_html__( 'This product bills recurringly but is still a simple product. Change its type to Subscription when convenient; it keeps working either way.', 'subly' )
+				esc_html__( 'This product bills recurringly but is still a simple product. Change its type to Subscription when convenient; it keeps working either way.', 'submex' )
 			);
 		}
 
-		Product_Field_Layout::section( 'pricing', __( 'Pricing', 'subly' ), self::ACTION_PRICING, $product_object );
-		Product_Field_Layout::section( 'renewal-pricing', __( 'Custom renewal pricing', 'subly' ), self::ACTION_RENEWAL, $product_object );
-		Product_Field_Layout::section( 'billing', __( 'Billing settings', 'subly' ), self::ACTION_BILLING, $product_object );
-		Product_Field_Layout::section( 'shipping', __( 'Shipping settings', 'subly' ), self::ACTION_SHIPPING, $product_object );
-		Product_Field_Layout::section( 'more', __( 'More settings', 'subly' ), self::ACTION_MORE, $product_object, '', true );
+		Product_Field_Layout::section( 'pricing', __( 'Pricing', 'submex' ), self::ACTION_PRICING, $product_object );
+		Product_Field_Layout::section( 'renewal-pricing', __( 'Custom renewal pricing', 'submex' ), self::ACTION_RENEWAL, $product_object );
+		Product_Field_Layout::section( 'billing', __( 'Billing settings', 'submex' ), self::ACTION_BILLING, $product_object );
+		Product_Field_Layout::section( 'shipping', __( 'Shipping settings', 'submex' ), self::ACTION_SHIPPING, $product_object );
+		Product_Field_Layout::section( 'more', __( 'More settings', 'submex' ), self::ACTION_MORE, $product_object, '', true );
 
 		echo '</div>';
 	}
@@ -79,11 +79,11 @@ class Product_Meta_Fields {
 			array(
 				'id'          => Subscription_Product::META_SIGNUP_FEE,
 				/* translators: %s: store currency symbol */
-				'label'       => sprintf( __( 'Sign-up fee (%s)', 'subly' ), get_woocommerce_currency_symbol() ),
+				'label'       => sprintf( __( 'Sign-up fee (%s)', 'submex' ), get_woocommerce_currency_symbol() ),
 				'data_type'   => 'price',
 				'value'       => $product ? ( $product->get_meta( Subscription_Product::META_SIGNUP_FEE ) ?: '' ) : '',
 				'desc_tip'    => true,
-				'description' => __( 'A one-off charge taken with the first payment.', 'subly' ),
+				'description' => __( 'A one-off charge taken with the first payment.', 'submex' ),
 			)
 		);
 	}
@@ -94,13 +94,13 @@ class Product_Meta_Fields {
 	public function schedule_field( $product ): void {
 		Product_Field_Layout::duration(
 			array(
-				'label'        => __( 'Bill every', 'subly' ),
+				'label'        => __( 'Bill every', 'submex' ),
 				'number_id'    => Subscription_Product::META_INTERVAL,
 				'number_value' => $product ? ( $product->get_meta( Subscription_Product::META_INTERVAL ) ?: 1 ) : 1,
 				'min'          => 1,
 				'unit_id'      => Subscription_Product::META_PERIOD,
 				'unit_value'   => $product ? ( $product->get_meta( Subscription_Product::META_PERIOD ) ?: 'month' ) : 'month',
-				'tip'          => __( 'How often the customer is charged. 2 with "Month(s)" charges every two months.', 'subly' ),
+				'tip'          => __( 'How often the customer is charged. 2 with "Month(s)" charges every two months.', 'submex' ),
 			)
 		);
 	}
@@ -111,14 +111,14 @@ class Product_Meta_Fields {
 	public function trial_field( $product ): void {
 		Product_Field_Layout::duration(
 			array(
-				'label'        => __( 'Free trial', 'subly' ),
+				'label'        => __( 'Free trial', 'submex' ),
 				'number_id'    => Subscription_Product::META_TRIAL_DAYS,
 				'number_value' => $product ? ( $product->get_meta( Subscription_Product::META_TRIAL_DAYS ) ?: '' ) : '',
 				'placeholder'  => '0',
 				'unit_id'      => Subscription_Product::META_TRIAL_PERIOD,
 				'unit_value'   => $product ? ( $product->get_meta( Subscription_Product::META_TRIAL_PERIOD ) ?: 'day' ) : 'day',
-				'tip'          => __( 'Nothing is charged until the trial ends, apart from any sign-up fee. Leave empty for no trial.', 'subly' ),
-				'note'         => __( 'Offer customers a free trial before their first payment.', 'subly' ),
+				'tip'          => __( 'Nothing is charged until the trial ends, apart from any sign-up fee. Leave empty for no trial.', 'submex' ),
+				'note'         => __( 'Offer customers a free trial before their first payment.', 'submex' ),
 			)
 		);
 	}
@@ -133,16 +133,16 @@ class Product_Meta_Fields {
 			return;
 		}
 
-		wp_enqueue_style( 'subly-product-fields', SUBLY_URL . 'assets/css/product-fields.css', array( 'woocommerce_admin_styles' ), Assets::version( 'assets/css/product-fields.css' ) );
-		wp_enqueue_script( 'subly-product-fields', SUBLY_URL . 'assets/js/product-fields.js', array( 'jquery' ), Assets::version( 'assets/js/product-fields.js' ), true );
+		wp_enqueue_style( 'submex-product-fields', SUBMEX_URL . 'assets/css/product-fields.css', array( 'woocommerce_admin_styles' ), Assets::version( 'assets/css/product-fields.css' ) );
+		wp_enqueue_script( 'submex-product-fields', SUBMEX_URL . 'assets/js/product-fields.js', array( 'jquery' ), Assets::version( 'assets/js/product-fields.js' ), true );
 		wp_localize_script(
-			'subly-product-fields',
-			'sublyProductFields',
+			'submex-product-fields',
+			'submexProductFields',
 			array(
 				'simpleType'       => Product_Types::SIMPLE,
 				'paymentTypeClass' => Product_Field_Layout::PAYMENT_TYPE_CLASS,
 				'defaultType'      => 'recurring',
-				'pricingTitle'     => __( 'Pricing', 'subly' ),
+				'pricingTitle'     => __( 'Pricing', 'submex' ),
 			)
 		);
 	}
@@ -184,7 +184,7 @@ class Product_Meta_Fields {
 		 *
 		 * @param \WC_Product $product
 		 */
-		do_action( 'subly_save_product_subscription_fields', $product );
+		do_action( 'submex_save_product_subscription_fields', $product );
 	}
 
 	private function posted_period( string $key, string $fallback ): string {

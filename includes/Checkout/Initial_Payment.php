@@ -1,9 +1,9 @@
 <?php
 
-namespace Subly\Checkout;
+namespace Submex\Checkout;
 
-use Subly\Product\Line_Terms;
-use Subly\Product\Subscription_Product;
+use Submex\Product\Line_Terms;
+use Submex\Product\Subscription_Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

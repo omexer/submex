@@ -1,11 +1,11 @@
 <?php
 
-namespace Subly\Privacy;
+namespace Submex\Privacy;
 
-use Subly\Data\Activity_Repository;
-use Subly\Data\Subscription_Query;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
+use Submex\Data\Activity_Repository;
+use Submex\Data\Subscription_Query;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Personal_Data {
 
-	private const GROUP = 'subly';
+	private const GROUP = 'submex';
 
 	public function __construct( private readonly Activity_Repository $activity ) {}
 
@@ -31,7 +31,7 @@ class Personal_Data {
 
 	public function add_exporter( array $exporters ): array {
 		$exporters[ self::GROUP ] = array(
-			'exporter_friendly_name' => __( 'Subscriptions', 'subly' ),
+			'exporter_friendly_name' => __( 'Subscriptions', 'submex' ),
 			'callback'               => array( $this, 'export' ),
 		);
 
@@ -40,7 +40,7 @@ class Personal_Data {
 
 	public function add_eraser( array $erasers ): array {
 		$erasers[ self::GROUP ] = array(
-			'eraser_friendly_name' => __( 'Subscriptions', 'subly' ),
+			'eraser_friendly_name' => __( 'Subscriptions', 'submex' ),
 			'callback'             => array( $this, 'erase' ),
 		);
 
@@ -57,43 +57,43 @@ class Personal_Data {
 		foreach ( $this->subscriptions_for( $email ) as $subscription ) {
 			$items[] = array(
 				'group_id'    => self::GROUP,
-				'group_label' => __( 'Subscriptions', 'subly' ),
+				'group_label' => __( 'Subscriptions', 'submex' ),
 				'item_id'     => 'subscription-' . $subscription->get_id(),
 				'data'        => array(
 					array(
-						'name'  => __( 'Subscription', 'subly' ),
+						'name'  => __( 'Subscription', 'submex' ),
 						'value' => '#' . $subscription->get_id(),
 					),
 					array(
-						'name'  => __( 'Status', 'subly' ),
+						'name'  => __( 'Status', 'submex' ),
 						'value' => $subscription->get_status(),
 					),
 					array(
-						'name'  => __( 'Billing', 'subly' ),
+						'name'  => __( 'Billing', 'submex' ),
 						'value' => sprintf( '%d / %s', $subscription->get_billing_interval(), $subscription->get_billing_period() ),
 					),
 					array(
-						'name'  => __( 'Recurring total', 'subly' ),
+						'name'  => __( 'Recurring total', 'submex' ),
 						'value' => wp_strip_all_tags( $subscription->get_formatted_order_total() ),
 					),
 					array(
-						'name'  => __( 'Next payment', 'subly' ),
+						'name'  => __( 'Next payment', 'submex' ),
 						'value' => (string) $subscription->get_next_payment(),
 					),
 					array(
-						'name'  => __( 'Trial ends', 'subly' ),
+						'name'  => __( 'Trial ends', 'submex' ),
 						'value' => (string) $subscription->get_trial_end(),
 					),
 					array(
-						'name'  => __( 'Payment method', 'subly' ),
+						'name'  => __( 'Payment method', 'submex' ),
 						'value' => $subscription->get_payment_method_title() ?: $subscription->get_payment_method(),
 					),
 					array(
-						'name'  => __( 'Billing email', 'subly' ),
+						'name'  => __( 'Billing email', 'submex' ),
 						'value' => $subscription->get_billing_email(),
 					),
 					array(
-						'name'  => __( 'Billing name', 'subly' ),
+						'name'  => __( 'Billing name', 'submex' ),
 						'value' => trim( $subscription->get_billing_first_name() . ' ' . $subscription->get_billing_last_name() ),
 					),
 				),
@@ -123,7 +123,7 @@ class Personal_Data {
 				$retained   = true;
 				$messages[] = sprintf(
 					/* translators: %d: subscription number */
-					__( 'Subscription #%d is still active. Cancel it before erasing, so billing stops at the payment gateway first.', 'subly' ),
+					__( 'Subscription #%d is still active. Cancel it before erasing, so billing stops at the payment gateway first.', 'submex' ),
 					$subscription->get_id()
 				);
 				continue;
@@ -148,7 +148,7 @@ class Personal_Data {
 		foreach ( array( 'billing', 'shipping' ) as $type ) {
 			$subscription->set_address(
 				array(
-					'first_name' => __( 'Removed', 'subly' ),
+					'first_name' => __( 'Removed', 'submex' ),
 					'last_name'  => '',
 					'company'    => '',
 					'address_1'  => '',

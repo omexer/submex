@@ -1,17 +1,17 @@
 <?php
 
-namespace Subly\Billing;
+namespace Submex\Billing;
 
-use Subly\Admin\Menu;
-use Subly\Admin\Notice_Dismissals;
-use Subly\Admin\Notices;
-use Subly\Admin\Settings_Page;
-use Subly\Data\Activity_Repository;
-use Subly\Data\Subscription_Query;
-use Subly\Domain\Money;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
-use Subly\Product\Subscription_Product;
+use Submex\Admin\Menu;
+use Submex\Admin\Notice_Dismissals;
+use Submex\Admin\Notices;
+use Submex\Admin\Settings_Page;
+use Submex\Data\Activity_Repository;
+use Submex\Data\Subscription_Query;
+use Submex\Domain\Money;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
+use Submex\Product\Subscription_Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -22,15 +22,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Renewal_Tax_Repair {
 
-	public const OPTION_SINCE = 'subly_tax_exclusive_lines_since';
+	public const OPTION_SINCE = 'submex_tax_exclusive_lines_since';
 
-	public const ACTION = 'subly_repair_renewal_tax';
+	public const ACTION = 'submex_repair_renewal_tax';
 
-	public const CACHE = 'subly_tax_added_twice';
+	public const CACHE = 'submex_tax_added_twice';
 
-	public const NOTICE = 'subly-tax-added-twice';
+	public const NOTICE = 'submex-tax-added-twice';
 
-	public const FROM_SUBLY = 'subly';
+	public const FROM_SUBMEX = 'submex';
 
 	public function __construct( private readonly Activity_Repository $activity ) {}
 
@@ -92,7 +92,7 @@ class Renewal_Tax_Repair {
 			|| ! in_array( $status, array( Subscription_Status::Active, Subscription_Status::Trialling, Subscription_Status::OnHold ), true )
 			|| ! $created || $created->getTimestamp() >= $this->since()
 			|| $subscription->get_items( 'tax' ) || 0.0 !== (float) $subscription->get_total_tax()
-			|| '' !== (string) $subscription->get_meta( '_subly_renewal_price_applied' )
+			|| '' !== (string) $subscription->get_meta( '_submex_renewal_price_applied' )
 			|| ! $lines ) {
 			return false;
 		}
@@ -162,7 +162,7 @@ class Renewal_Tax_Repair {
 		$id = absint( $_GET['subscription'] ?? 0 );
 
 		if ( ! current_user_can( Menu::CAPABILITY ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ?? '' ) ), self::ACTION . '_' . $id ) ) {
-			wp_die( esc_html__( 'That request could not be verified.', 'subly' ) );
+			wp_die( esc_html__( 'That request could not be verified.', 'submex' ) );
 		}
 
 		$subscription = wc_get_order( $id );
@@ -176,8 +176,8 @@ class Renewal_Tax_Repair {
 		wp_safe_redirect(
 			add_query_arg(
 				array(
-					'subly_tax_repaired'      => $repaired ? $id : 0,
-					'subly_tax_repair_failed' => $repaired ? 0 : $id,
+					'submex_tax_repaired'      => $repaired ? $id : 0,
+					'submex_tax_repair_failed' => $repaired ? 0 : $id,
 				),
 				self::list_url( sanitize_key( wp_unslash( $_GET['from'] ?? '' ) ) )
 			)
@@ -191,7 +191,7 @@ class Renewal_Tax_Repair {
 				array(
 					'action'       => self::ACTION,
 					'subscription' => $subscription_id,
-					'from'         => self::FROM_SUBLY === $from ? self::FROM_SUBLY : 'woocommerce',
+					'from'         => self::FROM_SUBMEX === $from ? self::FROM_SUBMEX : 'woocommerce',
 				),
 				admin_url( 'admin-post.php' )
 			),
@@ -202,13 +202,13 @@ class Renewal_Tax_Repair {
 	/**
 	 * The list lives on both settings screens; each one's repair comes back to it.
 	 */
-	public static function list_url( string $from = self::FROM_SUBLY ): string {
-		return self::FROM_SUBLY === $from
+	public static function list_url( string $from = self::FROM_SUBMEX ): string {
+		return self::FROM_SUBMEX === $from
 			? Settings_Page::section_url()
 			: add_query_arg(
 				array(
 					'page' => 'wc-settings',
-					'tab'  => 'subly',
+					'tab'  => 'submex',
 				),
 				admin_url( 'admin.php' )
 			);
@@ -232,18 +232,18 @@ class Renewal_Tax_Repair {
 				sprintf(
 					/* translators: %d: number of subscriptions */
 					_n(
-						'Subly: %d subscription renews with tax added twice, so its customer pays more than at checkout and may be owed a refund.',
-						'Subly: %d subscriptions renew with tax added twice, so their customers pay more than at checkout and may be owed refunds.',
+						'Submex: %d subscription renews with tax added twice, so its customer pays more than at checkout and may be owed a refund.',
+						'Submex: %d subscriptions renew with tax added twice, so their customers pay more than at checkout and may be owed refunds.',
 						$count,
-						'subly'
+						'submex'
 					),
 					$count
 				)
 			),
 			esc_url( self::list_url() . '#' . self::NOTICE ),
-			esc_html__( 'Review and repair', 'subly' ),
+			esc_html__( 'Review and repair', 'submex' ),
 			esc_url( Notice_Dismissals::url( self::NOTICE, $count ) ),
-			esc_html__( 'Dismiss', 'subly' )
+			esc_html__( 'Dismiss', 'submex' )
 		);
 	}
 

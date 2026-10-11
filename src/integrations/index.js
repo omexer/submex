@@ -1,22 +1,22 @@
 /**
- * The Integrations route: what Subly can connect to, and whether each connection is live.
+ * The Integrations route: what Submex can connect to, and whether each connection is live.
  */
 import { useCallback, useEffect, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
-import { Badge, Button, Card, CardContent, Skeleton } from '@subly/ui';
-import { registerRoute } from '@subly/shell';
+import { Badge, Button, Card, CardContent, Skeleton } from '@submex/ui';
+import { registerRoute } from '@submex/shell';
 
 function Heading() {
 	return (
 		<div className="sb-mb-6">
 			<h2 className="sb-text-2xl sb-font-semibold sb-tracking-tight">
-				{ __( 'Integrations', 'subly' ) }
+				{ __( 'Integrations', 'submex' ) }
 			</h2>
 			<p className="sb-mt-1 sb-text-sm sb-text-muted-foreground">
 				{ __(
 					'Hand a subscription to the plugin that delivers what it pays for, and take it back when it ends.',
-					'subly'
+					'submex'
 				) }
 			</p>
 		</div>
@@ -87,12 +87,13 @@ function Tile( { item, installer, onInstalled } ) {
 
 				setBusy( false );
 				setError(
-					result?.data?.message || __( 'That did not work.', 'subly' )
+					result?.data?.message ||
+						__( 'That did not work.', 'submex' )
 				);
 			} )
 			.catch( () => {
 				setBusy( false );
-				setError( __( 'That did not work.', 'subly' ) );
+				setError( __( 'That did not work.', 'submex' ) );
 			} );
 	};
 
@@ -107,7 +108,7 @@ function Tile( { item, installer, onInstalled } ) {
 					<p className="sb-text-xs sb-text-muted-foreground">
 						{ sprintf(
 							/* translators: %s: the plugin an integration needs */
-							__( 'Needs %s', 'subly' ),
+							__( 'Needs %s', 'submex' ),
 							item.requires
 						) }
 					</p>
@@ -129,23 +130,23 @@ function Tile( { item, installer, onInstalled } ) {
 			<div className="sb-mt-auto sb-flex sb-flex-wrap sb-items-center sb-justify-between sb-gap-2">
 				<Badge variant={ item.active ? 'success' : 'secondary' }>
 					{ item.active
-						? __( 'Connected', 'subly' )
-						: __( 'Not active', 'subly' ) }
+						? __( 'Connected', 'submex' )
+						: __( 'Not active', 'submex' ) }
 				</Badge>
 				<span className="sb-flex sb-flex-wrap sb-gap-2">
 					{ item.configure_url ? (
 						<Button asChild variant="outline" size="sm">
 							<a href={ item.configure_url }>
 								{ item.configure_label ||
-									__( 'Settings', 'subly' ) }
+									__( 'Settings', 'submex' ) }
 							</a>
 						</Button>
 					) : null }
 					{ item.install && installer ? (
 						<Button size="sm" disabled={ busy } onClick={ run }>
 							{ busy
-								? __( 'Installing…', 'subly' )
-								: __( 'Install', 'subly' ) }
+								? __( 'Installing…', 'submex' )
+								: __( 'Install', 'submex' ) }
 						</Button>
 					) : null }
 					{ ! item.install && item.get_url ? (
@@ -155,7 +156,7 @@ function Tile( { item, installer, onInstalled } ) {
 								target="_blank"
 								rel="noopener noreferrer"
 							>
-								{ __( 'Get it', 'subly' ) }{ ' ' }
+								{ __( 'Get it', 'submex' ) }{ ' ' }
 								<span aria-hidden="true">↗</span>
 							</a>
 						</Button>
@@ -176,7 +177,7 @@ export function Integrations( { onFail } ) {
 	const [ data, setData ] = useState( null );
 
 	const load = useCallback(
-		() => apiFetch( { path: '/subly/v1/integrations' } ).then( setData ),
+		() => apiFetch( { path: '/submex/v1/integrations' } ).then( setData ),
 		[]
 	);
 
@@ -206,12 +207,12 @@ export function Integrations( { onFail } ) {
 				<Card>
 					<CardContent className="sb-flex sb-flex-col sb-items-center sb-gap-2 sb-p-10 sb-text-center">
 						<p className="sb-font-medium">
-							{ __( 'Nothing to connect yet', 'subly' ) }
+							{ __( 'Nothing to connect yet', 'submex' ) }
 						</p>
 						<p className="sb-max-w-md sb-text-sm sb-text-muted-foreground">
 							{ __(
-								'Integrations hand a subscription to the plugin that grants what it pays for — a course, a mailing list, a licence key. Subly Pro adds them.',
-								'subly'
+								'Integrations hand a subscription to the plugin that grants what it pays for — a course, a mailing list, a licence key. Submex Pro adds them.',
+								'submex'
 							) }
 						</p>
 					</CardContent>
@@ -252,7 +253,7 @@ export function Integrations( { onFail } ) {
 			<p className="sb-text-sm sb-text-muted-foreground">
 				{ __(
 					'An integration only does anything while the plugin it connects to is active, and only for products you have configured it on.',
-					'subly'
+					'submex'
 				) }
 			</p>
 		</div>
@@ -260,7 +261,7 @@ export function Integrations( { onFail } ) {
 }
 
 registerRoute( {
-	page: 'subly-integrations',
-	title: __( 'Integrations', 'subly' ),
+	page: 'submex-integrations',
+	title: __( 'Integrations', 'submex' ),
 	render: ( ctx ) => <Integrations onFail={ ctx.fail } />,
 } );

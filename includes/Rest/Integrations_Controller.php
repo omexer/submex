@@ -1,10 +1,10 @@
 <?php
 
-namespace Subly\Rest;
+namespace Submex\Rest;
 
-use Subly\Admin\Integration_Installer;
-use Subly\Admin\Integrations_Page;
-use Subly\Admin\Menu;
+use Submex\Admin\Integration_Installer;
+use Submex\Admin\Integrations_Page;
+use Submex\Admin\Menu;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Integrations_Controller {
 
-	public const NAMESPACE = 'subly/v1';
+	public const NAMESPACE = 'submex/v1';
 
 	public function __construct( private readonly Integrations_Page $page ) {}
 
@@ -52,7 +52,7 @@ class Integrations_Controller {
 				'requires'        => (string) ( $integration['requires'] ?? $title ),
 				'description'     => (string) ( $integration['description'] ?? '' ),
 				'hint'            => (string) ( $integration['hint'] ?? '' ),
-				'category'        => '' !== $category ? $category : __( 'Other', 'subly' ),
+				'category'        => '' !== $category ? $category : __( 'Other', 'submex' ),
 				'icon'            => esc_url_raw( (string) ( $integration['icon'] ?? '' ) ),
 				'active'          => $active,
 				'configure_url'   => esc_url_raw( (string) ( $integration['configure_url'] ?? '' ) ),

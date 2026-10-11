@@ -2,10 +2,10 @@
 /**
  * The renewal lock has exactly one holder, even when the options cache is stale or two workers take over an expired lock at once.
  *
- * @package Subly
+ * @package Submex
  */
 
-use Subly\Billing\Lock;
+use Submex\Billing\Lock;
 
 require __DIR__ . '/bootstrap.php';
 
@@ -17,13 +17,13 @@ $ids  = range( $base, $base + 6 );
 
 $row = static function ( int $id ): ?object {
 	global $wpdb;
-	return $wpdb->get_row( $wpdb->prepare( "SELECT option_value, autoload FROM {$wpdb->options} WHERE option_name = %s", 'subly_lock_' . $id ) );
+	return $wpdb->get_row( $wpdb->prepare( "SELECT option_value, autoload FROM {$wpdb->options} WHERE option_name = %s", 'submex_lock_' . $id ) );
 };
 
 $plant = static function ( int $id, string $value ): void {
 	global $wpdb;
-	$wpdb->query( $wpdb->prepare( "INSERT INTO {$wpdb->options} ( option_name, option_value, autoload ) VALUES ( %s, %s, 'off' )", 'subly_lock_' . $id, $value ) );
-	wp_cache_delete( 'subly_lock_' . $id, 'options' );
+	$wpdb->query( $wpdb->prepare( "INSERT INTO {$wpdb->options} ( option_name, option_value, autoload ) VALUES ( %s, %s, 'off' )", 'submex_lock_' . $id, $value ) );
+	wp_cache_delete( 'submex_lock_' . $id, 'options' );
 };
 
 echo "\nOne holder\n";
@@ -41,7 +41,7 @@ echo "\nA stale 'this option does not exist' cache\n";
 $a->acquire( $ids[1], 600 );
 $held    = $row( $ids[1] )->option_value ?? '';
 $missing = wp_cache_get( 'notoptions', 'options' );
-wp_cache_set( 'notoptions', array_merge( is_array( $missing ) ? $missing : array(), array( 'subly_lock_' . $ids[1] => true ) ), 'options' );
+wp_cache_set( 'notoptions', array_merge( is_array( $missing ) ? $missing : array(), array( 'submex_lock_' . $ids[1] => true ) ), 'options' );
 $check( 'a worker told the lock is absent still cannot take it', ! $b->acquire( $ids[1] ) );
 $check( 'and the holder\'s row is untouched', $held === ( $row( $ids[1] )->option_value ?? '' ), array( $held, $row( $ids[1] ) ) );
 $a->release( $ids[1] );
@@ -60,7 +60,7 @@ $b_won      = null;
 $racing     = false;
 $interleave = function ( $query ) use ( &$racing, &$b_won, $b, $ids ) {
 	// C has read the expired row; B takes it over before C's delete runs.
-	if ( ! $racing && str_starts_with( ltrim( $query ), 'DELETE' ) && str_contains( $query, "'subly_lock_{$ids[3]}'" ) ) {
+	if ( ! $racing && str_starts_with( ltrim( $query ), 'DELETE' ) && str_contains( $query, "'submex_lock_{$ids[3]}'" ) ) {
 		$racing = true;
 		$b_won  = $b->acquire( $ids[3] );
 	}
@@ -91,14 +91,14 @@ $a->release( $ids[5] );
 echo "\nA lock written by an older version\n";
 $plant( $ids[6], (string) ( time() + 120 ) );
 $check( 'still blocks while it runs', ! $a->acquire( $ids[6] ) );
-$wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s", (string) ( time() - 5 ), 'subly_lock_' . $ids[6] ) );
-wp_cache_delete( 'subly_lock_' . $ids[6], 'options' );
+$wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s", (string) ( time() - 5 ), 'submex_lock_' . $ids[6] ) );
+wp_cache_delete( 'submex_lock_' . $ids[6], 'options' );
 $check( 'and is taken over once expired', $a->acquire( $ids[6] ) );
 $a->release( $ids[6] );
 
 foreach ( $ids as $id ) {
-	$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name = %s", 'subly_lock_' . $id ) );
-	wp_cache_delete( 'subly_lock_' . $id, 'options' );
+	$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name = %s", 'submex_lock_' . $id ) );
+	wp_cache_delete( 'submex_lock_' . $id, 'options' );
 }
 
-subly_test_done( $fail );
+submex_test_done( $fail );

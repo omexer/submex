@@ -1,10 +1,10 @@
 <?php
 
-namespace Subly\Frontend;
+namespace Submex\Frontend;
 
-use Subly\Data\Subscription_Query;
-use Subly\Domain\Subscription_Status;
-use Subly\Product\Subscription_Product;
+use Submex\Data\Subscription_Query;
+use Submex\Domain\Subscription_Status;
+use Submex\Product\Subscription_Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -73,12 +73,12 @@ class Downloadable_Access {
 
 		$order = $order_id ? wc_get_order( $order_id ) : null;
 
-		if ( ! $order instanceof \WC_Order || ! (int) $order->get_meta( '_subly_subscription_id' ) ) {
+		if ( ! $order instanceof \WC_Order || ! (int) $order->get_meta( '_submex_subscription_id' ) ) {
 			return false;
 		}
 
 		// A renewal order's lines are copies with nothing to ask; the subscription they renew is the answer.
-		$source = 'subly_renewal' === $order->get_created_via() ? wc_get_order( (int) $order->get_meta( '_subly_subscription_id' ) ) : $order;
+		$source = 'submex_renewal' === $order->get_created_via() ? wc_get_order( (int) $order->get_meta( '_submex_subscription_id' ) ) : $order;
 
 		if ( ! $source instanceof \WC_Order ) {
 			return false;
@@ -132,6 +132,6 @@ class Downloadable_Access {
 		 * @param int  $user_id
 		 * @param int  $product_id
 		 */
-		return (bool) apply_filters( 'subly_has_product_access', $found, $user_id, $product_id );
+		return (bool) apply_filters( 'submex_has_product_access', $found, $user_id, $product_id );
 	}
 }

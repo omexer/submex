@@ -1,6 +1,6 @@
 <?php
 
-namespace Subly\Domain;
+namespace Submex\Domain;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Subscription extends \WC_Order {
 
-	public const TYPE = 'subly_sub';
+	public const TYPE = 'submex_sub';
 
 	protected $object_type = self::TYPE;
 
@@ -40,15 +40,15 @@ class Subscription extends \WC_Order {
 	 * Meta keys backing $extra_data. Kept private so the mapping lives in one place.
 	 */
 	private const META_MAP = array(
-		'billing_period'    => '_subly_billing_period',
-		'billing_interval'  => '_subly_billing_interval',
-		'trial_end'         => '_subly_trial_end',
-		'next_payment'      => '_subly_next_payment',
-		'end_date'          => '_subly_end_date',
-		'parent_order_id'   => '_subly_parent_order_id',
-		'payment_token_id'  => '_subly_payment_token_id',
-		'schedule_sync_day' => '_subly_schedule_sync_day',
-		'period_index'      => '_subly_period_index',
+		'billing_period'    => '_submex_billing_period',
+		'billing_interval'  => '_submex_billing_interval',
+		'trial_end'         => '_submex_trial_end',
+		'next_payment'      => '_submex_next_payment',
+		'end_date'          => '_submex_end_date',
+		'parent_order_id'   => '_submex_parent_order_id',
+		'payment_token_id'  => '_submex_payment_token_id',
+		'schedule_sync_day' => '_submex_schedule_sync_day',
+		'period_index'      => '_submex_period_index',
 	);
 
 	/**
@@ -151,7 +151,7 @@ class Subscription extends \WC_Order {
 	 */
 	public function transition_to( Subscription_Status $to, string $note = '' ): void {
 		// Read the stored status, not the view default: a brand-new object reports
-		// subly-pending while its prop is still unset, and skipping the write there would
+		// submex-pending while its prop is still unset, and skipping the write there would
 		// leave WooCommerce's own "pending" on the record.
 		$stored = $this->get_status( 'edit' );
 		$from   = '' === $stored || null === $stored ? null : Subscription_Status::tryFrom( $stored );
@@ -180,7 +180,7 @@ class Subscription extends \WC_Order {
 		 * @param string       $from
 		 * @param string       $to
 		 */
-		do_action( 'subly_subscription_status_changed', $this, $from instanceof Subscription_Status ? $from->value : '', $to->value );
+		do_action( 'submex_subscription_status_changed', $this, $from instanceof Subscription_Status ? $from->value : '', $to->value );
 	}
 
 	/**
@@ -188,12 +188,12 @@ class Subscription extends \WC_Order {
 	 */
 	public function grace_ends_at(): ?int {
 		/**
-		 * The end of this subscription's grace period after a failed renewal. Subly alone gives none.
+		 * The end of this subscription's grace period after a failed renewal. Submex alone gives none.
 		 *
 		 * @param int|null     $ends
 		 * @param Subscription $subscription
 		 */
-		$ends = apply_filters( 'subly_grace_ends_at', null, $this );
+		$ends = apply_filters( 'submex_grace_ends_at', null, $this );
 
 		return is_numeric( $ends ) ? (int) $ends : null;
 	}
@@ -220,7 +220,7 @@ class Subscription extends \WC_Order {
 
 		$allowed = array( 'day', 'week', 'month', 'year' );
 		if ( ! in_array( $value, $allowed, true ) ) {
-			$this->error( 'subly_invalid_billing_period', 'Billing period must be one of: ' . implode( ', ', $allowed ) );
+			$this->error( 'submex_invalid_billing_period', 'Billing period must be one of: ' . implode( ', ', $allowed ) );
 		}
 		$this->set_prop( 'billing_period', $value );
 	}
@@ -236,7 +236,7 @@ class Subscription extends \WC_Order {
 
 		$value = absint( $value );
 		if ( $value < 1 ) {
-			$this->error( 'subly_invalid_billing_interval', 'Billing interval must be 1 or more.' );
+			$this->error( 'submex_invalid_billing_interval', 'Billing interval must be 1 or more.' );
 		}
 		$this->set_prop( 'billing_interval', $value );
 	}

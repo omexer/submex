@@ -1,9 +1,9 @@
 <?php
 
-namespace Subly\Rest;
+namespace Submex\Rest;
 
-use Subly\Admin\Help_Page;
-use Subly\Admin\Menu;
+use Submex\Admin\Help_Page;
+use Submex\Admin\Menu;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Help_Controller {
 
-	public const NAMESPACE = 'subly/v1';
+	public const NAMESPACE = 'submex/v1';
 
 	public function __construct( private readonly Help_Page $page ) {}
 

@@ -1,8 +1,8 @@
-# Subly — User Guide
+# Submex — User Guide
 
-**Subly 1.0.0 · Subly Pro 0.51.0**
+**Submex 1.0.0 · Submex Pro 0.51.0**
 
-This guide explains everything Subly does and every setting it has, in plain language. You
+This guide explains everything Submex does and every setting it has, in plain language. You
 do not need to be technical to follow it.
 
 Please read [What is not proven yet](#what-is-not-proven-yet) before taking real money.
@@ -11,7 +11,7 @@ Please read [What is not proven yet](#what-is-not-proven-yet) before taking real
 
 ## Contents
 
-1. [What Subly does](#what-subly-does)
+1. [What Submex does](#what-submex-does)
 2. [Installing](#installing)
 3. [Your first subscription in five minutes](#your-first-subscription-in-five-minutes)
 4. [Making subscription products](#making-subscription-products)
@@ -30,17 +30,17 @@ the field values to type and the integrations each one needs.
 
 ---
 
-## What Subly does
+## What Submex does
 
 A normal WooCommerce product is bought once. A **subscription** product is bought once and
 then charges again on a schedule — every month, every year, every two weeks, whatever you
 choose.
 
-Subly adds that. It creates a subscription record when somebody buys, charges them when the
+Submex adds that. It creates a subscription record when somebody buys, charges them when the
 next payment falls due, emails them when something needs their attention, and gives them a
 place to see and cancel it themselves.
 
-**What you need:** WordPress 6.5+, WooCommerce 8.0+, PHP 8.1+. Subly refuses to start and
+**What you need:** WordPress 6.5+, WooCommerce 8.0+, PHP 8.1+. Submex refuses to start and
 tells you if any of these is missing, rather than half-working.
 
 **Free or Pro?** The free plugin is complete on its own — products, billing, renewals,
@@ -52,22 +52,22 @@ payment gateways and nine integrations.
 
 ## Installing
 
-1. Install and activate **Subly – Subscriptions for WooCommerce**.
-2. For Pro, install **Subly Subscriptions Pro** and activate it **after** the free plugin.
+1. Install and activate **Submex Subscription Billing for WooCommerce**.
+2. For Pro, install **Submex Subscriptions Pro** and activate it **after** the free plugin.
 
 Pro does nothing on its own and says so if you activate it alone. It needs the free plugin
 version 0.9.0 or newer.
 
 > **The folder name does not matter.** Downloading from GitHub gives you a folder called
-> `subly-main`. That is fine — Pro finds the free plugin either way.
+> `submex-main`. That is fine — Pro finds the free plugin either way.
 
-Then go to **Subly** in the admin menu, just below WooCommerce.
+Then go to **Submex** in the admin menu, just below WooCommerce.
 
 ---
 
 ## Your first subscription in five minutes
 
-On **Subly → Home** there is a checklist. It walks you through four things, and
+On **Submex → Home** there is a checklist. It walks you through four things, and
 the fourth is the one that matters.
 
 **1. Connect a payment method.** Stripe or PayPal — both are included free, and the checklist
@@ -134,7 +134,7 @@ reviews.
 > **Variable subscription needs Pro**, and only appears in the dropdown while Pro is active.
 > A variation holds none of its parent's meta, so without Pro's resolver nothing gives it a
 > billing schedule and it would sell as a one-off purchase. If you already have a variable
-> subscription and Pro is switched off, the product keeps its type and Subly says so on the
+> subscription and Pro is switched off, the product keeps its type and Submex says so on the
 > edit screen — it does not quietly turn into a simple product.
 
 **What about physical and digital?** Either type works for both. Tick **Virtual** for
@@ -193,7 +193,7 @@ Installment, which is sold as a fixed total.
 |---|---|---|
 | **Shipping required** | Both | The Virtual box, from the other side: **No** makes the product virtual. |
 | **Ship every** + **Delivery day** *(Pro)* | Recurring | A shipping cadence of its own — pay monthly, ship weekly — optionally pinned to a weekday. Leave **Ship every** empty to ship once per payment. |
-| **Shipping charge** *(Pro)* | Recurring | **Free shipping for renewals** — how Subly has always billed: shipping is paid at checkout only. **Charge shipping on every renewal** adds the product's shipping to each renewal, by the method the customer chose at checkout. |
+| **Shipping charge** *(Pro)* | Recurring | **Free shipping for renewals** — how Submex has always billed: shipping is paid at checkout only. **Charge shipping on every renewal** adds the product's shipping to each renewal, by the method the customer chose at checkout. |
 
 **More settings** *(Pro)*
 
@@ -216,7 +216,7 @@ Two of these are easy to confuse:
 - **Divide the price** divides one total. £300 over 3 parts = £100 each.
 - **Installment** repeats a price. £100 × 3 payments = £300 total.
 
-They do the same arithmetic from opposite ends, and a product cannot use both — Subly
+They do the same arithmetic from opposite ends, and a product cannot use both — Submex
 refuses to save that. An instalment plan charges the part, not the total, at checkout and on
 every renewal; with an uneven total the first payment takes the odd cents. A product cannot
 have both a choice of plans and an instalment plan.
@@ -229,7 +229,7 @@ instalment is charged when the trial ends.
 > honour a custom renewal price, a fixed expiry date or renewal shipping. A product that uses
 > any of them does not offer PayPal at checkout. Neither PayPal nor Paddle is offered for an
 > instalment product, or when any coupon discounts a subscription in the cart, because both
-> bill their own plan price. Gateways Subly charges itself are unaffected. A minimum billing period works with PayPal, except that a PayPal customer
+> bill their own plan price. Gateways Submex charges itself are unaffected. A minimum billing period works with PayPal, except that a PayPal customer
 > can always cancel inside PayPal itself.
 
 A refused setting — a price left empty, a date in the past — is not saved, and a red notice at
@@ -237,7 +237,7 @@ the top of the screen says why.
 
 ### What the customer sees
 
-Subly writes the terms on the product page automatically — as separate plain facts, not one
+Submex writes the terms on the product page automatically — as separate plain facts, not one
 long sentence. The first line is the product's own price, which now says how often it
 recurs; the facts follow underneath:
 
@@ -285,7 +285,7 @@ somebody picks one there is no single price to state.
 
 ## Every setting, explained
 
-All of these live under **Subly → Settings**, a screen of sections: pick one on the left,
+All of these live under **Submex → Settings**, a screen of sections: pick one on the left,
 change what you need, then **Save changes**. Each section saves on its own.
 
 ### System status
@@ -298,7 +298,7 @@ Health**. Five lines telling you whether billing is actually working:
 | **Renewal queue** | WordPress's background task system is running | Renewals are not happening. On a quiet site, ask your host to set up a real server cron. |
 | **Unresolved charges** | A charge whose outcome nobody ever learned | That subscription has **stopped billing** on purpose, because charging again might charge twice. Open it and check your payment provider. |
 | **Payments awaiting confirmation** | Renewals submitted to a payment provider that confirms days later (Direct Debit, bank payments) | One has waited more than 10 days. Check that the provider's webhook reaches your site, and look the payment up in its dashboard. |
-| **Double-charge protection** | The database safeguard is in place | Deactivate and reactivate Subly. |
+| **Double-charge protection** | The database safeguard is in place | Deactivate and reactivate Submex. |
 | **Renewal tax** | No subscription renews with tax added twice | See below. |
 
 **Subscriptions renewing with tax added twice.** Before 0.19.4, a store that enters prices
@@ -350,15 +350,15 @@ manage and cancel it.
 | **Create an account for them automatically** *(default)* | A guest who buys a subscription gets an account made at checkout. Smoothest for the customer. |
 | **Require them to log in first** | They must sign in or register before buying. |
 
-If someone checks out with an email that already has an account, Subly stops and asks them
+If someone checks out with an email that already has an account, Submex stops and asks them
 to log in. It will not attach the subscription to an account they have not proved is theirs.
 
 > If you choose **Require them to log in** but WooCommerce is not showing a login on the
-> checkout page, Subly warns you — otherwise every subscription customer hits a dead end.
+> checkout page, Submex warns you — otherwise every subscription customer hits a dead end.
 
 **Let customers pay early** — off by default. Shows a button in My Account that charges the next
 period now. The renewal date does not move: paying early settles the payment that was already
-coming. Offered only for methods Subly charges itself, never PayPal.
+coming. Offered only for methods Submex charges itself, never PayPal.
 
 **Let customers turn off renewal** — off by default. Turn it on to show a switch in My
 Account.
@@ -377,7 +377,7 @@ Two safeguards: an **administrator is never changed** (you cannot demote yoursel
 your own product), and a customer is only dropped when **no other live subscription** of
 theirs still grants the role.
 
-**Delete data when the plugin is deleted** — off by default. Removes Subly's settings and own
+**Delete data when the plugin is deleted** — off by default. Removes Submex's settings and own
 tables on uninstall. Subscriptions and their orders are never deleted either way.
 
 **Health digest** *(Pro)* — how often to email you a summary of subscriptions needing
@@ -398,27 +398,27 @@ payment agreement per order.
 
 ## Taking payment
 
-Subly adds its own payment methods under **Subly → Settings**. All are off until you enter
+Submex adds its own payment methods under **Submex → Settings**. All are off until you enter
 credentials.
 
 | Gateway | How renewals are paid | Tier |
 |---|---|---|
-| **Stripe** | Subly charges the saved card when a payment falls due. | Free |
+| **Stripe** | Submex charges the saved card when a payment falls due. | Free |
 | **PayPal** | PayPal bills on its own schedule and tells us by webhook. | Free |
-| **Square**, **Braintree**, **Authorize.net**, **Mollie**, **Xendit**, **WooPayments** | Subly charges the payment method that gateway's own WooCommerce plugin saved at checkout | Pro |
-| **Razorpay** (UPI Autopay), **GoCardless** (Direct Debit), **Adyen** | Subly's own checkout sets up the mandate; Subly charges renewals | Pro |
+| **Square**, **Braintree**, **Authorize.net**, **Mollie**, **Xendit**, **WooPayments** | Submex charges the payment method that gateway's own WooCommerce plugin saved at checkout | Pro |
+| **Razorpay** (UPI Autopay), **GoCardless** (Direct Debit), **Adyen** | Submex's own checkout sets up the mandate; Submex charges renewals | Pro |
 | **Paddle** | Paddle bills on its own schedule and collects the tax, as merchant of record | Pro |
 | **bKash**, **SSLCommerz** | They cannot charge a customer again, so each renewal is emailed as a payment link | Pro |
 
 Each Pro gateway — what it rides on, where its settings are, its webhook address, its limits
-and how to check it in the provider's sandbox — is described in Subly Pro's
+and how to check it in the provider's sandbox — is described in Submex Pro's
 `docs/GATEWAYS.md`. Check yours in its sandbox before taking real payments.
 
 **Payments confirmed days later.** Direct Debit (GoCardless), UPI Autopay (Razorpay), and some
 Adyen and WooPayments payments (SEPA, ACH) are submitted on the renewal date and confirmed
 days later. Meanwhile the renewal is *pending*: the customer keeps access, the renewal order
 waits **On hold** with the provider's reference, the next payment date does not move, and
-Subly never retries or re-charges it. When the provider confirms, the renewal is marked paid
+Submex never retries or re-charges it. When the provider confirms, the renewal is marked paid
 and the next one scheduled; if it fails, the normal failed-payment path runs once. A
 subscription cancelled at the end of its period waits for a pending renewal before it ends.
 
@@ -445,25 +445,25 @@ Stripe's own confirmation page.
 PayPal needs four things, and one of them catches everybody:
 
 1. **Client ID** and **Secret** from your PayPal app.
-2. **Webhook URL** — Subly shows it. Copy it into your PayPal app and subscribe it to the
+2. **Webhook URL** — Submex shows it. Copy it into your PayPal app and subscribe it to the
    billing-subscription and payment-sale events.
 3. **Webhook ID** — PayPal gives you this *after* you add the URL. Paste it back.
 
-**Without the Webhook ID, Subly rejects every webhook** — because it cannot prove the
+**Without the Webhook ID, Submex rejects every webhook** — because it cannot prove the
 message really came from PayPal — and no renewal is ever recorded. If PayPal is taking money
 and your subscriptions are not updating, this is why.
 
 **Known issue — tax.** In a store that enters prices without tax, PayPal bills its plan price
-with no tax added, so the order total Subly records and the money PayPal actually takes can
+with no tax added, so the order total Submex records and the money PayPal actually takes can
 differ. Not fixed yet.
 
 ### Square, Braintree, Authorize.net, Mollie and Xendit (Pro)
 
 These renew against the payment method that the store's **existing** plugin saved at
 checkout. Keep that plugin installed and configured for the first payment, and make sure it
-saves the card. Subly only handles the renewals.
+saves the card. Submex only handles the renewals.
 
-**If a Xendit renewal's answer never arrives** — a timeout, a dropped connection — Subly asks
+**If a Xendit renewal's answer never arrives** — a timeout, a dropped connection — Submex asks
 Xendit again for the same charge, which cannot bill the customer twice. It can only do that for
 24 hours. After that it stops and marks the charge as unresolved, so you can check your Xendit
 dashboard and settle it by hand, rather than risk charging again.
@@ -471,8 +471,8 @@ dashboard and settle it by hand, rather than risk charging again.
 ### Razorpay (Pro)
 
 Subscriptions bought through the Razorpay for WooCommerce plugin cannot renew — it never sets
-up a mandate — so they renew as emailed invoices. For automatic renewals, enable Subly Pro's
-own **Razorpay Subscriptions (Subly)** payment method (shown to customers as "UPI Autopay (Razorpay)"): INR only, UPI only (card mandates are not built yet),
+up a mandate — so they renew as emailed invoices. For automatic renewals, enable Submex Pro's
+own **Razorpay Subscriptions (Submex)** payment method (shown to customers as "UPI Autopay (Razorpay)"): INR only, UPI only (card mandates are not built yet),
 with a **mandate limit** per renewal (₹15,000 by default). The bank notifies the customer
 before each debit and debits about a day and a half later; the renewal is pending meanwhile.
 
@@ -481,21 +481,21 @@ before each debit and debits about a day and a half later; the renewal is pendin
 | Field | Appears on | What to put in it |
 |---|---|---|
 | **Enable PayPal** / **Enable Stripe** | Free gateways | Tick to offer it at checkout. Off until you do. |
-| **Enable … renewals** | Pro gateways that ride another plugin | Tick to let Subly renew against that gateway's stored payment method. |
+| **Enable … renewals** | Pro gateways that ride another plugin | Tick to let Submex renew against that gateway's stored payment method. |
 | **Environment** | All | **Test**/**Sandbox** while you are setting up, **Live** when real money should move. |
 | **Test secret key** / **Live secret key** | Stripe | From Stripe → Developers → API keys. `sk_test_…` and `sk_live_…`. |
 | **Client ID** / **Secret** | PayPal | From your PayPal app. |
-| **Webhook URL** | PayPal | Subly shows it — copy it into PayPal. |
+| **Webhook URL** | PayPal | Submex shows it — copy it into PayPal. |
 | **Webhook ID** | PayPal | PayPal gives you this after you add the URL. Paste it back. |
 | **Test API key** / **Live API key** | Mollie, Xendit | From that gateway's dashboard. |
 
 Pro's other gateways have their own fields; see Pro's `docs/GATEWAYS.md`.
 
-Subly's gateways work on both checkouts — the classic one and the newer block checkout —
+Submex's gateways work on both checkouts — the classic one and the newer block checkout —
 and on either they are offered only when the cart actually contains a subscription.
 
 A gateway with no credentials is never offered at checkout, even if enabled — so a
-half-configured gateway cannot be chosen by a customer and then fail. **Subly tells you
+half-configured gateway cannot be chosen by a customer and then fail. **Submex tells you
 when this is happening**, and names the field that is empty: seeing *Active* on the
 WooCommerce payments screen and *There are no payment methods available* at the checkout is
 almost always a gateway switched on with an empty key, or keys typed into Test while the
@@ -519,7 +519,7 @@ Under **My account → Subscriptions** they get a list and a detail page, where 
 - **Pay** a renewal that failed, or one waiting on them, from its payment link
 - **Pay early**, if you enabled it
 - **Pause**, **Resume** and **Switch plan** (Pro, where the gateway supports it)
-- **Update card** (Pro, Subly Stripe subscriptions) — saves a new card on Stripe's own page;
+- **Update card** (Pro, Submex Stripe subscriptions) — saves a new card on Stripe's own page;
   a renewal waiting on a declined card is retried on it straight away
 - **Upgrade your plan** (Pro) — the upgrades you chose on the product, with a confirmation
   page stating the new price and the date it starts. Nothing is charged at the switch; the
@@ -553,9 +553,9 @@ subscriptions), and the health digest to you.
 
 ## Running the shop day to day
 
-### Subly → Home
+### Submex → Home
 
-Where Subly opens. Until setup is finished, the checklist comes first. After that:
+Where Submex opens. Until setup is finished, the checklist comes first. After that:
 
 - **The numbers** — monthly recurring revenue, active subscriptions, how many are on a free
   trial, and how many are on hold after a failed payment.
@@ -565,7 +565,7 @@ Where Subly opens. Until setup is finished, the checklist comes first. After tha
 - **Recent subscriptions** — the latest six, each opening its own screen.
 - **Shortcuts** to Integrations, Settings and Help.
 
-### Subly → All subscriptions
+### Submex → All subscriptions
 
 Everyone who pays you on a schedule. You can **search** by name, email or id, **sort** by id,
 next payment or total, and **filter** by status.
@@ -617,8 +617,8 @@ with the reason. When a customer asks "why was I charged?", the answer is here.
 | **Card updates** | "Update card" in My Account, an "Update your payment details" email on permanent declines, and an expiring-card warning |
 | **Win-back** | Up to three emails to customers whose subscription ended, each with an optional single-use discount and a "Come back" button |
 | **Anniversaries** | A thank-you email on 12-month (or chosen) milestones, with an optional renewal discount or store coupon |
-| **Members-only content** | Lock posts, pages or part of a post (`[subly_restricted]`) to subscribers of chosen products |
-| **Webhooks** | Subscription events through WooCommerce's own webhooks (topics `subly_subscription.*`) |
+| **Members-only content** | Lock posts, pages or part of a post (`[submex_restricted]`) to subscribers of chosen products |
+| **Webhooks** | Subscription events through WooCommerce's own webhooks (topics `submex_subscription.*`) |
 | **WhatsApp** | Renewal, payment and cancellation messages through the Meta WhatsApp Cloud API, to customers who opt in |
 | **Subscription limits** | One active, one ever, or N per customer; and a cap on total payments |
 | **Delivery schedules** | Ship on a different cadence from billing, with a printable manifest |
@@ -630,7 +630,7 @@ with the reason. When a customer asks "why was I charged?", the answer is here.
 | **Thirteen integrations** | See [INTEGRATIONS.md](INTEGRATIONS.md), and [BUSINESS-EXAMPLES.md](BUSINESS-EXAMPLES.md) for which to connect for what |
 | **More gateways** | See [Taking payment](#taking-payment) |
 
-Pro's settings are sections of **Subly → Settings** (the same sections appear under
+Pro's settings are sections of **Submex → Settings** (the same sections appear under
 **WooCommerce → Settings → Subscriptions**):
 
 | Section | What is in it |
@@ -648,7 +648,7 @@ Pro's settings are sections of **Subly → Settings** (the same sections appear 
 
 ### Live QR settings
 
-**Subly → Settings → Live QR.** Prints a QR code on the subscription so you can put it on a
+**Submex → Settings → Live QR.** Prints a QR code on the subscription so you can put it on a
 packing slip; the customer scans it and sees where their subscription stands.
 
 | Setting | Default | What it does |
@@ -666,7 +666,7 @@ details** — whichever of the three sections you switch on.
 
 ### The Pro licence
 
-**Subly → Settings → Licence.** Paste your key and activate.
+**Submex → Settings → Licence.** Paste your key and activate.
 
 The licence controls **updates and support only**. If it lapses or expires, or the licence
 server is unreachable, **your Pro features keep working and your customers keep being
@@ -677,12 +677,12 @@ charged.** A licence problem will never stop you taking money.
 ## The REST API
 
 Free. Everything below works without a licence. A logged-in store manager can always use it;
-for an app, turn on **Subly → Settings → API Settings → Allow API keys**, then create
+for an app, turn on **Submex → Settings → API Settings → Allow API keys**, then create
 a key under **WooCommerce → Settings → Advanced → REST API** on an account that can manage
 WooCommerce. It authenticates exactly as it does on WooCommerce's own API: a read key can only
 read, and a write key can only make changes. API Settings lists every endpoint on your site.
 
-All of it lives under `/wp-json/subly/v1/`.
+All of it lives under `/wp-json/submex/v1/`.
 
 | Route | Method | What it does |
 |---|---|---|
@@ -692,7 +692,7 @@ All of it lives under `/wp-json/subly/v1/`.
 | `/subscriptions/<id>/actions` | POST | `cancel`, `expire`, `reactivate`, `change_status` — and `pause` / `resume` with Pro. |
 | `/subscriptions/<id>/activity` | GET | What has happened to it, newest first. |
 | `/subscriptions/statuses` | GET | The statuses and what they are called, so you do not hard-code either. |
-| `/dashboard` | GET | Everything the Subly Home screen shows: setup steps, the numbers, what needs attention, recent subscriptions. |
+| `/dashboard` | GET | Everything the Submex Home screen shows: setup steps, the numbers, what needs attention, recent subscriptions. |
 | `/overview` | GET | Recurring revenue, live count and the status breakdown, on their own. |
 | `/reports` | GET | *(Pro)* Every figure on the Reports screen. `days` sets the range. |
 | `/health` | GET | *(Pro)* Subscriptions at risk, why, and what would fix them. |
@@ -721,7 +721,7 @@ missed. An hourly check picks up every subscription whose renewal is overdue, th
 first, however many subscriptions the store has.
 
 **A subscription stopped billing and nothing explains it.** Check **Unresolved charges** in
-that same panel. If a charge's outcome was never learned, Subly stops rather than risk
+that same panel. If a charge's outcome was never learned, Submex stops rather than risk
 charging twice. Look the payment up at your provider, then act on the subscription.
 
 **A renewal has been "awaiting confirmation" for days.** Direct Debit and UPI Autopay
@@ -735,15 +735,15 @@ Health**, repair each one, and check whether its customer is owed a refund.
 **PayPal is charging but subscriptions are not updating.** The Webhook ID is missing or
 wrong. See the PayPal section above.
 
-**An integration is not doing anything.** **Subly → Integrations** shows whether its plugin
+**An integration is not doing anything.** **Submex → Integrations** shows whether its plugin
 is active. An integration whose plugin is missing does nothing, silently.
 
-**I need to ask for help.** **Subly → Help** has a system report — versions, settings, queue
+**I need to ask for help.** **Submex → Help** has a system report — versions, settings, queue
 health — to paste into your request. It contains no passwords and no customer data.
 
 ---
 
-## How Subly is tested
+## How Submex is tested
 
 What has been verified, and what to check on your own store before taking real money.
 

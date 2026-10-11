@@ -14,7 +14,7 @@ import {
 	Input,
 	Skeleton,
 	Stat,
-} from '@subly/ui';
+} from '@submex/ui';
 import {
 	daysAgo,
 	describeSchedule,
@@ -42,13 +42,13 @@ function Fact( { label, children } ) {
 function entryLabel( type ) {
 	switch ( type ) {
 		case 'status_change':
-			return __( 'Status', 'subly' );
+			return __( 'Status', 'submex' );
 		case 'charge_attempt':
-			return __( 'Charge', 'subly' );
+			return __( 'Charge', 'submex' );
 		case 'schedule_change':
-			return __( 'Schedule', 'subly' );
+			return __( 'Schedule', 'submex' );
 		default:
-			return __( 'Note', 'subly' );
+			return __( 'Note', 'submex' );
 	}
 }
 
@@ -89,12 +89,12 @@ export function Detail( { id, onBack, onFail } ) {
 		setBusy( true );
 
 		return Promise.all( [
-			apiFetch( { path: `/subly/v1/subscriptions/${ id }` } ),
+			apiFetch( { path: `/submex/v1/subscriptions/${ id }` } ),
 			apiFetch( {
-				path: `/subly/v1/subscriptions/${ id }/activity`,
+				path: `/submex/v1/subscriptions/${ id }/activity`,
 			} ).catch( () => [] ),
 			apiFetch( {
-				path: `/subly/v1/subscriptions/${ id }/panels`,
+				path: `/submex/v1/subscriptions/${ id }/panels`,
 			} ).catch( () => ( {} ) ),
 		] )
 			.then( ( [ subscription, entries, extra ] ) => {
@@ -121,10 +121,10 @@ export function Detail( { id, onBack, onFail } ) {
 							ok: false,
 							message: __(
 								'That could not be reloaded.',
-								'subly'
+								'submex'
 							),
 						} );
-					} else if ( 'subly_not_found' === error?.code ) {
+					} else if ( 'submex_not_found' === error?.code ) {
 						setMissing( true );
 					} else {
 						onFail();
@@ -150,14 +150,14 @@ export function Detail( { id, onBack, onFail } ) {
 		setNotice( null );
 
 		apiFetch( {
-			path: `/subly/v1/subscriptions/${ id }/actions`,
+			path: `/submex/v1/subscriptions/${ id }/actions`,
 			method: 'POST',
 			data: { action },
 		} )
 			.then( () => {
 				setNotice( {
 					ok: true,
-					message: __( 'Done.', 'subly' ),
+					message: __( 'Done.', 'submex' ),
 				} );
 
 				return load();
@@ -167,7 +167,7 @@ export function Detail( { id, onBack, onFail } ) {
 				setNotice( {
 					ok: false,
 					message:
-						error?.message || __( 'That did not work.', 'subly' ),
+						error?.message || __( 'That did not work.', 'submex' ),
 				} );
 			} );
 	};
@@ -177,7 +177,7 @@ export function Detail( { id, onBack, onFail } ) {
 		setNotice( null );
 
 		apiFetch( {
-			path: `/subly/v1/subscriptions/${ id }`,
+			path: `/submex/v1/subscriptions/${ id }`,
 			method: 'POST',
 			data: {
 				next_payment: dates.next_payment
@@ -191,7 +191,7 @@ export function Detail( { id, onBack, onFail } ) {
 			.then( () => {
 				setNotice( {
 					ok: true,
-					message: __( 'The schedule was changed.', 'subly' ),
+					message: __( 'The schedule was changed.', 'submex' ),
 				} );
 
 				return load();
@@ -202,7 +202,7 @@ export function Detail( { id, onBack, onFail } ) {
 					ok: false,
 					message:
 						error?.message ||
-						__( 'That date could not be read.', 'subly' ),
+						__( 'That date could not be read.', 'submex' ),
 				} );
 			} );
 	};
@@ -211,7 +211,7 @@ export function Detail( { id, onBack, onFail } ) {
 		return (
 			<Card>
 				<CardContent className="sb-p-6">
-					<p>{ __( 'No subscription with that id.', 'subly' ) }</p>
+					<p>{ __( 'No subscription with that id.', 'submex' ) }</p>
 				</CardContent>
 			</Card>
 		);
@@ -221,11 +221,11 @@ export function Detail( { id, onBack, onFail } ) {
 		return <Skeleton className="sb-my-4 sb-h-64" />;
 	}
 
-	let nextMeta = __( 'Nothing scheduled', 'subly' );
+	let nextMeta = __( 'Nothing scheduled', 'submex' );
 
 	// The date only moves once the provider confirms, so "overdue" would mislead.
 	if ( data.payment_pending ) {
-		nextMeta = __( 'Waiting for the payment', 'subly' );
+		nextMeta = __( 'Waiting for the payment', 'submex' );
 	} else if ( data.next_payment ) {
 		nextMeta = whenDue( data.next_payment );
 	}
@@ -238,7 +238,7 @@ export function Detail( { id, onBack, onFail } ) {
 						<h2 className="sb-m-0 sb-text-xl sb-font-semibold">
 							{ sprintf(
 								/* translators: %d: subscription id. */
-								__( 'Subscription #%d', 'subly' ),
+								__( 'Subscription #%d', 'submex' ),
 								data.id
 							) }
 						</h2>
@@ -261,7 +261,7 @@ export function Detail( { id, onBack, onFail } ) {
 						onClick={ onBack }
 						className="sb-ml-auto"
 					>
-						{ __( '← All subscriptions', 'subly' ) }
+						{ __( '← All subscriptions', 'submex' ) }
 					</Button>
 				) : null }
 			</div>
@@ -284,41 +284,41 @@ export function Detail( { id, onBack, onFail } ) {
 					className="sb-mb-4 sb-rounded-lg sb-border sb-p-3 sb-text-sm"
 					role="status"
 				>
-					<strong>{ __( 'Payment processing', 'subly' ) }</strong>{ ' ' }
+					<strong>{ __( 'Payment processing', 'submex' ) }</strong>{ ' ' }
 					{ sprintf(
 						/* translators: 1: renewal order number, 2: how long ago, such as "3 days ago". */
 						__(
 							'Renewal order #%1$s was submitted %2$s and is waiting for the payment provider to confirm it.',
-							'subly'
+							'submex'
 						),
 						data.payment_pending_order.number,
 						daysAgo( data.payment_pending_since )
 					) }{ ' ' }
 					<a href={ data.payment_pending_order.url }>
-						{ __( 'View order', 'subly' ) }
+						{ __( 'View order', 'submex' ) }
 					</a>
 				</div>
 			) : null }
 
 			<div className="sb-mb-4 sb-grid sb-gap-4 sb-grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
 				<Stat
-					label={ __( 'Recurring total', 'subly' ) }
+					label={ __( 'Recurring total', 'submex' ) }
 					value={ data.total_formatted }
 					meta={ describeSchedule( data ) }
 				/>
 				<Stat
-					label={ __( 'Next payment', 'subly' ) }
+					label={ __( 'Next payment', 'submex' ) }
 					value={ data.next_payment_formatted || '—' }
 					meta={ nextMeta }
 				/>
 				<Stat
-					label={ __( 'Payments made', 'subly' ) }
+					label={ __( 'Payments made', 'submex' ) }
 					value={ String( Number( data.period_index || 0 ) + 1 ) }
 					meta={
 						formatDay( data.date_created )
 							? sprintf(
 									/* translators: %s: date the subscription started. */
-									__( 'since %s', 'subly' ),
+									__( 'since %s', 'submex' ),
 									formatDay( data.date_created )
 							  )
 							: ''
@@ -329,28 +329,28 @@ export function Detail( { id, onBack, onFail } ) {
 			<div className="sb-grid sb-gap-4 sb-grid-cols-[repeat(auto-fit,minmax(320px,1fr))]">
 				<Card>
 					<CardHeader>
-						<CardTitle>{ __( 'Details', 'subly' ) }</CardTitle>
+						<CardTitle>{ __( 'Details', 'submex' ) }</CardTitle>
 					</CardHeader>
 					<CardContent className="sb-text-sm">
-						<Fact label={ __( 'Customer', 'subly' ) }>
+						<Fact label={ __( 'Customer', 'submex' ) }>
 							{ data.customer_name || data.customer_email || '—' }
 						</Fact>
-						<Fact label={ __( 'Email', 'subly' ) }>
+						<Fact label={ __( 'Email', 'submex' ) }>
 							{ data.customer_email || '—' }
 						</Fact>
-						<Fact label={ __( 'Payment method', 'subly' ) }>
+						<Fact label={ __( 'Payment method', 'submex' ) }>
 							{ data.payment_method_title ||
 								data.payment_method ||
 								'—' }
 						</Fact>
-						<Fact label={ __( 'Trial ends', 'subly' ) }>
+						<Fact label={ __( 'Trial ends', 'submex' ) }>
 							{ formatDay( data.trial_end ) || '—' }
 						</Fact>
-						<Fact label={ __( 'Ends', 'subly' ) }>
+						<Fact label={ __( 'Ends', 'submex' ) }>
 							{ formatDay( data.end_date ) ||
-								__( 'Not set', 'subly' ) }
+								__( 'Not set', 'submex' ) }
 						</Fact>
-						<Fact label={ __( 'Parent order', 'subly' ) }>
+						<Fact label={ __( 'Parent order', 'submex' ) }>
 							{ data.parent_order_id
 								? `#${ data.parent_order_id }`
 								: '—' }
@@ -361,7 +361,7 @@ export function Detail( { id, onBack, onFail } ) {
 				<Card>
 					<CardHeader>
 						<CardTitle>
-							{ __( 'Things you can do', 'subly' ) }
+							{ __( 'Things you can do', 'submex' ) }
 						</CardTitle>
 					</CardHeader>
 					<CardContent className="sb-flex sb-flex-col sb-gap-5">
@@ -376,14 +376,14 @@ export function Detail( { id, onBack, onFail } ) {
 												/* translators: %s: recurring total. */
 												__(
 													'This charges the customer %s right now. Continue?',
-													'subly'
+													'submex'
 												),
 												data.total_formatted
 											)
 										)
 									}
 								>
-									{ __( 'Renew now', 'subly' ) }
+									{ __( 'Renew now', 'submex' ) }
 								</Button>
 							) : null }
 							<Button
@@ -391,7 +391,7 @@ export function Detail( { id, onBack, onFail } ) {
 								disabled={ busy }
 								onClick={ () => act( 'reactivate' ) }
 							>
-								{ __( 'Reactivate', 'subly' ) }
+								{ __( 'Reactivate', 'submex' ) }
 							</Button>
 						</div>
 
@@ -399,30 +399,30 @@ export function Detail( { id, onBack, onFail } ) {
 							<p className="sb-m-0 sb-text-xs sb-text-muted-foreground">
 								{ __(
 									'Charging now takes the next payment immediately and moves the schedule on. It does not skip the queue for a failed one - the activity log below says what happened last.',
-									'subly'
+									'submex'
 								) }
 							</p>
 						) : null }
 
 						<div className="sb-flex sb-flex-col sb-gap-2 sb-border-t sb-pt-4">
 							<h4 className="sb-m-0 sb-text-sm sb-font-medium">
-								{ __( 'Change the schedule', 'subly' ) }
+								{ __( 'Change the schedule', 'submex' ) }
 							</h4>
 							<p className="sb-m-0 sb-mb-1 sb-text-xs sb-text-muted-foreground">
 								{ __(
 									'Moving the next payment changes when the customer is next charged; nothing is charged by saving. An end date stops renewals on or after it.',
-									'subly'
+									'submex'
 								) }
 							</p>
 
 							<label
 								className="sb-text-xs sb-text-muted-foreground"
-								htmlFor="subly-next-payment"
+								htmlFor="submex-next-payment"
 							>
-								{ __( 'Next payment', 'subly' ) }
+								{ __( 'Next payment', 'submex' ) }
 							</label>
 							<Input
-								id="subly-next-payment"
+								id="submex-next-payment"
 								type="datetime-local"
 								value={ dates.next_payment }
 								onChange={ ( event ) =>
@@ -435,12 +435,12 @@ export function Detail( { id, onBack, onFail } ) {
 
 							<label
 								className="sb-text-xs sb-text-muted-foreground"
-								htmlFor="subly-end-date"
+								htmlFor="submex-end-date"
 							>
-								{ __( 'Ends', 'subly' ) }
+								{ __( 'Ends', 'submex' ) }
 							</label>
 							<Input
-								id="subly-end-date"
+								id="submex-end-date"
 								type="datetime-local"
 								value={ dates.end_date }
 								onChange={ ( event ) =>
@@ -458,18 +458,18 @@ export function Detail( { id, onBack, onFail } ) {
 								onClick={ saveDates }
 								className="sb-mt-1 sb-self-start"
 							>
-								{ __( 'Save the schedule', 'subly' ) }
+								{ __( 'Save the schedule', 'submex' ) }
 							</Button>
 						</div>
 
 						<div className="sb-flex sb-flex-col sb-items-start sb-gap-2 sb-border-t sb-pt-4">
 							<h4 className="sb-m-0 sb-text-sm sb-font-medium">
-								{ __( 'End this subscription', 'subly' ) }
+								{ __( 'End this subscription', 'submex' ) }
 							</h4>
 							<p className="sb-m-0 sb-text-xs sb-text-muted-foreground">
 								{ __(
 									'Billing stops and the customer keeps what the last payment covered. This cannot be undone.',
-									'subly'
+									'submex'
 								) }
 							</p>
 							<Button
@@ -481,12 +481,12 @@ export function Detail( { id, onBack, onFail } ) {
 										'cancel',
 										__(
 											'Cancel this subscription? It cannot be reactivated afterwards.',
-											'subly'
+											'submex'
 										)
 									)
 								}
 							>
-								{ __( 'Cancel subscription', 'subly' ) }
+								{ __( 'Cancel subscription', 'submex' ) }
 							</Button>
 						</div>
 					</CardContent>
@@ -495,7 +495,7 @@ export function Detail( { id, onBack, onFail } ) {
 
 			<Card className="sb-mt-4">
 				<CardHeader>
-					<CardTitle>{ __( 'Activity', 'subly' ) }</CardTitle>
+					<CardTitle>{ __( 'Activity', 'submex' ) }</CardTitle>
 				</CardHeader>
 				<CardContent>
 					{ activity.length ? (
@@ -544,7 +544,7 @@ export function Detail( { id, onBack, onFail } ) {
 						<p className="sb-m-0 sb-text-sm sb-text-muted-foreground">
 							{ __(
 								'Nothing has happened to this subscription yet. Charges, status changes and schedule edits are all recorded here.',
-								'subly'
+								'submex'
 							) }
 						</p>
 					) }
@@ -554,7 +554,7 @@ export function Detail( { id, onBack, onFail } ) {
 			{ panels ? (
 				<div
 					className="sb-mt-4"
-					// Drawn by other plugins' PHP on subly_admin_subscription_detail, as the server screen draws it.
+					// Drawn by other plugins' PHP on submex_admin_subscription_detail, as the server screen draws it.
 					dangerouslySetInnerHTML={ { __html: panels } }
 				/>
 			) : null }

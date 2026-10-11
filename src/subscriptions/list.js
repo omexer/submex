@@ -22,19 +22,19 @@ import {
 	TableHead,
 	TableHeader,
 	TableRow,
-} from '@subly/ui';
+} from '@submex/ui';
 import { daysAgo, describeSchedule, statusVariant, whenDue } from './format';
 
 const PER_PAGE = 20;
 
 const BULK = [
-	{ key: 'cancel', label: __( 'Cancel', 'subly' ) },
+	{ key: 'cancel', label: __( 'Cancel', 'submex' ) },
 	{
 		key: 'change_status',
-		status: 'subly-on-hold',
-		label: __( 'Put on hold', 'subly' ),
+		status: 'submex-on-hold',
+		label: __( 'Put on hold', 'submex' ),
 	},
-	{ key: 'reactivate', label: __( 'Reactivate', 'subly' ) },
+	{ key: 'reactivate', label: __( 'Reactivate', 'submex' ) },
 ];
 
 const SORTABLE = {
@@ -55,23 +55,23 @@ function Empty( { filtered, onClear } ) {
 		<div className="sb-flex sb-flex-col sb-items-center sb-gap-2 sb-p-10 sb-text-center">
 			<p className="sb-m-0 sb-font-medium">
 				{ filtered
-					? __( 'No subscriptions match that', 'subly' )
-					: __( 'No subscriptions yet', 'subly' ) }
+					? __( 'No subscriptions match that', 'submex' )
+					: __( 'No subscriptions yet', 'submex' ) }
 			</p>
 			<p className="sb-m-0 sb-max-w-md sb-text-sm sb-text-muted-foreground">
 				{ filtered
 					? __(
 							'Try a different status, or clear the search.',
-							'subly'
+							'submex'
 					  )
 					: __(
 							'One appears here the moment somebody buys a subscription product. Nothing is charged until a gateway is connected.',
-							'subly'
+							'submex'
 					  ) }
 			</p>
 			{ filtered ? (
 				<Button variant="outline" size="sm" onClick={ onClear }>
-					{ __( 'Clear filters', 'subly' ) }
+					{ __( 'Clear filters', 'submex' ) }
 				</Button>
 			) : (
 				<Button
@@ -84,7 +84,7 @@ function Empty( { filtered, onClear } ) {
 						).href;
 					} }
 				>
-					{ __( 'New subscription product', 'subly' ) }
+					{ __( 'New subscription product', 'submex' ) }
 				</Button>
 			) }
 		</div>
@@ -105,7 +105,7 @@ function SortHeader( { column, label, sort, onSort, className } ) {
 				className="sb-inline-flex sb-items-center sb-gap-1 sb-font-medium hover:sb-text-foreground"
 				aria-label={ sprintf(
 					/* translators: %s: column name. */
-					__( 'Sort by %s', 'subly' ),
+					__( 'Sort by %s', 'submex' ),
 					label
 				) }
 			>
@@ -161,7 +161,7 @@ export function List( {
 		setBusy( true );
 
 		return apiFetch( {
-			path: `/subly/v1/subscriptions?${ params.toString() }`,
+			path: `/submex/v1/subscriptions?${ params.toString() }`,
 			parse: false,
 		} )
 			.then( ( response ) =>
@@ -192,7 +192,7 @@ export function List( {
 
 	const refreshStatuses = useCallback(
 		() =>
-			apiFetch( { path: '/subly/v1/subscriptions/statuses' } )
+			apiFetch( { path: '/submex/v1/subscriptions/statuses' } )
 				.then( setStatuses )
 				.catch( () => {} ),
 		[]
@@ -225,7 +225,7 @@ export function List( {
 		setNotice( null );
 
 		apiFetch( {
-			path: '/subly/v1/subscriptions/actions',
+			path: '/submex/v1/subscriptions/actions',
 			method: 'POST',
 			data: {
 				ids: chosen,
@@ -246,7 +246,7 @@ export function List( {
 								'%d subscription updated.',
 								'%d subscriptions updated.',
 								changed,
-								'subly'
+								'submex'
 							),
 							changed
 						) +
@@ -258,7 +258,7 @@ export function List( {
 										'%d was left alone because that change is not allowed from its current status.',
 										'%d were left alone because that change is not allowed from their current status.',
 										held,
-										'subly'
+										'submex'
 									),
 									held
 							  )
@@ -275,7 +275,7 @@ export function List( {
 				setNotice( {
 					ok: false,
 					message:
-						error?.message || __( 'That did not work.', 'subly' ),
+						error?.message || __( 'That did not work.', 'submex' ),
 				} );
 			} );
 	};
@@ -284,7 +284,7 @@ export function List( {
 		// This charges a real customer, so it names the amount and asks first.
 		const question = sprintf(
 			/* translators: %s: recurring total. */
-			__( 'This charges the customer %s right now. Continue?', 'subly' ),
+			__( 'This charges the customer %s right now. Continue?', 'submex' ),
 			row.total_formatted
 		);
 
@@ -297,7 +297,7 @@ export function List( {
 		setNotice( null );
 
 		apiFetch( {
-			path: `/subly/v1/subscriptions/${ row.id }/actions`,
+			path: `/submex/v1/subscriptions/${ row.id }/actions`,
 			method: 'POST',
 			data: { action: 'renew_now' },
 		} )
@@ -306,7 +306,7 @@ export function List( {
 					ok: true,
 					message: __(
 						'The renewal was put through. The activity log says what happened.',
-						'subly'
+						'submex'
 					),
 				} );
 
@@ -317,7 +317,7 @@ export function List( {
 				setNotice( {
 					ok: false,
 					message:
-						error?.message || __( 'That did not work.', 'subly' ),
+						error?.message || __( 'That did not work.', 'submex' ),
 				} );
 			} );
 	};
@@ -369,7 +369,7 @@ export function List( {
 					<div className="sb-flex sb-flex-wrap sb-items-center sb-gap-1">
 						{ tab(
 							'',
-							__( 'All', 'subly' ),
+							__( 'All', 'submex' ),
 							total && ! filtered ? total : undefined
 						) }
 						{ statuses
@@ -384,7 +384,7 @@ export function List( {
 						value={ query.search }
 						placeholder={ __(
 							'Search name, email or id',
-							'subly'
+							'submex'
 						) }
 						onChange={ ( event ) =>
 							set( { search: event.target.value, page: 1 } )
@@ -402,7 +402,7 @@ export function List( {
 									'%d selected',
 									'%d selected',
 									chosen.length,
-									'subly'
+									'submex'
 								),
 								chosen.length
 							) }
@@ -412,7 +412,7 @@ export function List( {
 							onChange={ ( event ) =>
 								setBulk( event.target.value )
 							}
-							aria-label={ __( 'Bulk action', 'subly' ) }
+							aria-label={ __( 'Bulk action', 'submex' ) }
 							className="sb-h-8"
 						>
 							{ BULK.map( ( item ) => (
@@ -422,14 +422,14 @@ export function List( {
 							) ) }
 						</Select>
 						<Button size="sm" disabled={ busy } onClick={ runBulk }>
-							{ __( 'Apply', 'subly' ) }
+							{ __( 'Apply', 'submex' ) }
 						</Button>
 						<Button
 							variant="ghost"
 							size="sm"
 							onClick={ () => setChosen( [] ) }
 						>
-							{ __( 'Clear', 'subly' ) }
+							{ __( 'Clear', 'submex' ) }
 						</Button>
 					</div>
 				) : null }
@@ -443,7 +443,7 @@ export function List( {
 										checked={ allChosen }
 										aria-label={ __(
 											'Select all',
-											'subly'
+											'submex'
 										) }
 										onChange={ ( event ) =>
 											setChosen(
@@ -457,32 +457,32 @@ export function List( {
 									/>
 								</TableHead>
 								<TableHead>
-									{ __( 'Customer', 'subly' ) }
+									{ __( 'Customer', 'submex' ) }
 								</TableHead>
 								<SortHeader
 									column="id"
-									label={ __( 'Subscription', 'subly' ) }
+									label={ __( 'Subscription', 'submex' ) }
 									sort={ query }
 									onSort={ set }
 								/>
 								<TableHead>
-									{ __( 'Status', 'subly' ) }
+									{ __( 'Status', 'submex' ) }
 								</TableHead>
 								<SortHeader
 									column="next_payment"
-									label={ __( 'Next payment', 'subly' ) }
+									label={ __( 'Next payment', 'submex' ) }
 									sort={ query }
 									onSort={ set }
 								/>
 								<SortHeader
 									column="total"
-									label={ __( 'Recurring total', 'subly' ) }
+									label={ __( 'Recurring total', 'submex' ) }
 									sort={ query }
 									onSort={ set }
 									className="sb-text-right"
 								/>
 								<TableHead className="sb-text-right">
-									{ __( 'Actions', 'subly' ) }
+									{ __( 'Actions', 'submex' ) }
 								</TableHead>
 							</TableRow>
 						</TableHeader>
@@ -503,7 +503,7 @@ export function List( {
 													/* translators: %d: subscription id. */
 													__(
 														'Select subscription %d',
-														'subly'
+														'submex'
 													),
 													row.id
 												) }
@@ -536,7 +536,7 @@ export function List( {
 											>
 												{ row.customer_name ||
 													row.customer_email ||
-													__( 'Guest', 'subly' ) }
+													__( 'Guest', 'submex' ) }
 											</a>
 											{ row.customer_name &&
 											row.customer_email ? (
@@ -565,7 +565,7 @@ export function List( {
 												<div className="sb-mt-1 sb-text-xs sb-text-muted-foreground">
 													{ __(
 														'Payment processing',
-														'subly'
+														'submex'
 													) }
 													{ ' · ' }
 													<a
@@ -579,7 +579,7 @@ export function List( {
 															/* translators: %s: renewal order number. */
 															__(
 																'order #%s',
-																'subly'
+																'submex'
 															),
 															row
 																.payment_pending_order
@@ -591,7 +591,7 @@ export function List( {
 														/* translators: %s: how long ago, such as "3 days ago". */
 														__(
 															'submitted %s',
-															'subly'
+															'submex'
 														),
 														daysAgo(
 															row.payment_pending_since
@@ -612,7 +612,7 @@ export function List( {
 														{ row.payment_pending
 															? __(
 																	'waiting for the payment',
-																	'subly'
+																	'submex'
 															  )
 															: whenDue(
 																	row.next_payment
@@ -645,7 +645,7 @@ export function List( {
 												>
 													{ __(
 														'Renew now',
-														'subly'
+														'submex'
 													) }
 												</Button>
 											) : null }
@@ -681,7 +681,7 @@ export function List( {
 									'%d subscription',
 									'%d subscriptions',
 									total,
-									'subly'
+									'submex'
 								),
 								total
 							) }
@@ -696,12 +696,12 @@ export function List( {
 										set( { page: query.page - 1 } )
 									}
 								>
-									{ __( 'Previous', 'subly' ) }
+									{ __( 'Previous', 'submex' ) }
 								</Button>
 								<span className="sb-text-muted-foreground">
 									{ sprintf(
 										/* translators: 1: current page, 2: total pages. */
-										__( 'Page %1$d of %2$d', 'subly' ),
+										__( 'Page %1$d of %2$d', 'submex' ),
 										query.page,
 										pages
 									) }
@@ -714,7 +714,7 @@ export function List( {
 										set( { page: query.page + 1 } )
 									}
 								>
-									{ __( 'Next', 'subly' ) }
+									{ __( 'Next', 'submex' ) }
 								</Button>
 							</div>
 						) : null }

@@ -1,9 +1,9 @@
 <?php
 
-namespace Subly\Lifecycle;
+namespace Submex\Lifecycle;
 
-use Subly\Data\Activity_Repository;
-use Subly\Domain\Subscription;
+use Submex\Data\Activity_Repository;
+use Submex\Domain\Subscription;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -18,8 +18,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Cancellation_Survey {
 
-	private const META_REASON = '_subly_cancel_reason';
-	private const META_DETAIL = '_subly_cancel_detail';
+	private const META_REASON = '_submex_cancel_reason';
+	private const META_DETAIL = '_submex_cancel_detail';
 
 	public function __construct( private readonly Activity_Repository $activity ) {}
 
@@ -32,29 +32,29 @@ class Cancellation_Survey {
 	 */
 	public function reasons(): array {
 		return (array) apply_filters(
-			'subly_cancellation_reasons',
+			'submex_cancellation_reasons',
 			array(
-				'too_expensive' => __( 'Too expensive', 'subly' ),
-				'not_using'     => __( "I wasn't using it", 'subly' ),
-				'found_better'  => __( 'I found something better', 'subly' ),
-				'quality'       => __( "It wasn't what I expected", 'subly' ),
-				'temporary'     => __( 'Only pausing for now', 'subly' ),
-				'other'         => __( 'Something else', 'subly' ),
+				'too_expensive' => __( 'Too expensive', 'submex' ),
+				'not_using'     => __( "I wasn't using it", 'submex' ),
+				'found_better'  => __( 'I found something better', 'submex' ),
+				'quality'       => __( "It wasn't what I expected", 'submex' ),
+				'temporary'     => __( 'Only pausing for now', 'submex' ),
+				'other'         => __( 'Something else', 'submex' ),
 			)
 		);
 	}
 
 	public function handle_submission(): void {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing
-		$action = isset( $_POST['subly_action'] ) ? sanitize_key( wp_unslash( $_POST['subly_action'] ) ) : '';
+		$action = isset( $_POST['submex_action'] ) ? sanitize_key( wp_unslash( $_POST['submex_action'] ) ) : '';
 
 		if ( 'cancel_survey' !== $action ) {
 			return;
 		}
 
-		$id = absint( $_POST['subly_subscription'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$id = absint( $_POST['submex_subscription'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
-		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ?? '' ) ), 'subly_survey_' . $id ) ) {
+		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce'] ?? '' ) ), 'submex_survey_' . $id ) ) {
 			return;
 		}
 
@@ -64,8 +64,8 @@ class Cancellation_Survey {
 			return;
 		}
 
-		$reason = sanitize_key( wp_unslash( $_POST['subly_reason'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
-		$detail = sanitize_textarea_field( wp_unslash( $_POST['subly_detail'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$reason = sanitize_key( wp_unslash( $_POST['submex_reason'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$detail = sanitize_textarea_field( wp_unslash( $_POST['submex_detail'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 
 		if ( ! array_key_exists( $reason, $this->reasons() ) ) {
 			return;
@@ -86,9 +86,9 @@ class Cancellation_Survey {
 			array( 'reason' => $reason )
 		);
 
-		do_action( 'subly_cancellation_reason_recorded', $subscription, $reason, $detail );
+		do_action( 'submex_cancellation_reason_recorded', $subscription, $reason, $detail );
 
-		wp_safe_redirect( add_query_arg( 'subly_thanks', '1', wc_get_account_endpoint_url( 'subscriptions' ) ) );
+		wp_safe_redirect( add_query_arg( 'submex_thanks', '1', wc_get_account_endpoint_url( 'subscriptions' ) ) );
 		exit;
 	}
 
@@ -107,7 +107,7 @@ class Cancellation_Survey {
 	public function tally(): array {
 		$counts = array_fill_keys( array_keys( $this->reasons() ), 0 );
 
-		foreach ( \Subly\Data\Subscription_Query::get(
+		foreach ( \Submex\Data\Subscription_Query::get(
 			array(
 				'limit'  => -1,
 				'status' => null,

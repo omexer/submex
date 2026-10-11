@@ -2,28 +2,28 @@
 /**
  * Renewal and billing rules the free plugin owns: the renewal reminder switch, where the
  * grace and renewal settings sit, and what a grace period means for roles, files and the
- * words a customer reads. Subly alone gives no grace period; one is supplied here the way
- * Subly Pro supplies it, through subly_grace_ends_at.
+ * words a customer reads. Submex alone gives no grace period; one is supplied here the way
+ * Submex Pro supplies it, through submex_grace_ends_at.
  *
- * @package Subly
+ * @package Submex
  */
 
-use Subly\Billing\Renewal_Scheduler;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
-use Subly\Frontend\MyAccount\Status_Presenter;
+use Submex\Billing\Renewal_Scheduler;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
+use Submex\Frontend\MyAccount\Status_Presenter;
 
 require __DIR__ . '/bootstrap.php';
 require_once ABSPATH . 'wp-admin/includes/user.php';
 
-$absent = '__subly_absent__';
+$absent = '__submex_absent__';
 $saved  = array();
 $set    = function ( string $name, $value ) use ( &$saved, $absent ): void {
 	if ( ! array_key_exists( $name, $saved ) ) { $saved[ $name ] = get_option( $name, $absent ); }
 	update_option( $name, $value );
 };
 
-$product = subly_test_product();
+$product = submex_test_product();
 $made    = array();
 $make    = function ( Subscription_Status $status, int $customer = 1, int $due_in_days = 10 ) use ( $product, &$made ): Subscription {
 	$s = new Subscription();
@@ -53,8 +53,8 @@ add_filter(
 );
 
 echo "\nRenewal reminder\n";
-$scheduler = \Subly\Plugin::instance()->get( 'scheduler' );
-$reminder  = WC()->mailer()->get_emails()['Subly_Renewal_Reminder'];
+$scheduler = \Submex\Plugin::instance()->get( 'scheduler' );
+$reminder  = WC()->mailer()->get_emails()['Submex_Renewal_Reminder'];
 $set( Renewal_Scheduler::OPTION_REMINDER_HOURS, 72 );
 $set( $reminder->get_option_key(), array( 'enabled' => 'yes' ) );
 WC()->mailer()->init();
@@ -79,12 +79,12 @@ echo "\nWhere the settings sit\n";
 global $wp_actions;
 $page = null;
 foreach ( WC_Admin_Settings::get_settings_pages() as $candidate ) {
-	if ( $candidate instanceof WC_Settings_Page && 'subly' === $candidate->get_id() ) {
+	if ( $candidate instanceof WC_Settings_Page && 'submex' === $candidate->get_id() ) {
 		$page = $candidate;
 	}
 }
 if ( ! $page ) {
-	subly_test_abort( 'the Subscriptions settings tab is not registered' );
+	submex_test_abort( 'the Subscriptions settings tab is not registered' );
 }
 $groups  = array();
 $current = '';
@@ -96,7 +96,7 @@ foreach ( $page->get_settings_for_renewal_section() as $field ) {
 		$groups[ $current ][] = $field['id'];
 	}
 }
-$check( 'missed renewals and free first payments share the Renewal card, the only one free draws', array( 'Renewal' => array( 'subly_catch_up_policy', \Subly\Checkout\Trial_Payment::OPTION ) ) === $groups, $groups );
+$check( 'missed renewals and free first payments share the Renewal card, the only one free draws', array( 'Renewal' => array( 'submex_catch_up_policy', \Submex\Checkout\Trial_Payment::OPTION ) ) === $groups, $groups );
 
 echo "\nWithout a grace period\n";
 $user = wp_insert_user(
@@ -108,13 +108,13 @@ $user = wp_insert_user(
 	)
 );
 if ( is_wp_error( $user ) ) {
-	subly_test_abort( 'could not create a customer: ' . $user->get_error_message() );
+	submex_test_abort( 'could not create a customer: ' . $user->get_error_message() );
 }
 foreach ( array( 'sk_rules_member', 'sk_rules_lapsed' ) as $role ) {
 	add_role( $role, $role, array( 'read' => true ) );
 }
-$set( 'subly_active_role', 'sk_rules_member' );
-$set( 'subly_inactive_role', 'sk_rules_lapsed' );
+$set( 'submex_active_role', 'sk_rules_member' );
+$set( 'submex_inactive_role', 'sk_rules_lapsed' );
 $roles     = static function () use ( $user ): array {
 	clean_user_cache( $user );
 	return ( new WP_User( $user ) )->roles;
@@ -139,7 +139,7 @@ $check( 'My Account says only that the payment failed', "We couldn't take your l
 echo "\nWith a grace period\n";
 $ends  = time() + 5 * DAY_IN_SECONDS;
 $grace = static fn( $given, $subscription ) => $subscription instanceof Subscription && 'yes' === $subscription->get_meta( '_sk_rules_grace' ) ? $ends : $given;
-add_filter( 'subly_grace_ends_at', $grace, 20, 2 );
+add_filter( 'submex_grace_ends_at', $grace, 20, 2 );
 
 $plain->transition_to( Subscription_Status::Active );
 $plain->save();
@@ -155,7 +155,7 @@ $date   = wp_date( (string) get_option( 'date_format' ), $ends );
 $detail = Status_Presenter::for( $graced )['detail'];
 $check( 'My Account says until when access lasts', "We couldn't take your last payment. You keep access until $date." === $detail, $detail );
 
-$email = WC()->mailer()->get_emails()['Subly_Payment_Failed'] ?? null;
+$email = WC()->mailer()->get_emails()['Submex_Payment_Failed'] ?? null;
 if ( $email && $email->is_enabled() ) {
 	$sent = array();
 	$email->trigger( $graced, $graced );
@@ -173,17 +173,17 @@ $active->save();
 $check( 'a grace period only counts while on hold', ! $active->in_grace() );
 
 $expired = static fn( $given, $subscription ) => $subscription instanceof Subscription && 'yes' === $subscription->get_meta( '_sk_rules_grace' ) ? time() - 1 : $given;
-add_filter( 'subly_grace_ends_at', $expired, 30, 2 );
+add_filter( 'submex_grace_ends_at', $expired, 30, 2 );
 $check( 'and only until it ends', ! wc_get_order( $graced->get_id() )->in_grace() );
-remove_filter( 'subly_grace_ends_at', $expired, 30 );
+remove_filter( 'submex_grace_ends_at', $expired, 30 );
 
 echo "\nWhen the grace period ends\n";
 $demoted = 0;
 $count   = function () use ( &$demoted ): void { ++$demoted; };
 add_action( 'set_user_role', $count );
-do_action( 'subly_subscription_grace_ended', wc_get_order( $graced->get_id() ) );
+do_action( 'submex_subscription_grace_ended', wc_get_order( $graced->get_id() ) );
 $check( 'the role goes', in_array( 'sk_rules_lapsed', $roles(), true ) && ! in_array( 'sk_rules_member', $roles(), true ), $roles() );
-do_action( 'subly_subscription_grace_ended', wc_get_order( $graced->get_id() ) );
+do_action( 'submex_subscription_grace_ended', wc_get_order( $graced->get_id() ) );
 $check( 'once, however often it is announced', 1 === $demoted, $demoted );
 remove_action( 'set_user_role', $count );
 
@@ -196,14 +196,14 @@ $ending->transition_to( Subscription_Status::Cancelled, 'Cancelled.' );
 $ending->save();
 $check( 'another subscription ending keeps the role another in its grace period still gives', in_array( 'sk_rules_member', $roles(), true ), $roles() );
 
-remove_filter( 'subly_grace_ends_at', $grace, 20 );
+remove_filter( 'submex_grace_ends_at', $grace, 20 );
 
 // ---- Clean up --------------------------------------------------------------------------
 global $wpdb;
 foreach ( $made as $id ) {
 	$scheduler->unschedule( $id );
 	as_unschedule_all_actions( Renewal_Scheduler::ACTION_REMINDER, array( 'subscription_id' => $id ), Renewal_Scheduler::GROUP );
-	$wpdb->delete( $wpdb->prefix . 'subly_activity', array( 'subscription_id' => $id ) );
+	$wpdb->delete( $wpdb->prefix . 'submex_activity', array( 'subscription_id' => $id ) );
 	wc_get_order( $id )?->delete( true );
 }
 wp_delete_user( $user );
@@ -213,4 +213,4 @@ foreach ( array( 'sk_rules_member', 'sk_rules_lapsed' ) as $role ) {
 foreach ( $saved as $name => $old ) {
 	$absent === $old ? delete_option( $name ) : update_option( $name, $old );
 }
-subly_test_done( $fail );
+submex_test_done( $fail );

@@ -1,6 +1,6 @@
 # Releasing
 
-How a version of Subly or Subly Pro goes from `main` to a zip a store can install. The two plugins release the same way; the differences are at the end.
+How a version of Submex or Submex Pro goes from `main` to a zip a store can install. The two plugins release the same way; the differences are at the end.
 
 ---
 
@@ -10,7 +10,7 @@ The zip holds only what a store runs:
 
 | Free | Pro |
 |---|---|
-| `subly.php`, `includes/`, `assets/`, `build/`, `templates/`, `languages/`, `readme.txt` | `subly-pro.php`, `includes/`, `assets/`, `build/`, `templates/` |
+| `submex.php`, `includes/`, `assets/`, `build/`, `templates/`, `languages/`, `readme.txt` | `submex-pro.php`, `includes/`, `assets/`, `build/`, `templates/` |
 
 **Nothing else.** Not `docs/`, not the React source in `src/`, not `tools/`, not `vendor/` or `node_modules/`, not the CI or lint configuration.
 
@@ -19,7 +19,7 @@ That is enforced two ways, so a mistake stops the build instead of shipping:
 - **`.distignore`** lists what to remove.
 - **An allow list in `tools/build.sh`** fails the build on any top-level file that is not expected, so a new config file added to the repository cannot slip into a release unnoticed. The build also refuses `docs`, `src`, `node_modules`, `.git`, source maps and `.env` files anywhere in the zip, and lints every PHP file inside it.
 
-The zip is built from **committed** files only (`git archive HEAD`), and its folder is always the real plugin slug — never the `subly-main` a GitHub download produces.
+The zip is built from **committed** files only (`git archive HEAD`), and its folder is always the real plugin slug — never the `submex-main` a GitHub download produces.
 
 ---
 
@@ -34,7 +34,7 @@ The version is written in several places — the plugin header, a PHP constant, 
 ## Before the first release
 
 - `composer install` and `npm ci` in the plugin.
-- For Pro: the free plugin checked out beside it, and the `SUBLY_FREE_REPO_TOKEN` secret set in the Pro repository.
+- For Pro: the free plugin checked out beside it, and the `SUBMEX_FREE_REPO_TOKEN` secret set in the Pro repository.
 
 ---
 
@@ -119,7 +119,7 @@ Every push to `main` and every pull request also builds the zip in CI, as the **
 
 ---
 
-## Differences for Subly Pro
+## Differences for Submex Pro
 
 - **Release notes** come from `CHANGELOG.md`, since Pro is not on wordpress.org and has no `readme.txt`. Without an entry for the version, they fall back to the commits since the previous tag.
 - **When Pro needs a newer free plugin**, raise its minimum in the same bump: `tools/bump-version.sh X.Y.Z --min-free A.B.C`.

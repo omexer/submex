@@ -1,11 +1,11 @@
 <?php
 
-namespace Subly\Admin;
+namespace Submex\Admin;
 
-use Subly\Billing\Renewal_Scheduler;
-use Subly\Data\Migrator;
-use Subly\Data\Subscription_Query;
-use Subly\Gateways\Gateway_Registry;
+use Submex\Billing\Renewal_Scheduler;
+use Submex\Data\Migrator;
+use Submex\Data\Subscription_Query;
+use Submex\Gateways\Gateway_Registry;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -30,8 +30,8 @@ class Help_Page {
 	public function add_page(): void {
 		add_submenu_page(
 			Menu::PARENT,
-			__( 'Help', 'subly' ),
-			__( 'Help', 'subly' ),
+			__( 'Help', 'submex' ),
+			__( 'Help', 'submex' ),
 			Menu::CAPABILITY,
 			self::SLUG,
 			array( $this, 'render' )
@@ -44,13 +44,13 @@ class Help_Page {
 	public function report(): array {
 		global $wpdb;
 
-		$scheduler = \Subly\Plugin::instance()->get( 'scheduler' );
-		$gateways  = \Subly\Plugin::instance()->get( 'gateways' );
+		$scheduler = \Submex\Plugin::instance()->get( 'scheduler' );
+		$gateways  = \Submex\Plugin::instance()->get( 'gateways' );
 		$migrator  = new Migrator();
 
 		$rows = array(
-			'Subly'     => defined( 'SUBLY_VERSION' ) ? SUBLY_VERSION : '?',
-			'Subly Pro' => defined( 'SUBLY_PRO_VERSION' ) ? SUBLY_PRO_VERSION : __( 'not installed', 'subly' ),
+			'Submex'     => defined( 'SUBMEX_VERSION' ) ? SUBMEX_VERSION : '?',
+			'Submex Pro' => defined( 'SUBMEX_PRO_VERSION' ) ? SUBMEX_PRO_VERSION : __( 'not installed', 'submex' ),
 			'WordPress'            => get_bloginfo( 'version' ),
 			'WooCommerce'          => defined( 'WC_VERSION' ) ? WC_VERSION : '?',
 			'PHP'                  => PHP_VERSION,
@@ -91,7 +91,7 @@ class Help_Page {
 		 *
 		 * @param array $rows
 		 */
-		return (array) apply_filters( 'subly_support_report', $rows );
+		return (array) apply_filters( 'submex_support_report', $rows );
 	}
 
 	/**
@@ -103,24 +103,24 @@ class Help_Page {
 		return array(
 			array(
 				'icon'  => '1',
-				'title' => __( 'Run the setup checks', 'subly' ),
-				'body'  => __( 'Home runs a real renewal end to end without charging anyone. If renewals are the problem, that test usually says why.', 'subly' ),
-				'label' => __( 'Open Home', 'subly' ),
+				'title' => __( 'Run the setup checks', 'submex' ),
+				'body'  => __( 'Home runs a real renewal end to end without charging anyone. If renewals are the problem, that test usually says why.', 'submex' ),
+				'label' => __( 'Open Home', 'submex' ),
 				'url'   => admin_url( 'admin.php?page=' . Menu::SLUG ),
 			),
 			array(
 				'icon'  => '2',
-				'title' => __( 'Read the activity log', 'subly' ),
-				'body'  => __( 'Every subscription records each charge attempt and status change, with the reason. Open one and scroll to Activity.', 'subly' ),
-				'label' => __( 'All subscriptions', 'subly' ),
+				'title' => __( 'Read the activity log', 'submex' ),
+				'body'  => __( 'Every subscription records each charge attempt and status change, with the reason. Open one and scroll to Activity.', 'submex' ),
+				'label' => __( 'All subscriptions', 'submex' ),
 				'url'   => admin_url( 'admin.php?page=' . Menu::LIST_SLUG ),
 			),
 			array(
 				'icon'  => '3',
-				'title' => __( 'Check renewal health', 'subly' ),
-				'body'  => __( 'Settings shows whether the renewal queue is running, any charge whose outcome is unknown, and the double-charge safeguard.', 'subly' ),
-				'label' => __( 'Open settings', 'subly' ),
-				'url'   => admin_url( 'admin.php?page=wc-settings&tab=subly' ),
+				'title' => __( 'Check renewal health', 'submex' ),
+				'body'  => __( 'Settings shows whether the renewal queue is running, any charge whose outcome is unknown, and the double-charge safeguard.', 'submex' ),
+				'label' => __( 'Open settings', 'submex' ),
+				'url'   => admin_url( 'admin.php?page=wc-settings&tab=submex' ),
 			),
 		);
 	}
@@ -142,7 +142,7 @@ class Help_Page {
 
 	public function render(): void {
 		if ( ! current_user_can( Menu::CAPABILITY ) ) {
-			wp_die( esc_html__( 'You do not have permission to manage subscriptions.', 'subly' ) );
+			wp_die( esc_html__( 'You do not have permission to manage subscriptions.', 'submex' ) );
 		}
 
 		App_Host::start( self::SLUG );
@@ -155,16 +155,16 @@ class Help_Page {
 		$text   = self::report_text( $report );
 
 		Page_Shell::open(
-			__( 'Help', 'subly' ),
-			__( 'Where to look first, and the report to send if you still need a hand.', 'subly' )
+			__( 'Help', 'submex' ),
+			__( 'Where to look first, and the report to send if you still need a hand.', 'submex' )
 		);
 
-		echo '<h2 class="subly-section-title">' . esc_html__( 'Check these first', 'subly' ) . '</h2>';
-		echo '<div class="subly-grid">';
+		echo '<h2 class="submex-section-title">' . esc_html__( 'Check these first', 'submex' ) . '</h2>';
+		echo '<div class="submex-grid">';
 
 		foreach ( $this->tiles() as $tile ) {
 			printf(
-				'<div class="subly-tile"><div class="subly-tile__top"><span class="subly-tile__icon" aria-hidden="true">%s</span><h3 class="subly-tile__title">%s</h3></div><p class="subly-tile__body">%s</p><div class="subly-tile__foot"><a class="subly-btn subly-btn--sm" href="%s">%s</a></div></div>',
+				'<div class="submex-tile"><div class="submex-tile__top"><span class="submex-tile__icon" aria-hidden="true">%s</span><h3 class="submex-tile__title">%s</h3></div><p class="submex-tile__body">%s</p><div class="submex-tile__foot"><a class="submex-btn submex-btn--sm" href="%s">%s</a></div></div>',
 				esc_html( $tile['icon'] ),
 				esc_html( $tile['title'] ),
 				esc_html( $tile['body'] ),
@@ -175,17 +175,17 @@ class Help_Page {
 
 		echo '</div>';
 
-		echo '<h2 class="subly-section-title">' . esc_html__( 'System report', 'subly' ) . '</h2>';
-		echo '<div class="subly-card subly-report-card">';
-		echo '<div class="subly-report-card__head"><p class="subly-lede">' . esc_html__( 'Paste this into your support request. It contains no keys and no customer data.', 'subly' ) . '</p>';
+		echo '<h2 class="submex-section-title">' . esc_html__( 'System report', 'submex' ) . '</h2>';
+		echo '<div class="submex-card submex-report-card">';
+		echo '<div class="submex-report-card__head"><p class="submex-lede">' . esc_html__( 'Paste this into your support request. It contains no keys and no customer data.', 'submex' ) . '</p>';
 		printf(
-			'<button type="button" class="subly-btn subly-btn--primary subly-btn--sm" data-subly-copy="subly-report" data-subly-copied="%s">%s</button></div>',
-			esc_attr__( 'Copied', 'subly' ),
-			esc_html__( 'Copy report', 'subly' )
+			'<button type="button" class="submex-btn submex-btn--primary submex-btn--sm" data-submex-copy="submex-report" data-submex-copied="%s">%s</button></div>',
+			esc_attr__( 'Copied', 'submex' ),
+			esc_html__( 'Copy report', 'submex' )
 		);
 
 		printf(
-			'<textarea id="subly-report" readonly rows="%d" class="subly-report">%s</textarea>',
+			'<textarea id="submex-report" readonly rows="%d" class="submex-report">%s</textarea>',
 			(int) min( 24, count( $report ) + 1 ),
 			esc_textarea( $text )
 		);

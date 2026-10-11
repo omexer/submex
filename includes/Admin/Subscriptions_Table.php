@@ -1,11 +1,11 @@
 <?php
 
-namespace Subly\Admin;
+namespace Submex\Admin;
 
-use Subly\Data\Subscription_Query;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
-use Subly\Frontend\MyAccount\Status_Presenter;
+use Submex\Data\Subscription_Query;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
+use Submex\Frontend\MyAccount\Status_Presenter;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -34,12 +34,12 @@ class Subscriptions_Table extends \WP_List_Table {
 	public function get_columns(): array {
 		return array(
 			'cb'           => '<input type="checkbox" />',
-			'subscription' => __( 'Subscription', 'subly' ),
-			'customer'     => __( 'Customer', 'subly' ),
-			'status'       => __( 'Status', 'subly' ),
-			'next_payment' => __( 'Next payment', 'subly' ),
-			'total'        => __( 'Recurring total', 'subly' ),
-			'gateway'      => __( 'Payment method', 'subly' ),
+			'subscription' => __( 'Subscription', 'submex' ),
+			'customer'     => __( 'Customer', 'submex' ),
+			'status'       => __( 'Status', 'submex' ),
+			'next_payment' => __( 'Next payment', 'submex' ),
+			'total'        => __( 'Recurring total', 'submex' ),
+			'gateway'      => __( 'Payment method', 'submex' ),
 		);
 	}
 
@@ -68,9 +68,9 @@ class Subscriptions_Table extends \WP_List_Table {
 	 */
 	public function get_bulk_actions(): array {
 		return array(
-			'cancel' => __( 'Cancel', 'subly' ),
-			'hold'   => __( 'Put on hold', 'subly' ),
-			'resume' => __( 'Reactivate', 'subly' ),
+			'cancel' => __( 'Cancel', 'submex' ),
+			'hold'   => __( 'Put on hold', 'submex' ),
+			'resume' => __( 'Reactivate', 'submex' ),
 		);
 	}
 
@@ -138,7 +138,7 @@ class Subscriptions_Table extends \WP_List_Table {
 			// The pill carries colour, but the label is always readable text inside it:
 			// a merchant scanning for problems must not have to decode a swatch.
 			'status'       => sprintf(
-				'<span class="subly-pill subly-pill--%s">%s</span>%s',
+				'<span class="submex-pill submex-pill--%s">%s</span>%s',
 				esc_attr( (string) $item->get_status() ),
 				esc_html( Status_Presenter::for( $item )['label'] ),
 				$this->pending_line( $item )
@@ -162,7 +162,7 @@ class Subscriptions_Table extends \WP_List_Table {
 		);
 
 		$actions = array(
-			'view' => sprintf( '<a href="%s">%s</a>', esc_url( $view ), esc_html__( 'View', 'subly' ) ),
+			'view' => sprintf( '<a href="%s">%s</a>', esc_url( $view ), esc_html__( 'View', 'submex' ) ),
 		);
 
 		$status = $item->get_status_enum();
@@ -175,15 +175,15 @@ class Subscriptions_Table extends \WP_List_Table {
 					wp_nonce_url(
 						add_query_arg(
 							array(
-								'action'       => 'subly_process_renewal',
+								'action'       => 'submex_process_renewal',
 								'subscription' => $item->get_id(),
 							),
 							admin_url( 'admin-post.php' )
 						),
-						'subly_process_renewal_' . $item->get_id()
+						'submex_process_renewal_' . $item->get_id()
 					)
 				),
-				esc_html__( 'Renew now', 'subly' )
+				esc_html__( 'Renew now', 'submex' )
 			);
 		}
 
@@ -191,7 +191,7 @@ class Subscriptions_Table extends \WP_List_Table {
 			$actions['order'] = sprintf(
 				'<a href="%s">%s</a>',
 				esc_url( (string) $this->get_edit_order_url( $item->get_parent_order_id() ) ),
-				esc_html__( 'Parent order', 'subly' )
+				esc_html__( 'Parent order', 'submex' )
 			);
 		}
 
@@ -209,7 +209,7 @@ class Subscriptions_Table extends \WP_List_Table {
 			'<br><span class="description">%s</span>',
 			sprintf(
 				/* translators: 1: renewal order number, linked, 2: how long ago it was submitted, such as "3 days" */
-				esc_html__( 'Renewal order %1$s submitted %2$s ago', 'subly' ),
+				esc_html__( 'Renewal order %1$s submitted %2$s ago', 'submex' ),
 				sprintf( '<a href="%s">#%s</a>', esc_url( $pending['order']->get_edit_order_url() ), esc_html( $pending['order']->get_order_number() ) ),
 				esc_html( human_time_diff( $pending['since'] ) )
 			)
@@ -273,7 +273,7 @@ class Subscriptions_Table extends \WP_List_Table {
 				continue;
 			}
 
-			$subscription->transition_to( $target, __( 'Changed in bulk from the subscriptions list.', 'subly' ) );
+			$subscription->transition_to( $target, __( 'Changed in bulk from the subscriptions list.', 'submex' ) );
 			$subscription->save();
 			++$changed;
 		}
@@ -282,8 +282,8 @@ class Subscriptions_Table extends \WP_List_Table {
 			add_query_arg(
 				array(
 					'page'           => Menu::LIST_SLUG,
-					'subly_changed' => $changed,
-					'subly_asked'   => count( $ids ),
+					'submex_changed' => $changed,
+					'submex_asked'   => count( $ids ),
 				),
 				admin_url( 'admin.php' )
 			)
@@ -318,7 +318,7 @@ class Subscriptions_Table extends \WP_List_Table {
 	}
 
 	public function no_items(): void {
-		esc_html_e( 'No subscriptions yet. Tick "Subscription" on a product to start selling one.', 'subly' );
+		esc_html_e( 'No subscriptions yet. Tick "Subscription" on a product to start selling one.', 'submex' );
 	}
 
 	/**
@@ -333,7 +333,7 @@ class Subscriptions_Table extends \WP_List_Table {
 				'<a href="%s"%s>%s</a>',
 				esc_url( $base ),
 				'' === $current ? ' class="current"' : '',
-				esc_html__( 'All', 'subly' )
+				esc_html__( 'All', 'submex' )
 			),
 		);
 

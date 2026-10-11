@@ -1,6 +1,6 @@
 <?php
 
-namespace Subly\Admin;
+namespace Submex\Admin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -26,8 +26,8 @@ class Gateway_Notice {
 		}
 
 		$this->notice(
-			'subly_paypal_credentials',
-			__( 'Subly is not offering a payment method at checkout.', 'subly' ),
+			'submex_paypal_credentials',
+			__( 'Submex is not offering a payment method at checkout.', 'submex' ),
 			$this->paypal_credentials(),
 			// A different field missing is a different problem, so a dismissed notice comes back for it.
 			Notice_Dismissals::problem_key( array_keys( self::missing_credentials() ) ),
@@ -38,8 +38,8 @@ class Gateway_Notice {
 		// alongside "not offered at checkout" would send the merchant looking for the
 		// wrong thing entirely.
 		$this->notice(
-			'subly_paypal_webhook',
-			__( 'PayPal renewals will not be recorded.', 'subly' ),
+			'submex_paypal_webhook',
+			__( 'PayPal renewals will not be recorded.', 'submex' ),
 			$this->paypal_webhook(),
 			$this->paypal_webhook() ? 'webhook_id' : '',
 			'paypal'
@@ -64,9 +64,9 @@ class Gateway_Notice {
 		printf(
 			'</ul><p><a class="button" href="%s">%s</a> <a class="button-link" href="%s">%s</a></p></div>',
 			esc_url( Settings_Page::section_url( $section ) ),
-			esc_html__( 'Finish setting it up', 'subly' ),
+			esc_html__( 'Finish setting it up', 'submex' ),
 			esc_url( Notice_Dismissals::problem_url( $id, $problem ) ),
-			esc_html__( 'Dismiss', 'subly' )
+			esc_html__( 'Dismiss', 'submex' )
 		);
 	}
 
@@ -85,8 +85,8 @@ class Gateway_Notice {
 		return array(
 			sprintf(
 				/* translators: %s: the PayPal fields that are empty. */
-				__( 'PayPal is switched on but has no %s. Until it does, PayPal is not offered at checkout.', 'subly' ),
-				implode( __( ' and ', 'subly' ), $missing )
+				__( 'PayPal is switched on but has no %s. Until it does, PayPal is not offered at checkout.', 'submex' ),
+				implode( __( ' and ', 'submex' ), $missing )
 			),
 		);
 	}
@@ -95,15 +95,15 @@ class Gateway_Notice {
 	 * @return array<string, string> Option name => what to call it.
 	 */
 	private static function missing_credentials(): array {
-		if ( 'yes' !== get_option( 'subly_paypal_enabled', 'no' ) ) {
+		if ( 'yes' !== get_option( 'submex_paypal_enabled', 'no' ) ) {
 			return array();
 		}
 
 		$missing = array();
 
 		foreach ( array(
-			'subly_paypal_client_id' => __( 'client ID', 'subly' ),
-			'subly_paypal_secret'    => __( 'secret', 'subly' ),
+			'submex_paypal_client_id' => __( 'client ID', 'submex' ),
+			'submex_paypal_secret'    => __( 'secret', 'submex' ),
 		) as $option => $label ) {
 			if ( '' === (string) get_option( $option, '' ) ) {
 				$missing[ $option ] = $label;
@@ -115,13 +115,13 @@ class Gateway_Notice {
 
 	/**
 	 * The webhook ID does not gate the checkout: PayPal bills on its own schedule and
-	 * tells Subly by webhook, and an unverifiable webhook is rejected, so every renewal
+	 * tells Submex by webhook, and an unverifiable webhook is rejected, so every renewal
 	 * goes unrecorded while the customer is charged.
 	 *
 	 * @return string[]
 	 */
 	private function paypal_webhook(): array {
-		if ( 'yes' !== get_option( 'subly_paypal_enabled', 'no' ) || '' !== (string) get_option( 'subly_paypal_webhook_id', '' ) ) {
+		if ( 'yes' !== get_option( 'submex_paypal_enabled', 'no' ) || '' !== (string) get_option( 'submex_paypal_webhook_id', '' ) ) {
 			return array();
 		}
 
@@ -132,7 +132,7 @@ class Gateway_Notice {
 		}
 
 		return array(
-			__( 'PayPal is switched on but has no webhook ID. Customers can pay, and PayPal will keep charging them, but Subly cannot verify what PayPal sends back — so renewals are rejected and never show against the subscription.', 'subly' ),
+			__( 'PayPal is switched on but has no webhook ID. Customers can pay, and PayPal will keep charging them, but Submex cannot verify what PayPal sends back — so renewals are rejected and never show against the subscription.', 'submex' ),
 		);
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Subly\Product;
+namespace Submex\Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

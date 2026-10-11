@@ -1,6 +1,6 @@
-# Subly — Feature Inventory
+# Submex — Feature Inventory
 
-Everything either plugin does, what tier it is in, and **how well it is actually proven**. Measured against the committed code at Subly 0.23.0 and Subly Pro 0.45.0, not from memory.
+Everything either plugin does, what tier it is in, and **how well it is actually proven**. Measured against the committed code at Submex 0.23.0 and Submex Pro 0.45.0, not from memory.
 
 Since 2026-09-24 both plugins have an integration suite (`tools/test.sh`, run in CI on PHP 8.1 and 8.4 — see [`TESTING.md`](TESTING.md)). **Run (suite)** below means a test in that suite drives the feature against a real WordPress and WooCommerce on every push. A gateway row stays **Mocked** even when the suite covers it: the gateway's HTTP is faked with `pre_http_request`.
 
@@ -52,7 +52,7 @@ Verification key:
 | Sectioned product panel (Pricing, Billing, Shipping; rows follow the payment type) | Run | Rendered through WooCommerce's own meta box and clicked through in a browser harness — not a logged-in wp-admin. A hidden row is disabled, so it is never saved |
 | Create the first product from the setup guide | Run | Invalid input refused, not coerced |
 | **Admin screens in one visual language** (list, detail, settings, deliveries) | Run | Tokens shared by the PHP and React screens; clicked through in a logged-in wp-admin after every change |
-| **Settings screen** (Subly → Settings) | Run | Sections, cards and a status rail. The fields are WooCommerce's own definitions, so Pro's sections appear untouched and Woo's handler saves them; driven in a logged-in wp-admin |
+| **Settings screen** (Submex → Settings) | Run | Sections, cards and a status rail. The fields are WooCommerce's own definitions, so Pro's sections appear untouched and Woo's handler saves them; driven in a logged-in wp-admin |
 | Disclosure as independent facts, not prose | Run | Survives trial + fee + interval combined |
 | Subscription end date enforced | Run | No renewal on or after it; the paid period runs out. Stored but never enforced before 0.14.0 |
 | Classic checkout | Run | |
@@ -94,7 +94,7 @@ Verification key:
 | MRR and live count on Home | Run | Yearly, weekly, every-2-months all normalise correctly. Net of tax since 0.19.4 |
 | Daily MRR snapshot, capped at 400 days | Run | History cannot be recomputed, so it is recorded |
 | Setup checklist | Run | |
-| One top-level Subly menu | Run | Seven screens, verified through WordPress's own menu globals |
+| One top-level Submex menu | Run | Seven screens, verified through WordPress's own menu globals |
 | Integrations screen | Run | Lists all thirteen Pro integrations and whether each host plugin is active |
 | Help screen with a system report | Run | Proven to exclude Stripe, PayPal and licence credentials |
 | Self-test renewal (creates, renews, deletes) | Run | |
@@ -118,7 +118,7 @@ Verification key:
 | Overview endpoint | Run | Recurring revenue, live count and status breakdown |
 | Dashboard endpoint | Run | Setup steps, numbers, what needs attention, recent subscriptions |
 | React Home screen | Run | Setup until done, then numbers, attention and recent subscriptions; a failed request leaves the server-rendered Home showing |
-| One frame for every Subly screen | Run | Header with breadcrumbs, page heading, footer; checked by screenshot, not only by test |
+| One frame for every Submex screen | Run | Header with breadcrumbs, page heading, footer; checked by screenshot, not only by test |
 | React subscriptions list | Run | Tabs, search, server-side sorting, bulk actions, paging; 6 tests, bulk-ids assertion mutation-checked |
 | React subscription detail | Run | Facts, actions, date editing, activity; a panel added by another plugin stays visible |
 
@@ -137,7 +137,7 @@ Verification key:
 | **Recurring coupons** | Run (suite) | Discounts that survive into renewals; checked with tax in both modes (percent, fixed cart, fixed product) |
 | **Sign-up fee coupons** | Run (suite) | Two discount types that touch only the sign-up fee. PayPal hidden while one applies; moved to draft when Pro is deactivated |
 | **Failed payment recovery** (configurable retries, retry emails, recovery report) | Run (suite) | Payment retries: 1–5 attempts, wait per attempt in hours, cancel or expire at the end; default waits 1, 2, 3 days. Hard declines are never retried and there is no give-up timer for them yet |
-| **Card updates and card emails** | Mocked | Stripe faked in the suite. "Update card" in My Account for Subly Stripe subscriptions; "Update your payment details" on hard declines; "Card expiring" scan (default 14 days ahead) |
+| **Card updates and card emails** | Mocked | Stripe faked in the suite. "Update card" in My Account for Submex Stripe subscriptions; "Update your payment details" on hard declines; "Card expiring" scan (default 14 days ahead) |
 | **Subscription health** (6 signals, digest email) | Run | Every signal has a positive *and* a negative case. Since 0.39.0 also lists live subscriptions that missed their instalment plan or delivery schedule (sold before the fix) — listed, never changed |
 | Health row actions: retry now, ask the customer | Run | Retry runs the real pipeline; the slot still guards the charge |
 | Row actions over AJAX | Run | Progressive enhancement: plain submits without JavaScript |
@@ -145,11 +145,11 @@ Verification key:
 | **Delivery schedules** (cadence, manifest, print) | Run | Guards refuse rather than coerce |
 | **Reports** (MRR, ARR, churn, LTV) | Run | |
 | **Content access** (per-product roles, download capability) | Wired | |
-| **Members-only content** | Run (suite) | Per-post panel and `[subly_restricted]` shortcode; kept out of excerpts, feeds, REST, search and the Latest Posts block. On hold does not unlock |
+| **Members-only content** | Run (suite) | Per-post panel and `[submex_restricted]` shortcode; kept out of excerpts, feeds, REST, search and the Latest Posts block. On hold does not unlock |
 | **Win-back campaign** | Run (suite) | Up to three emails, single-use personal coupons, signed come-back link, confirmed unsubscribe |
 | **Anniversary thank-yous** | Run (suite) | Daily scan, 7-day window so enabling it never floods; renewal discount or personal store coupon |
 | **Retention offer on cancellation** | Run (suite) | Whether its coupon discounts renewals is unverified |
-| **Subscription webhooks** | Run (suite) | WooCommerce's own webhooks, resource `subly_subscription`; see Pro's `docs/WEBHOOKS.md` |
+| **Subscription webhooks** | Run (suite) | WooCommerce's own webhooks, resource `submex_subscription`; see Pro's `docs/WEBHOOKS.md` |
 | **WhatsApp notifications** | Mocked | Meta Cloud API faked; opt-in at checkout and My Account; exactly-once per event |
 | **REST API**: pause and resume, reports, health | Run | 401 / 404 / 409 / 400 paths all proven. The subscriptions routes themselves are free. |
 | **Mollie renewals** | Mocked | Idempotency-Key + payment metadata |
@@ -159,7 +159,7 @@ Verification key:
 | **WooPayments renewals** | Mocked | Through WooPayments' own `process_payment_for_order()`; SEPA/ACH processing is pending |
 | **Paddle Billing** | Mocked | Gateway-managed, merchant of record; non-shipping carts only; no cycle cap, so not offered for instalments |
 | **bKash, SSLCommerz** (pay link) | Mocked | No off-session charging; each renewal is on hold until its link is paid; unpaid links are not chased |
-| **Razorpay renewals** | Mocked | Rebuilt in 0.31.0: Subly's own UPI Autopay checkout registers the mandate (the Razorpay plugin never did, so earlier renewals always declined). Renewals are pending until the debit lands (~36h). Card mandates not built |
+| **Razorpay renewals** | Mocked | Rebuilt in 0.31.0: Submex's own UPI Autopay checkout registers the mandate (the Razorpay plugin never did, so earlier renewals always declined). Renewals are pending until the debit lands (~36h). Card mandates not built |
 | **Xendit renewals** | Mocked | Refuses to replay past the 24h key window; reconciliation finds the renewal order from its attempt record |
 | **Subscription limits** (one active / one ever / N per customer) | Run | Guests refused, not waved through |
 | **Payment cap** (end after N charges) | Run | |
@@ -174,7 +174,7 @@ Verification key:
 | **Live QR status page** | Run | Unguessable token; enumeration proven to fail |
 | **QR encoder** (ours, versions 1-10) | Run | Proven by decoding what it draws |
 | LearnDash, TutorLMS, LearnPress | Wired | Host plugins not installed. Variable products read the parent's settings since 0.39.0 |
-| BuddyBoss / BuddyPress groups and member type | Run | Run against BuddyPress 14.5.2 during development; the CI suite uses a stand-in where BuddyPress is not active. BuddyBoss Platform read from source only. Removes only what Subly added |
+| BuddyBoss / BuddyPress groups and member type | Run | Run against BuddyPress 14.5.2 during development; the CI suite uses a stand-in where BuddyPress is not active. BuddyBoss Platform read from source only. Removes only what Submex added |
 | AutomateWoo triggers, data type, actions | Mocked | Against a stand-in built from AutomateWoo 6.9.0's GPL source. Verify against a licensed copy before release |
 | AffiliateWP recurring referrals | Mocked | Against a stand-in built from AffiliateWP's documented behaviour. Verify against a licensed copy before release |
 | MailPoet, FluentCRM | Wired | Host plugins not installed |

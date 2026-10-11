@@ -2,11 +2,11 @@
 /**
  * The hourly sweep picks up overdue subscriptions, trials included, when a scheduled action was missed.
  *
- * @package Subly
+ * @package Submex
  */
 
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
 
 require __DIR__ . '/bootstrap.php';
 
@@ -26,7 +26,7 @@ $make = function ( Subscription_Status $status ) {
 $trial  = $make( Subscription_Status::Trialling );
 $active = $make( Subscription_Status::Active );
 
-$scheduler = \Subly\Plugin::instance()->get( 'scheduler' );
+$scheduler = \Submex\Plugin::instance()->get( 'scheduler' );
 $method    = new ReflectionMethod( $scheduler, 'due_ids' );
 $method->setAccessible( true );
 $due = $method->invoke( $scheduler, gmdate( 'Y-m-d H:i:s' ), 200, 0 );
@@ -35,4 +35,4 @@ $check( 'overdue active subscription is swept', in_array( $active, $due, true ),
 $check( 'overdue trial is swept', in_array( $trial, $due, true ), $due );
 
 foreach ( array( $trial, $active ) as $id ) { wc_get_order( $id )->delete( true ); }
-subly_test_done( $fail );
+submex_test_done( $fail );

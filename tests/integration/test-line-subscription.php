@@ -3,21 +3,21 @@
  * A normal product's cart line sold as a subscription on terms of its own, through cart, disclosure,
  * checkout, the created subscription and its renewal, and the same product with nothing hooked in.
  *
- * @package Subly
+ * @package Submex
  */
 
-use Subly\Checkout\Cart_Validation;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
-use Subly\Gateways\Charge_Result;
-use Subly\Gateways\Gateway_Model;
-use Subly\Gateways\Recurring_Gateway;
-use Subly\Product\Line_Terms;
-use Subly\Product\Subscription_Product;
+use Submex\Checkout\Cart_Validation;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
+use Submex\Gateways\Charge_Result;
+use Submex\Gateways\Gateway_Model;
+use Submex\Gateways\Recurring_Gateway;
+use Submex\Product\Line_Terms;
+use Submex\Product\Subscription_Product;
 
 require __DIR__ . '/bootstrap.php';
 
-$plugin = \Subly\Plugin::instance();
+$plugin = \Submex\Plugin::instance();
 
 $equals = static function ( string $what, $got, $want ) use ( $check ): void {
 	$check( $what, $got === $want, array( 'got' => $got, 'want' => $want ) );
@@ -42,7 +42,7 @@ foreach ( $options as $name => $value ) {
 $gateway = new class() implements Recurring_Gateway {
 	/** @var string[] */
 	public array $charged = array();
-	public function id(): string { return 'subly_test_line_terms'; }
+	public function id(): string { return 'submex_test_line_terms'; }
 	public function title(): string { return 'Line terms harness'; }
 	public function model(): Gateway_Model { return Gateway_Model::Tokenized; }
 	public function supports( string $f ): bool { return true; }
@@ -68,7 +68,7 @@ $normal = static function ( string $name, string $price ): WC_Product {
 
 $coffee       = $normal( 'SK Line terms coffee', '30' );
 $tea          = $normal( 'SK Line terms tea', '12' );
-$subscription = subly_test_product();
+$subscription = submex_test_product();
 $orders       = array();
 
 // What an extension like Pro does: the line carries its choice, the order line keeps it, and both answer from it.
@@ -92,8 +92,8 @@ $terms_by_name = array(
 );
 $configured    = array();
 $hooks         = array(
-	array( 'subly_cart_item_is_subscription', static fn( $recurring, $item ) => isset( $item['sbt_terms'] ) ? true : $recurring, 10, 2 ),
-	array( 'subly_adding_subscription', static fn( $recurring, $product_id, $variation_id = 0, $data = array() ) => isset( $data['sbt_terms'] ) ? true : $recurring, 10, 4 ),
+	array( 'submex_cart_item_is_subscription', static fn( $recurring, $item ) => isset( $item['sbt_terms'] ) ? true : $recurring, 10, 2 ),
+	array( 'submex_adding_subscription', static fn( $recurring, $product_id, $variation_id = 0, $data = array() ) => isset( $data['sbt_terms'] ) ? true : $recurring, 10, 4 ),
 	array(
 		'woocommerce_checkout_create_order_line_item',
 		static function ( $line, $key, $values ) {
@@ -104,9 +104,9 @@ $hooks         = array(
 		10,
 		3,
 	),
-	array( 'subly_create_subscription_for_item', static fn( $create, $line ) => '' !== (string) $line->get_meta( '_sbt_terms' ) ? true : $create, 10, 2 ),
+	array( 'submex_create_subscription_for_item', static fn( $create, $line ) => '' !== (string) $line->get_meta( '_sbt_terms' ) ? true : $create, 10, 2 ),
 	array(
-		'subly_line_terms',
+		'submex_line_terms',
 		static function ( $terms, $product, $cart_item, $order_item ) use ( $terms_by_name ) {
 			$name = $cart_item['sbt_terms'] ?? ( $order_item ? (string) $order_item->get_meta( '_sbt_terms' ) : '' );
 			return $terms_by_name[ $name ] ?? $terms;
@@ -115,7 +115,7 @@ $hooks         = array(
 		4,
 	),
 	array(
-		'subly_configure_subscription',
+		'submex_configure_subscription',
 		static function ( $sub, $product, $line = null ) use ( &$configured ) {
 			$configured[] = $line instanceof WC_Order_Item_Product ? (string) $line->get_meta( '_sbt_terms' ) : 'no line';
 		},
@@ -161,7 +161,7 @@ $checkout = static function () use ( $plugin, $gateway, &$orders ): array {
 		)
 	);
 	if ( is_wp_error( $order_id ) ) {
-		subly_test_abort( 'checkout failed: ' . $order_id->get_error_message() );
+		submex_test_abort( 'checkout failed: ' . $order_id->get_error_message() );
 	}
 	$orders[] = $order_id;
 	$order    = wc_get_order( $order_id );
@@ -171,7 +171,7 @@ $checkout = static function () use ( $plugin, $gateway, &$orders ): array {
 
 	$plugin->get( 'subscription_factory' )->from_checkout( $order_id );
 	$order = wc_get_order( $order_id );
-	$sub   = wc_get_order( (int) $order->get_meta( '_subly_subscription_id' ) );
+	$sub   = wc_get_order( (int) $order->get_meta( '_submex_subscription_id' ) );
 	if ( $sub instanceof Subscription ) {
 		$orders[] = $sub->get_id();
 	}
@@ -250,7 +250,7 @@ $configured = array();
 $started    = time();
 list( $order, $sub ) = $checkout();
 if ( ! $sub ) {
-	subly_test_abort( 'no subscription was created for the line' );
+	submex_test_abort( 'no subscription was created for the line' );
 }
 $equals( 'the order charged 29', wc_format_decimal( $order->get_total(), 2 ), '29.00' );
 $equals( 'the subscription bills every 2 weeks', array( $sub->get_billing_period(), (int) $sub->get_billing_interval() ), array( 'week', 2 ) );
@@ -335,7 +335,7 @@ try {
 } catch ( \Automattic\WooCommerce\StoreApi\Exceptions\InvalidCartException $invalid ) {
 	$codes = $invalid->getError()->get_error_codes();
 }
-$check( 'and so does the block checkout', in_array( 'subly_one_subscription_per_order', $codes, true ), $codes );
+$check( 'and so does the block checkout', in_array( 'submex_one_subscription_per_order', $codes, true ), $codes );
 $fill( array( array( $coffee->get_id(), array( 'sbt_terms' => 'fortnight' ) ), array( $tea->get_id() ) ) );
 wc_clear_notices();
 WC()->checkout()->check_cart_items();
@@ -368,4 +368,4 @@ foreach ( $saved as $name => $value ) {
 	null === $value ? delete_option( $name ) : update_option( $name, $value );
 }
 
-subly_test_done( $fail );
+submex_test_done( $fail );

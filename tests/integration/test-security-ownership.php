@@ -2,22 +2,22 @@
 /**
  * A customer can act on their own subscription and nobody else's, even holding a valid nonce.
  *
- * @package Subly
+ * @package Submex
  */
 
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
 
 require __DIR__ . '/bootstrap.php';
 
-if ( ! class_exists( 'Subly_Test_Redirected' ) ) {
+if ( ! class_exists( 'Submex_Test_Redirected' ) ) {
 	// Handlers redirect and exit once they act; stop at the redirect and read the state.
-	final class Subly_Test_Redirected extends Exception {}
+	final class Submex_Test_Redirected extends Exception {}
 }
 add_filter(
 	'wp_redirect',
 	static function ( $to ) {
-		throw new Subly_Test_Redirected( (string) $to );
+		throw new Submex_Test_Redirected( (string) $to );
 	},
 	1
 );
@@ -53,7 +53,7 @@ $subscription_for = static function ( int $owner ): Subscription {
 $state = static function ( int $id ): array {
 	$s = wc_get_order( $id );
 
-	return array( $s->get_status(), $s->get_next_payment(), $s->get_meta( '_subly_cancel_reason' ), $s->get_meta( '_subly_auto_renew' ) );
+	return array( $s->get_status(), $s->get_next_payment(), $s->get_meta( '_submex_cancel_reason' ), $s->get_meta( '_submex_auto_renew' ) );
 };
 
 $attempt = static function ( callable $handler, array $post ): void {
@@ -62,7 +62,7 @@ $attempt = static function ( callable $handler, array $post ): void {
 
 	try {
 		$handler();
-	} catch ( Subly_Test_Redirected $e ) {
+	} catch ( Submex_Test_Redirected $e ) {
 		unset( $e );
 	}
 
@@ -70,17 +70,17 @@ $attempt = static function ( callable $handler, array $post ): void {
 	$_REQUEST = array();
 };
 
-$account = \Subly\Plugin::instance()->get( 'account' );
-$survey  = \Subly\Plugin::instance()->get( 'survey' );
+$account = \Submex\Plugin::instance()->get( 'account' );
+$survey  = \Submex\Plugin::instance()->get( 'survey' );
 
-update_option( 'subly_allow_early_renewal', 'yes' );
-update_option( 'subly_allow_auto_renew_toggle', 'yes' );
+update_option( 'submex_allow_early_renewal', 'yes' );
+update_option( 'submex_allow_auto_renew_toggle', 'yes' );
 
 $actions = static function ( int $id ): array {
 	return array(
-		'cancel'              => array( 'subly_action' => 'cancel', 'subly_when' => 'immediate', 'subly_subscription' => $id, '_wpnonce' => wp_create_nonce( "subly_cancel_{$id}" ) ),
-		'turn off auto-renew' => array( 'subly_action' => 'auto_renew', 'subly_auto_renew' => 'off', 'subly_subscription' => $id, '_wpnonce' => wp_create_nonce( "subly_auto_renew_{$id}" ) ),
-		'pay a period early'  => array( 'subly_action' => 'renew_early', 'subly_subscription' => $id, '_wpnonce' => wp_create_nonce( "subly_renew_early_{$id}" ) ),
+		'cancel'              => array( 'submex_action' => 'cancel', 'submex_when' => 'immediate', 'submex_subscription' => $id, '_wpnonce' => wp_create_nonce( "submex_cancel_{$id}" ) ),
+		'turn off auto-renew' => array( 'submex_action' => 'auto_renew', 'submex_auto_renew' => 'off', 'submex_subscription' => $id, '_wpnonce' => wp_create_nonce( "submex_auto_renew_{$id}" ) ),
+		'pay a period early'  => array( 'submex_action' => 'renew_early', 'submex_subscription' => $id, '_wpnonce' => wp_create_nonce( "submex_renew_early_{$id}" ) ),
 	);
 };
 
@@ -96,7 +96,7 @@ foreach ( array( 'another customer' => $bob, 'a logged-out visitor' => 0 ) as $w
 	}
 
 	$before = $state( $id );
-	$attempt( array( $survey, 'handle_submission' ), array( 'subly_action' => 'cancel_survey', 'subly_reason' => 'too_expensive', 'subly_subscription' => $id, '_wpnonce' => wp_create_nonce( "subly_survey_{$id}" ) ) );
+	$attempt( array( $survey, 'handle_submission' ), array( 'submex_action' => 'cancel_survey', 'submex_reason' => 'too_expensive', 'submex_subscription' => $id, '_wpnonce' => wp_create_nonce( "submex_survey_{$id}" ) ) );
 	$check( "{$who} cannot write somebody else's cancellation reason", $before === $state( $id ), array( $before, $state( $id ) ) );
 
 	$target->delete( true );
@@ -104,17 +104,17 @@ foreach ( array( 'another customer' => $bob, 'a logged-out visitor' => 0 ) as $w
 
 // And the owner still can: a check that refuses everybody would pass everything above.
 $own  = $subscription_for( $alice );
-$when = get_option( 'subly_cancellation_effective', null );
-update_option( 'subly_cancellation_effective', 'immediate' );
+$when = get_option( 'submex_cancellation_effective', null );
+update_option( 'submex_cancellation_effective', 'immediate' );
 wp_set_current_user( $alice );
 $attempt( array( $account, 'handle_actions' ), $actions( $own->get_id() )['cancel'] );
 $check( 'the owner can cancel their own subscription', str_contains( wc_get_order( $own->get_id() )->get_status(), 'cancelled' ), wc_get_order( $own->get_id() )->get_status() );
 $own->delete( true );
-null === $when ? delete_option( 'subly_cancellation_effective' ) : update_option( 'subly_cancellation_effective', $when );
+null === $when ? delete_option( 'submex_cancellation_effective' ) : update_option( 'submex_cancellation_effective', $when );
 
-delete_option( 'subly_allow_early_renewal' );
-delete_option( 'subly_allow_auto_renew_toggle' );
+delete_option( 'submex_allow_early_renewal' );
+delete_option( 'submex_allow_auto_renew_toggle' );
 wp_delete_user( $alice );
 wp_delete_user( $bob );
 
-subly_test_done( $fail );
+submex_test_done( $fail );

@@ -1,8 +1,8 @@
 <?php
 
-namespace Subly\Emails;
+namespace Submex\Emails;
 
-use Subly\Billing\Renewal_Scheduler;
+use Submex\Billing\Renewal_Scheduler;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,11 +15,11 @@ final class Notification_Settings {
 
 	public const SECTION = 'notifications';
 
-	public const CARD_MAIN  = 'subly_notifications_title';
-	public const CARD_OTHER = 'subly_other_emails_title';
+	public const CARD_MAIN  = 'submex_notifications_title';
+	public const CARD_OTHER = 'submex_other_emails_title';
 
 	/** Stored in days before 0.27; read once to set the hours, then removed. */
-	private const LEGACY_DAYS = 'subly_renewal_reminder_days';
+	private const LEGACY_DAYS = 'submex_renewal_reminder_days';
 
 	public function register(): void {
 		add_action( 'init', array( $this, 'migrate' ), 6 );
@@ -45,8 +45,8 @@ final class Notification_Settings {
 		$days = get_option( self::LEGACY_DAYS, false );
 
 		if ( false !== $days && (int) $days < 1 ) {
-			$email = self::email( 'subly_renewal_reminder' );
-			$key   = $email ? $email->get_option_key() : 'woocommerce_subly_renewal_reminder_settings';
+			$email = self::email( 'submex_renewal_reminder' );
+			$key   = $email ? $email->get_option_key() : 'woocommerce_submex_renewal_reminder_settings';
 			$saved = (array) get_option( $key, array() );
 
 			$saved['enabled'] = 'no';
@@ -61,29 +61,29 @@ final class Notification_Settings {
 	 * @return array<int, array<string, mixed>>
 	 */
 	public static function fields(): array {
-		$renewal = self::email_row( 'subly_renewal_reminder', __( 'Renewal reminder', 'subly' ), __( 'Send customers a reminder email before their next renewal payment.', 'subly' ) );
+		$renewal = self::email_row( 'submex_renewal_reminder', __( 'Renewal reminder', 'submex' ), __( 'Send customers a reminder email before their next renewal payment.', 'submex' ) );
 
 		$main = array(
 			$renewal,
-			$renewal ? self::hours_row( Renewal_Scheduler::OPTION_REMINDER_HOURS, __( 'Send renewal reminder before (Hours)', 'subly' ), __( 'Choose how many hours before the renewal date the reminder email is sent.', 'subly' ), $renewal['id'] ) : null,
-			self::email_row( 'subly_payment_failed', __( 'Payment failure emails', 'subly' ), __( 'Notify customers when a renewal payment fails.', 'subly' ) ),
-			self::email_row( 'subly_renewal_receipt', __( 'Renewal success email', 'subly' ), __( 'Send customers a confirmation email after a subscription renewal payment is completed successfully.', 'subly' ) ),
-			self::email_row( 'subly_subscription_cancelled', __( 'Subscription cancelled email', 'subly' ), __( 'Send customers a confirmation email when their subscription is cancelled.', 'subly' ) ),
-			self::email_row( 'subly_subscription_reactivated', __( 'Subscription reactivated email', 'subly' ), __( 'Send customers a confirmation email when their paused or cancelled subscription is reactivated.', 'subly' ) ),
+			$renewal ? self::hours_row( Renewal_Scheduler::OPTION_REMINDER_HOURS, __( 'Send renewal reminder before (Hours)', 'submex' ), __( 'Choose how many hours before the renewal date the reminder email is sent.', 'submex' ), $renewal['id'] ) : null,
+			self::email_row( 'submex_payment_failed', __( 'Payment failure emails', 'submex' ), __( 'Notify customers when a renewal payment fails.', 'submex' ) ),
+			self::email_row( 'submex_renewal_receipt', __( 'Renewal success email', 'submex' ), __( 'Send customers a confirmation email after a subscription renewal payment is completed successfully.', 'submex' ) ),
+			self::email_row( 'submex_subscription_cancelled', __( 'Subscription cancelled email', 'submex' ), __( 'Send customers a confirmation email when their subscription is cancelled.', 'submex' ) ),
+			self::email_row( 'submex_subscription_reactivated', __( 'Subscription reactivated email', 'submex' ), __( 'Send customers a confirmation email when their paused or cancelled subscription is reactivated.', 'submex' ) ),
 		);
 
 		$other = array(
-			self::email_row( 'subly_subscription_started' ),
-			self::email_row( 'subly_confirm_payment' ),
-			self::email_row( 'subly_merchant_new_subscription' ),
-			self::email_row( 'subly_merchant_subscription_cancelled' ),
-			self::email_row( 'subly_merchant_subscription_ended' ),
+			self::email_row( 'submex_subscription_started' ),
+			self::email_row( 'submex_confirm_payment' ),
+			self::email_row( 'submex_merchant_new_subscription' ),
+			self::email_row( 'submex_merchant_subscription_cancelled' ),
+			self::email_row( 'submex_merchant_subscription_ended' ),
 		);
 
 		return array_merge(
 			array(
 				array(
-					'title' => __( 'Email notifications', 'subly' ),
+					'title' => __( 'Email notifications', 'submex' ),
 					'type'  => 'title',
 					'id'    => self::CARD_MAIN,
 				),
@@ -95,7 +95,7 @@ final class Notification_Settings {
 					'id'   => self::CARD_MAIN,
 				),
 				array(
-					'title' => __( 'Other emails', 'subly' ),
+					'title' => __( 'Other emails', 'submex' ),
 					'type'  => 'title',
 					'id'    => self::CARD_OTHER,
 				),
@@ -128,7 +128,7 @@ final class Notification_Settings {
 			'id'           => $email->get_option_key() . '[enabled]',
 			'type'         => 'checkbox',
 			'default'      => (string) ( $email->get_form_fields()['enabled']['default'] ?? 'yes' ),
-			'subly_email' => $email_id,
+			'submex_email' => $email_id,
 		);
 	}
 
@@ -190,7 +190,7 @@ final class Notification_Settings {
 				'min'  => '1',
 				'step' => '1',
 			),
-			'subly_show_if'    => $parent,
+			'submex_show_if'    => $parent,
 		);
 	}
 

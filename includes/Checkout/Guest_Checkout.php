@@ -1,10 +1,10 @@
 <?php
 
-namespace Subly\Checkout;
+namespace Submex\Checkout;
 
-use Subly\Admin\Notice_Dismissals;
-use Subly\Admin\Notices;
-use Subly\Product\Subscription_Product;
+use Submex\Admin\Notice_Dismissals;
+use Submex\Admin\Notices;
+use Submex\Product\Subscription_Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -23,12 +23,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Guest_Checkout {
 
-	private const OPTION = 'subly_guest_checkout';
+	private const OPTION = 'submex_guest_checkout';
 
 	public const ALLOW   = 'create_account';
 	public const REQUIRE = 'require_login';
 
-	private const NOTICE_UNREACHABLE = 'subly_guest_checkout_unreachable';
+	private const NOTICE_UNREACHABLE = 'submex_guest_checkout_unreachable';
 
 	public function register(): void {
 		add_action( 'woocommerce_checkout_process', array( $this, 'validate_classic' ) );
@@ -62,7 +62,7 @@ class Guest_Checkout {
 		$error = $this->blocking_error( $this->customer_email() );
 
 		if ( $error && $errors instanceof \WP_Error ) {
-			$errors->add( 'subly_login_required', $error );
+			$errors->add( 'submex_login_required', $error );
 		}
 
 		return $errors;
@@ -111,9 +111,9 @@ class Guest_Checkout {
 		printf(
 			'<div class="%s"><p>%s</p><p><a class="button-link" href="%s">%s</a></p></div>',
 			esc_attr( Notices::important( 'warning' ) ),
-			esc_html__( 'Subly requires customers to log in before buying a subscription, but WooCommerce is not offering a login or sign-up on the checkout page. Customers will be turned away with no way forward.', 'subly' ),
+			esc_html__( 'Submex requires customers to log in before buying a subscription, but WooCommerce is not offering a login or sign-up on the checkout page. Customers will be turned away with no way forward.', 'submex' ),
 			esc_url( Notice_Dismissals::problem_url( self::NOTICE_UNREACHABLE, 'unreachable' ) ),
-			esc_html__( 'Dismiss', 'subly' )
+			esc_html__( 'Dismiss', 'submex' )
 		);
 	}
 
@@ -123,13 +123,13 @@ class Guest_Checkout {
 		}
 
 		if ( self::REQUIRE === self::mode() ) {
-			return __( 'Please log in or create an account to buy a subscription. You will need one to manage or cancel it later.', 'subly' );
+			return __( 'Please log in or create an account to buy a subscription. You will need one to manage or cancel it later.', 'submex' );
 		}
 
 		// Letting this through would create a subscription owned by nobody, which the
 		// customer could never see or cancel. Better to stop here than to sell that.
 		if ( '' !== $email && email_exists( $email ) ) {
-			return __( 'You already have an account with this email address. Please log in to buy a subscription.', 'subly' );
+			return __( 'You already have an account with this email address. Please log in to buy a subscription.', 'submex' );
 		}
 
 		return '';
@@ -182,7 +182,7 @@ class Guest_Checkout {
 			return 0;
 		}
 
-		$order->add_order_note( __( 'An account was created for this customer so they can manage their subscription.', 'subly' ) );
+		$order->add_order_note( __( 'An account was created for this customer so they can manage their subscription.', 'submex' ) );
 
 		return (int) $user_id;
 	}

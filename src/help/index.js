@@ -4,19 +4,19 @@
 import { useEffect, useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
-import { Button, Card, CardContent, Skeleton } from '@subly/ui';
-import { registerRoute } from '@subly/shell';
+import { Button, Card, CardContent, Skeleton } from '@submex/ui';
+import { registerRoute } from '@submex/shell';
 
 function Heading() {
 	return (
 		<div className="sb-mb-6">
 			<h2 className="sb-text-2xl sb-font-semibold sb-tracking-tight">
-				{ __( 'Help', 'subly' ) }
+				{ __( 'Help', 'submex' ) }
 			</h2>
 			<p className="sb-mt-1 sb-text-sm sb-text-muted-foreground">
 				{ __(
 					'Where to look first, and the report to send if you still need a hand.',
-					'subly'
+					'submex'
 				) }
 			</p>
 		</div>
@@ -46,7 +46,7 @@ export function Help( { onFail } ) {
 	const field = useRef( null );
 
 	useEffect( () => {
-		apiFetch( { path: '/subly/v1/help' } )
+		apiFetch( { path: '/submex/v1/help' } )
 			.then( setData )
 			.catch( () => onFail() );
 		// Loaded once: onFail is a new closure on every render.
@@ -80,7 +80,7 @@ export function Help( { onFail } ) {
 			<Heading />
 
 			<h2 className="sb-mb-3 sb-text-base sb-font-semibold">
-				{ __( 'Check these first', 'subly' ) }
+				{ __( 'Check these first', 'submex' ) }
 			</h2>
 			<div className="sb-mb-8 sb-grid sb-gap-4 sb-grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
 				{ data.tiles.map( ( tile, index ) => (
@@ -112,7 +112,7 @@ export function Help( { onFail } ) {
 			</div>
 
 			<h2 className="sb-mb-3 sb-text-base sb-font-semibold">
-				{ __( 'System report', 'subly' ) }
+				{ __( 'System report', 'submex' ) }
 			</h2>
 			<Card>
 				<CardContent className="sb-flex sb-flex-col sb-gap-3 sb-p-5">
@@ -120,7 +120,7 @@ export function Help( { onFail } ) {
 						<p className="sb-text-sm sb-text-muted-foreground">
 							{ __(
 								'Paste this into your support request. It contains no keys and no customer data.',
-								'subly'
+								'submex'
 							) }
 						</p>
 						<Button
@@ -132,14 +132,14 @@ export function Help( { onFail } ) {
 							}
 						>
 							{ copied
-								? __( 'Copied', 'subly' )
-								: __( 'Copy report', 'subly' ) }
+								? __( 'Copied', 'submex' )
+								: __( 'Copy report', 'submex' ) }
 						</Button>
 					</div>
 					<textarea
 						ref={ field }
 						readOnly
-						aria-label={ __( 'System report', 'subly' ) }
+						aria-label={ __( 'System report', 'submex' ) }
 						rows={ Math.min( 24, lines ) }
 						value={ data.report }
 						className="sb-w-full sb-rounded-md sb-border sb-border-input sb-bg-muted/40 sb-p-3 sb-font-mono sb-text-xs"
@@ -151,7 +151,7 @@ export function Help( { onFail } ) {
 }
 
 registerRoute( {
-	page: 'subly-help',
-	title: __( 'Help', 'subly' ),
+	page: 'submex-help',
+	title: __( 'Help', 'submex' ),
 	render: ( ctx ) => <Help onFail={ ctx.fail } />,
 } );

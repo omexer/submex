@@ -5,13 +5,13 @@
 #   tools/test.sh              run them all
 #   tools/test.sh renewal      run only those whose name contains "renewal"
 #
-# SUBLY_WP is the command that runs WP-CLI inside that WordPress. It defaults to the wp-env
+# SUBMEX_WP is the command that runs WP-CLI inside that WordPress. It defaults to the wp-env
 # environment CI uses; point it at your own site instead, for example:
-#   SUBLY_WP="docker compose -f ~/wp-docker/docker-compose.yml exec -T wordpress wp --allow-root"
+#   SUBMEX_WP="docker compose -f ~/wp-docker/docker-compose.yml exec -T wordpress wp --allow-root"
 set -uo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-read -r -a wp <<< "${SUBLY_WP:-npx wp-env run cli wp}"
+read -r -a wp <<< "${SUBMEX_WP:-npx wp-env run cli wp}"
 slug="$(basename "$PWD")"
 filter="${1:-}"
 

@@ -1,15 +1,15 @@
 <?php
 
-namespace Subly\Admin;
+namespace Submex\Admin;
 
-use Subly\Emails\Notification_Settings;
+use Submex\Emails\Notification_Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
- * Subly → Settings.
+ * Submex → Settings.
  *
  * The fields are WooCommerce's own definitions, read from the settings tab and its filters,
  * so free and Pro declare a setting once and it appears here, saved by Woo's own handler.
@@ -19,7 +19,7 @@ class Settings_Page {
 
 	public const SLUG = Menu::SLUG . '-settings';
 
-	private const NONCE = 'subly_save_settings';
+	private const NONCE = 'submex_save_settings';
 
 	/**
 	 * A section missing from every group's list lands in Integrations.
@@ -28,14 +28,14 @@ class Settings_Page {
 
 	public function register(): void {
 		add_action( 'admin_menu', array( $this, 'add_page' ), 95 );
-		add_action( 'subly_app_enqueue', array( $this, 'enqueue_route' ) );
+		add_action( 'submex_app_enqueue', array( $this, 'enqueue_route' ) );
 	}
 
 	/**
 	 * On every app page, not just this one: the shell swaps screens without a page load.
 	 */
 	public function enqueue_route(): void {
-		$asset = SUBLY_PATH . 'build/settings.asset.php';
+		$asset = SUBMEX_PATH . 'build/settings.asset.php';
 
 		if ( ! is_readable( $asset ) ) {
 			return;
@@ -44,21 +44,21 @@ class Settings_Page {
 		$asset = require $asset;
 
 		wp_enqueue_script(
-			'subly-settings',
-			SUBLY_URL . 'build/settings.js',
-			array_merge( $asset['dependencies'], array( 'subly-ui', 'subly-shell' ) ),
+			'submex-settings',
+			SUBMEX_URL . 'build/settings.js',
+			array_merge( $asset['dependencies'], array( 'submex-ui', 'submex-shell' ) ),
 			$asset['version'],
 			true
 		);
 
-		wp_set_script_translations( 'subly-settings', 'subly', SUBLY_PATH . 'languages' );
+		wp_set_script_translations( 'submex-settings', 'submex', SUBMEX_PATH . 'languages' );
 	}
 
 	public function add_page(): void {
 		$hook = add_submenu_page(
 			Menu::PARENT,
-			__( 'Settings', 'subly' ),
-			__( 'Settings', 'subly' ),
+			__( 'Settings', 'submex' ),
+			__( 'Settings', 'submex' ),
 			Menu::CAPABILITY,
 			self::SLUG,
 			array( $this, 'render' )
@@ -77,13 +77,13 @@ class Settings_Page {
 	 * page is saved, since a group stacks several into one form.
 	 */
 	public function maybe_save(): void {
-		if ( ! isset( $_POST['subly_settings_nonce'] ) || ! current_user_can( Menu::CAPABILITY ) ) {
+		if ( ! isset( $_POST['submex_settings_nonce'] ) || ! current_user_can( Menu::CAPABILITY ) ) {
 			return;
 		}
 
-		check_admin_referer( self::NONCE, 'subly_settings_nonce' );
+		check_admin_referer( self::NONCE, 'submex_settings_nonce' );
 
-		$section  = isset( $_POST['subly_section'] ) ? sanitize_key( wp_unslash( $_POST['subly_section'] ) ) : '';
+		$section  = isset( $_POST['submex_section'] ) ? sanitize_key( wp_unslash( $_POST['submex_section'] ) ) : '';
 		$sections = $this->sections();
 
 		if ( ! isset( $sections[ $section ] ) ) {
@@ -94,7 +94,7 @@ class Settings_Page {
 			return;
 		}
 
-		wp_safe_redirect( add_query_arg( 'subly_saved', '1', self::section_url( $section ) ) );
+		wp_safe_redirect( add_query_arg( 'submex_saved', '1', self::section_url( $section ) ) );
 		exit;
 	}
 
@@ -122,7 +122,7 @@ class Settings_Page {
 
 		// After the whole stack is written: a section's checks may read another's settings.
 		foreach ( array_filter( $saved, static fn( string $id ): bool => '' !== $id ) as $id ) {
-			do_action( 'woocommerce_update_options_subly_' . $id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WooCommerce's own settings hook.
+			do_action( 'woocommerce_update_options_submex_' . $id ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WooCommerce's own settings hook.
 		}
 
 		return (bool) $saved;
@@ -158,35 +158,35 @@ class Settings_Page {
 		$sections = $this->sections();
 		$current  = $this->current_section( $sections );
 
-		Page_Shell::open( __( 'Settings', 'subly' ), '', array( array( 'label' => __( 'Settings', 'subly' ) ) ), '', false );
+		Page_Shell::open( __( 'Settings', 'submex' ), '', array( array( 'label' => __( 'Settings', 'submex' ) ) ), '', false );
 
 		$this->render_notices();
 
 		if ( ! $sections ) {
 			printf(
-				'<div class="subly-notice subly-notice--bad">%s</div>',
-				esc_html__( "WooCommerce's settings could not be loaded, so Subly's settings cannot be shown. Check that WooCommerce is active.", 'subly' )
+				'<div class="submex-notice submex-notice--bad">%s</div>',
+				esc_html__( "WooCommerce's settings could not be loaded, so Submex's settings cannot be shown. Check that WooCommerce is active.", 'submex' )
 			);
 			Page_Shell::close();
 
 			return;
 		}
 
-		echo '<div class="subly-settings">';
+		echo '<div class="submex-settings">';
 
 		$this->render_nav( $sections, $current );
 
-		echo '<form class="subly-settings__main" method="post" action="">';
-		wp_nonce_field( self::NONCE, 'subly_settings_nonce' );
-		printf( '<input type="hidden" name="subly_section" value="%s" />', esc_attr( $current ) );
+		echo '<form class="submex-settings__main" method="post" action="">';
+		wp_nonce_field( self::NONCE, 'submex_settings_nonce' );
+		printf( '<input type="hidden" name="submex_section" value="%s" />', esc_attr( $current ) );
 
 		$this->render_cards( $this->page_fields( $current, $sections ) );
 
 		printf(
-			'<div class="subly-settings__save"><span class="subly-settings__save-note">%s</span>'
-				. '<button type="submit" class="button button-primary subly-btn subly-btn--primary">%s</button></div>',
-			esc_html__( 'Changes apply to new renewals and purchases from the moment you save.', 'subly' ),
-			esc_html__( 'Save changes', 'subly' )
+			'<div class="submex-settings__save"><span class="submex-settings__save-note">%s</span>'
+				. '<button type="submit" class="button button-primary submex-btn submex-btn--primary">%s</button></div>',
+			esc_html__( 'Changes apply to new renewals and purchases from the moment you save.', 'submex' ),
+			esc_html__( 'Save changes', 'submex' )
 		);
 
 		echo '</form></div>';
@@ -203,48 +203,48 @@ class Settings_Page {
 	public static function groups(): array {
 		$groups = array(
 			'general'            => array(
-				'label'    => __( 'General', 'subly' ),
+				'label'    => __( 'General', 'submex' ),
 				'icon'     => '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
 				'sections' => array( '', 'license' ),
 			),
 			'customers'          => array(
-				'label'    => __( 'Customer Controls', 'subly' ),
+				'label'    => __( 'Customer Controls', 'submex' ),
 				'icon'     => '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6.2 18.4a6.5 6.5 0 0 1 11.6 0"/>',
 				'sections' => array( 'customer_controls' ),
 			),
 			'billing'            => array(
-				'label'    => __( 'Renewal & Billing', 'subly' ),
+				'label'    => __( 'Renewal & Billing', 'submex' ),
 				'icon'     => '<path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M14.5 8h-3.2a1.3 1.3 0 0 0 0 2.6h1.4a1.3 1.3 0 0 1 0 2.6H9.5M12 6.5V8m0 5.2v1.5"/>',
 				'sections' => array( 'recovery', 'renewal' ),
 			),
 			'switching'          => array(
-				'label'    => __( 'Upgrade & Downgrade', 'subly' ),
+				'label'    => __( 'Upgrade & Downgrade', 'submex' ),
 				'icon'     => '<path d="M7 20V4m0 0L3.5 7.5M7 4l3.5 3.5M17 4v16m0 0 3.5-3.5M17 20l-3.5-3.5"/>',
 				'sections' => array( 'switching', 'upsell' ),
 			),
 			'checkout'           => array(
-				'label'    => __( 'Cart & Checkout', 'subly' ),
+				'label'    => __( 'Cart & Checkout', 'submex' ),
 				'icon'     => '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.7 12.2a1 1 0 0 0 1 .8h9.6a1 1 0 0 0 1-.8L21 7H6"/>',
 				'sections' => array( 'checkout' ),
 			),
 			'shipping'           => array(
-				'label'    => __( 'Shipping', 'subly' ),
+				'label'    => __( 'Shipping', 'submex' ),
 				'icon'     => '<path d="M2.5 6h11v10h-11zM13.5 9.5h4l3 3V16h-7"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
 				'sections' => array( 'live-qr' ),
 			),
 			'notifications'      => array(
-				'label'    => __( 'Email Notifications', 'subly' ),
+				'label'    => __( 'Email Notifications', 'submex' ),
 				'icon'     => '<path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
 				'sections' => array( 'notifications', 'payment_methods' ),
 			),
 			'payments'           => array(
-				'label'    => __( 'Payments', 'subly' ),
+				'label'    => __( 'Payments', 'submex' ),
 				'icon'     => '<rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19M6.5 15h3"/>',
 				'sections' => array( 'stripe', 'paypal', 'mollie', 'razorpay', 'xendit', 'square', 'authorize_net', 'braintree', 'adyen', 'gocardless', 'woopayments', 'paddle', 'bkash', 'sslcommerz' ),
 				'list'     => true,
 			),
 			self::FALLBACK_GROUP => array(
-				'label'    => __( 'Integrations', 'subly' ),
+				'label'    => __( 'Integrations', 'submex' ),
 				'icon'     => '<path d="M9 2.5V7m6-4.5V7M6 7h12v4.5a6 6 0 0 1-12 0zM12 17.5v4"/>',
 				'sections' => array( 'whatsapp', 'affiliatewp', 'anniversary', 'winback' ),
 				'list'     => true,
@@ -256,7 +256,7 @@ class Settings_Page {
 		 *
 		 * @param array<string, array{label: string, icon: string, sections: string[], list?: bool}> $groups
 		 */
-		return (array) apply_filters( 'subly_settings_groups', $groups );
+		return (array) apply_filters( 'submex_settings_groups', $groups );
 	}
 
 	/**
@@ -362,23 +362,23 @@ class Settings_Page {
 	public function notices( array $query ): array {
 		$notices = array();
 
-		if ( isset( $query['subly_saved'] ) ) {
+		if ( isset( $query['submex_saved'] ) ) {
 			$notices[] = array(
 				'type'    => 'good',
-				'message' => __( 'Settings saved.', 'subly' ),
+				'message' => __( 'Settings saved.', 'submex' ),
 			);
 		}
 
-		$licence = isset( $query['subly_license_notice'] ) ? sanitize_text_field( wp_unslash( (string) $query['subly_license_notice'] ) ) : '';
+		$licence = isset( $query['submex_license_notice'] ) ? sanitize_text_field( wp_unslash( (string) $query['submex_license_notice'] ) ) : '';
 
 		if ( '' === $licence ) {
 			return $notices;
 		}
 
 		$known = array(
-			'activated'   => __( 'Licence activated.', 'subly' ),
-			'deactivated' => __( 'Licence deactivated.', 'subly' ),
-			'ok'          => __( 'Licence updated.', 'subly' ),
+			'activated'   => __( 'Licence activated.', 'submex' ),
+			'deactivated' => __( 'Licence deactivated.', 'submex' ),
+			'ok'          => __( 'Licence updated.', 'submex' ),
 		);
 
 		$notices[] = array(
@@ -392,7 +392,7 @@ class Settings_Page {
 	private function render_notices(): void {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- redirect flags, not actions.
 		foreach ( $this->notices( $_GET ) as $notice ) {
-			printf( '<div class="subly-notice subly-notice--%s">%s</div>', esc_attr( $notice['type'] ), esc_html( $notice['message'] ) );
+			printf( '<div class="submex-notice submex-notice--%s">%s</div>', esc_attr( $notice['type'] ), esc_html( $notice['message'] ) );
 		}
 	}
 
@@ -402,14 +402,14 @@ class Settings_Page {
 	private function render_nav( array $sections, string $current ): void {
 		$active = self::group_of( $current );
 
-		echo '<nav class="subly-settings__nav" aria-label="' . esc_attr__( 'Settings sections', 'subly' ) . '"><ul>';
+		echo '<nav class="submex-settings__nav" aria-label="' . esc_attr__( 'Settings sections', 'submex' ) . '"><ul>';
 
 		foreach ( $this->menu( $sections ) as $group ) {
 			$here    = $group['id'] === $active;
 			$members = array_column( $group['sections'], 'id' );
 
 			printf(
-				'<li><a class="subly-settings__tab%s" href="%s"%s><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">%s</svg><span>%s</span></a>',
+				'<li><a class="submex-settings__tab%s" href="%s"%s><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">%s</svg><span>%s</span></a>',
 				$here ? ' is-current' : '',
 				esc_url( self::section_url( $members[0] ) ),
 				$here && ! $group['list'] ? ' aria-current="page"' : '',
@@ -418,11 +418,11 @@ class Settings_Page {
 			);
 
 			if ( $here && $group['list'] ) {
-				echo '<ul class="subly-settings__subnav">';
+				echo '<ul class="submex-settings__subnav">';
 
 				foreach ( $group['sections'] as $section ) {
 					printf(
-						'<li><a class="subly-settings__subtab%s" href="%s"%s>%s</a></li>',
+						'<li><a class="submex-settings__subtab%s" href="%s"%s>%s</a></li>',
 						$section['id'] === $current ? ' is-current' : '',
 						esc_url( self::section_url( $section['id'] ) ),
 						$section['id'] === $current ? ' aria-current="page"' : '',
@@ -473,7 +473,7 @@ class Settings_Page {
 					continue;
 				}
 
-				if ( isset( $field['subly_joins'] ) ) {
+				if ( isset( $field['submex_joins'] ) ) {
 					continue;
 				}
 
@@ -516,10 +516,10 @@ class Settings_Page {
 		$toggles = $this->toggle_states( $by_section ? array_merge( ...array_values( $by_section ) ) : array() );
 
 		foreach ( $this->cards( $by_section ) as $card ) {
-			printf( '<section class="subly-settings__card"%s>', null === $card['anchor'] ? '' : ' id="' . esc_attr( 'subly-section-' . ( '' === $card['anchor'] ? 'general' : $card['anchor'] ) ) . '"' );
+			printf( '<section class="submex-settings__card"%s>', null === $card['anchor'] ? '' : ' id="' . esc_attr( 'submex-section-' . ( '' === $card['anchor'] ? 'general' : $card['anchor'] ) ) . '"' );
 
 			if ( '' !== $card['title'] || '' !== $card['desc'] ) {
-				echo '<header class="subly-settings__card-head">';
+				echo '<header class="submex-settings__card-head">';
 				if ( '' !== $card['title'] ) {
 					printf( '<h2>%s</h2>', esc_html( $card['title'] ) );
 				}
@@ -529,13 +529,13 @@ class Settings_Page {
 				echo '</header>';
 			}
 
-			echo '<div class="subly-settings__rows">';
+			echo '<div class="submex-settings__rows">';
 
 			foreach ( $card['rows'] as $row ) {
 				if ( null === $row['html'] ) {
 					$this->render_row( $row['field'], $toggles, $row['joined'] );
 				} else {
-					echo '<div class="subly-settings__row subly-settings__row--wide">' . wp_kses( $row['html'], Allowed_Html::form() ) . '</div>';
+					echo '<div class="submex-settings__row submex-settings__row--wide">' . wp_kses( $row['html'], Allowed_Html::form() ) . '</div>';
 				}
 			}
 
@@ -557,7 +557,7 @@ class Settings_Page {
 			if ( 'checkbox' === ( $field['type'] ?? '' ) && ! empty( $field['id'] ) ) {
 				$toggles[ (string) $field['id'] ] = array(
 					'on'     => 'yes' === \WC_Admin_Settings::get_option( (string) $field['id'], $field['default'] ?? '' ),
-					'parent' => (string) ( $field['subly_show_if'] ?? '' ),
+					'parent' => (string) ( $field['submex_show_if'] ?? '' ),
 				);
 			}
 		}
@@ -576,8 +576,8 @@ class Settings_Page {
 		$joined = array();
 
 		foreach ( $fields as $field ) {
-			if ( isset( $field['subly_joins'] ) ) {
-				$joined[ (string) $field['subly_joins'] ][] = $field;
+			if ( isset( $field['submex_joins'] ) ) {
+				$joined[ (string) $field['submex_joins'] ][] = $field;
 			}
 		}
 
@@ -603,28 +603,28 @@ class Settings_Page {
 	private function render_row( array $field, array $toggles, array $joined ): void {
 		$id     = (string) ( $field['id'] ?? '' );
 		$help   = $this->help_text( $field );
-		$parent = (string) ( $field['subly_show_if'] ?? '' );
+		$parent = (string) ( $field['submex_show_if'] ?? '' );
 
 		printf(
-			'<div class="subly-settings__row%s"%s>',
+			'<div class="submex-settings__row%s"%s>',
 			$this->is_shown( $parent, $toggles ) ? '' : ' is-hidden',
-			'' === $parent ? '' : ' data-subly-show-if="' . esc_attr( $parent ) . '"'
+			'' === $parent ? '' : ' data-submex-show-if="' . esc_attr( $parent ) . '"'
 		);
-		printf( '<div class="subly-settings__label"><label class="subly-settings__title" for="%s">%s</label>', esc_attr( $id ), esc_html( (string) ( $field['title'] ?? '' ) ) );
+		printf( '<div class="submex-settings__label"><label class="submex-settings__title" for="%s">%s</label>', esc_attr( $id ), esc_html( (string) ( $field['title'] ?? '' ) ) );
 		if ( '' !== $help ) {
-			printf( '<p class="subly-settings__help" id="%s">%s</p>', esc_attr( $id . '-help' ), wp_kses_post( $help ) );
+			printf( '<p class="submex-settings__help" id="%s">%s</p>', esc_attr( $id . '-help' ), wp_kses_post( $help ) );
 		}
-		echo '</div><div class="subly-settings__control">';
+		echo '</div><div class="submex-settings__control">';
 
-		$preview = Notification_Settings::preview_url( (string) ( $field['subly_email'] ?? '' ) );
+		$preview = Notification_Settings::preview_url( (string) ( $field['submex_email'] ?? '' ) );
 
 		if ( '' !== $preview ) {
 			printf(
-				'<a class="subly-btn subly-btn--sm" href="%s" target="_blank" rel="noopener noreferrer">%s<span class="screen-reader-text"> %s</span></a>',
+				'<a class="submex-btn submex-btn--sm" href="%s" target="_blank" rel="noopener noreferrer">%s<span class="screen-reader-text"> %s</span></a>',
 				esc_url( $preview ),
-				esc_html__( 'Preview', 'subly' ),
+				esc_html__( 'Preview', 'submex' ),
 				/* translators: %s: the email's name, such as "Renewal reminder" */
-				esc_html( sprintf( __( '%s (opens in a new tab)', 'subly' ), (string) ( $field['title'] ?? '' ) ) )
+				esc_html( sprintf( __( '%s (opens in a new tab)', 'submex' ), (string) ( $field['title'] ?? '' ) ) )
 			);
 		}
 
@@ -636,7 +636,7 @@ class Settings_Page {
 		}
 
 		if ( '' !== $this->suffix( $field ) ) {
-			printf( '<span class="subly-settings__suffix">%s</span>', wp_kses_post( $this->suffix( $field ) ) );
+			printf( '<span class="submex-settings__suffix">%s</span>', wp_kses_post( $this->suffix( $field ) ) );
 		}
 
 		echo '</div></div>';
@@ -654,7 +654,7 @@ class Settings_Page {
 		switch ( $type ) {
 			case 'checkbox':
 				$html = sprintf(
-					'<span class="subly-switch"><input type="checkbox" role="switch" name="%1$s" id="%1$s" value="1"%2$s%3$s /><span class="subly-switch__track" aria-hidden="true"></span></span>',
+					'<span class="submex-switch"><input type="checkbox" role="switch" name="%1$s" id="%1$s" value="1"%2$s%3$s /><span class="submex-switch__track" aria-hidden="true"></span></span>',
 					esc_attr( $id ),
 					checked( $value, 'yes', false ),
 					$aria
@@ -662,7 +662,7 @@ class Settings_Page {
 				break;
 
 			case 'select':
-				$html = sprintf( '<select name="%1$s" id="%1$s" class="subly-input"%2$s>', esc_attr( $id ), $aria );
+				$html = sprintf( '<select name="%1$s" id="%1$s" class="submex-input"%2$s>', esc_attr( $id ), $aria );
 				foreach ( (array) ( $field['options'] ?? array() ) as $option => $option_label ) {
 					$html .= sprintf(
 						'<option value="%s"%s>%s</option>',
@@ -676,7 +676,7 @@ class Settings_Page {
 
 			case 'textarea':
 				$html = sprintf(
-					'<textarea name="%1$s" id="%1$s" class="subly-input subly-input--wide" rows="4"%2$s%3$s>%4$s</textarea>',
+					'<textarea name="%1$s" id="%1$s" class="submex-input submex-input--wide" rows="4"%2$s%3$s>%4$s</textarea>',
 					esc_attr( $id ),
 					$aria,
 					$this->attributes( $field ),
@@ -690,10 +690,10 @@ class Settings_Page {
 			case 'email':
 			case 'url':
 				$html = sprintf(
-					'<input type="%1$s" name="%2$s" id="%2$s" class="subly-input%3$s" value="%4$s"%5$s%6$s />',
+					'<input type="%1$s" name="%2$s" id="%2$s" class="submex-input%3$s" value="%4$s"%5$s%6$s />',
 					esc_attr( $type ),
 					esc_attr( $id ),
-					'number' === $type ? ' subly-input--short' : ' subly-input--wide',
+					'number' === $type ? ' submex-input--short' : ' submex-input--wide',
 					esc_attr( $value ),
 					$aria,
 					$this->attributes( $field )
@@ -725,7 +725,7 @@ class Settings_Page {
 	 * @param array<string, mixed> $field
 	 */
 	public function wide_markup( array $field ): string {
-		if ( 'subly_status' !== ( $field['type'] ?? '' ) ) {
+		if ( 'submex_status' !== ( $field['type'] ?? '' ) ) {
 			return $this->woo_markup( $field );
 		}
 
@@ -735,7 +735,7 @@ class Settings_Page {
 			Settings::render_check( $check );
 		}
 
-		return '<div class="subly-checks">' . ob_get_clean() . '</div>';
+		return '<div class="submex-checks">' . ob_get_clean() . '</div>';
 	}
 
 	/**
@@ -749,7 +749,7 @@ class Settings_Page {
 		\WC_Admin_Settings::output_fields( array( $field ) );
 		$markup = trim( (string) ob_get_clean() );
 
-		return '' === $markup ? '' : '<table class="form-table subly-settings__woo">' . $markup . '</table>';
+		return '' === $markup ? '' : '<table class="form-table submex-settings__woo">' . $markup . '</table>';
 	}
 
 	/**
@@ -830,7 +830,7 @@ class Settings_Page {
 		}
 
 		foreach ( \WC_Admin_Settings::get_settings_pages() as $page ) {
-			if ( $page instanceof \WC_Settings_Page && 'subly' === $page->get_id() ) {
+			if ( $page instanceof \WC_Settings_Page && 'submex' === $page->get_id() ) {
 				return $page;
 			}
 		}

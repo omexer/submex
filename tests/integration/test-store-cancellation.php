@@ -2,11 +2,11 @@
 /**
  * A cancellation made from the admin tells the customer, as one made in My Account does.
  *
- * @package Subly
+ * @package Submex
  */
 
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
 
 require __DIR__ . '/bootstrap.php';
 
@@ -22,7 +22,7 @@ $s->save();
 $s->transition_to( Subscription_Status::Active );
 $s->save();
 
-$c  = new \Subly\Rest\Subscriptions_Controller( \Subly\Plugin::instance()->get( 'activity' ), \Subly\Plugin::instance()->get( 'processor' ) );
+$c  = new \Submex\Rest\Subscriptions_Controller( \Submex\Plugin::instance()->get( 'activity' ), \Submex\Plugin::instance()->get( 'processor' ) );
 $m  = new ReflectionMethod( $c, 'transition' );
 $m->setAccessible( true );
 $m->invoke( $c, $s, Subscription_Status::Cancelled, 'Cancelled by the store.' );
@@ -32,4 +32,4 @@ $check( 'store is told', in_array( get_option( 'admin_email' ), $sent, true ), $
 $check( 'the subscription really is cancelled', str_contains( wc_get_order( $s->get_id() )->get_status(), 'cancelled' ), wc_get_order( $s->get_id() )->get_status() );
 
 $s->delete( true );
-subly_test_done( $fail );
+submex_test_done( $fail );

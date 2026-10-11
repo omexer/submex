@@ -1,10 +1,10 @@
 <?php
 
-namespace Subly\Integrations;
+namespace Submex\Integrations;
 
-use Subly\Data\Subscription_Query;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
+use Submex\Data\Subscription_Query;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -24,7 +24,7 @@ class Integrations {
 	private array $integrations = array();
 
 	/**
-	 * Every integration, available or not: Subly's own and those an extension adds.
+	 * Every integration, available or not: Submex's own and those an extension adds.
 	 *
 	 * @return Integration[]
 	 */
@@ -34,7 +34,7 @@ class Integrations {
 		 *
 		 * @param Integration[] $integrations
 		 */
-		$integrations = (array) apply_filters( 'subly_integrations', array( new FluentCRM() ) );
+		$integrations = (array) apply_filters( 'submex_integrations', array( new FluentCRM() ) );
 
 		return array_values( array_filter( $integrations, static fn( $integration ): bool => $integration instanceof Integration ) );
 	}
@@ -67,13 +67,13 @@ class Integrations {
 			return;
 		}
 
-		add_action( 'subly_subscription_activated', array( $this, 'on_activated' ), 10, 1 );
-		add_action( 'subly_subscription_status_changed', array( $this, 'on_status_changed' ), 10, 3 );
-		add_action( 'subly_subscription_cancelled', array( $this, 'on_cancelled' ), 10, 1 );
-		add_action( 'subly_subscription_grace_ended', array( $this, 'on_cancelled' ), 10, 1 );
+		add_action( 'submex_subscription_activated', array( $this, 'on_activated' ), 10, 1 );
+		add_action( 'submex_subscription_status_changed', array( $this, 'on_status_changed' ), 10, 3 );
+		add_action( 'submex_subscription_cancelled', array( $this, 'on_cancelled' ), 10, 1 );
+		add_action( 'submex_subscription_grace_ended', array( $this, 'on_cancelled' ), 10, 1 );
 
-		add_action( 'subly_product_subscription_fields', array( $this, 'render_fields' ), 30 );
-		add_action( 'subly_save_product_subscription_fields', array( $this, 'save_fields' ), 30 );
+		add_action( 'submex_product_subscription_fields', array( $this, 'render_fields' ), 30 );
+		add_action( 'submex_save_product_subscription_fields', array( $this, 'save_fields' ), 30 );
 
 		foreach ( $this->integrations as $integration ) {
 			if ( method_exists( $integration, 'hooks' ) ) {
@@ -232,7 +232,7 @@ class Integrations {
 		echo '<label for="' . esc_attr( $args['id'] ) . '">' . esc_html( $args['label'] ) . '</label>';
 
 		if ( ! $options ) {
-			echo '<span class="description">' . esc_html( $args['empty'] ?? __( 'Nothing to choose yet.', 'subly' ) ) . '</span></p>';
+			echo '<span class="description">' . esc_html( $args['empty'] ?? __( 'Nothing to choose yet.', 'submex' ) ) . '</span></p>';
 			return;
 		}
 
@@ -279,7 +279,7 @@ class Integrations {
 				}
 			} catch ( \Throwable $e ) {
 				// A third-party API failing must not abort the subscription transition itself.
-				do_action( 'subly_integration_failed', $integration->slug(), $e->getMessage(), $subscription );
+				do_action( 'submex_integration_failed', $integration->slug(), $e->getMessage(), $subscription );
 			}
 		}
 	}

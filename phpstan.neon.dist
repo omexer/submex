@@ -2,7 +2,7 @@ parameters:
 	level: 5
 	phpVersion: 80100
 	paths:
-		- subly.php
+		- submex.php
 		- includes
 		- templates
 	scanFiles:
@@ -34,7 +34,7 @@ parameters:
 		# type, so the data store hands back Subscription objects.
 		-
 			identifier: return.type
-			message: '#should return array<(int\|Subly\\Domain\\Subscription|Subly\\Domain\\Subscription\|int)> but returns array<WC_Order>#'
+			message: '#should return array<(int\|Submex\\Domain\\Subscription|Submex\\Domain\\Subscription\|int)> but returns array<WC_Order>#'
 		# process_admin_options() returns bool and every WooCommerce gateway hooks it to
 		# an action exactly like this.
 		-

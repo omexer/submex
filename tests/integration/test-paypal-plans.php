@@ -3,14 +3,14 @@
  * PayPal billing plans are cached per set of terms, not per product: one product sold on two
  * schedules gets two plans, each billing what its line says, and asking again reuses them.
  *
- * @package Subly
+ * @package Submex
  */
 
-use Subly\Gateways\PayPal\PayPal_Checkout_Gateway;
-use Subly\Gateways\PayPal\PayPal_Client;
-use Subly\Gateways\PayPal\PayPal_Gateway;
-use Subly\Gateways\PayPal\PayPal_Plans;
-use Subly\Product\Line_Terms;
+use Submex\Gateways\PayPal\PayPal_Checkout_Gateway;
+use Submex\Gateways\PayPal\PayPal_Client;
+use Submex\Gateways\PayPal\PayPal_Gateway;
+use Submex\Gateways\PayPal\PayPal_Plans;
+use Submex\Product\Line_Terms;
 
 require __DIR__ . '/bootstrap.php';
 
@@ -70,8 +70,8 @@ $line_terms    = static function ( $terms, $p, $cart_item, $order_item ) use ( $
 	return $order_item ? ( $terms_by_name[ (string) $order_item->get_meta( '_sbt_terms' ) ] ?? $terms ) : $terms;
 };
 $is_line       = static fn( $create, $line ) => '' !== (string) $line->get_meta( '_sbt_terms' ) ? true : $create;
-add_filter( 'subly_line_terms', $line_terms, 10, 4 );
-add_filter( 'subly_create_subscription_for_item', $is_line, 10, 2 );
+add_filter( 'submex_line_terms', $line_terms, 10, 4 );
+add_filter( 'submex_create_subscription_for_item', $is_line, 10, 2 );
 
 $line = static function ( string $name ) use ( $product ): WC_Order_Item_Product {
 	$item = new WC_Order_Item_Product();
@@ -112,9 +112,9 @@ $equals( 'without creating another', count( $plan_posts() ), $before );
 
 echo "\n3. A change to what PayPal is told makes a new plan\n";
 $cap = static fn() => 6;
-add_filter( 'subly_paypal_total_cycles', $cap );
+add_filter( 'submex_paypal_total_cycles', $cap );
 $capped = $cache->plan_for( wc_get_product( $product->get_id() ), Line_Terms::for_order_item( $line( 'fortnight' ) ) );
-remove_filter( 'subly_paypal_total_cycles', $cap );
+remove_filter( 'submex_paypal_total_cycles', $cap );
 $equals( 'a payment cap is a different plan', $capped['plan_id'], 'P-HARNESS-3' );
 $equals( 'that stops after 6 payments', $regular( $plan_posts()[2][1] )['total_cycles'], 6 );
 $own = $cache->plan_for( wc_get_product( $product->get_id() ) );
@@ -134,8 +134,8 @@ $equals( 'the customer is sent to approve it', $result['result'] ?? '', 'success
 $equals( 'on the yearly plan', array( $sent[0][1]['plan_id'] ?? '', wc_get_order( $order->get_id() )->get_meta( PayPal_Gateway::META_PLAN_ID ) ), array( 'P-HARNESS-2', 'P-HARNESS-2' ) );
 wc_clear_notices();
 
-remove_filter( 'subly_line_terms', $line_terms, 10 );
-remove_filter( 'subly_create_subscription_for_item', $is_line, 10 );
+remove_filter( 'submex_line_terms', $line_terms, 10 );
+remove_filter( 'submex_create_subscription_for_item', $is_line, 10 );
 
 $order = wc_create_order( array( 'customer_id' => 1 ) );
 $order->add_product( wc_get_product( $product->get_id() ), 1 );
@@ -150,7 +150,7 @@ foreach ( $made as $order ) {
 	$order->delete( true );
 }
 $product->delete( true );
-delete_transient( 'subly_paypal_token_' . md5( $client_id . $client->base() ) );
+delete_transient( 'submex_paypal_token_' . md5( $client_id . $client->base() ) );
 null === $saved_decimals ? delete_option( 'woocommerce_price_num_decimals' ) : update_option( 'woocommerce_price_num_decimals', $saved_decimals );
 
-subly_test_done( $fail );
+submex_test_done( $fail );

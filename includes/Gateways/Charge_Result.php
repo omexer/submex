@@ -1,6 +1,6 @@
 <?php
 
-namespace Subly\Gateways;
+namespace Submex\Gateways;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

@@ -1,9 +1,9 @@
 <?php
 
-namespace Subly\Product;
+namespace Submex\Product;
 
-use Subly\Domain\Billing_Schedule;
-use Subly\Domain\Money;
+use Submex\Domain\Billing_Schedule;
+use Submex\Domain\Money;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -17,13 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Subscription_Product {
 
-	public const META_ENABLED  = '_subly_enabled';
-	public const META_PERIOD   = '_subly_period';
-	public const META_INTERVAL = '_subly_interval';
+	public const META_ENABLED  = '_submex_enabled';
+	public const META_PERIOD   = '_submex_period';
+	public const META_INTERVAL = '_submex_interval';
 	// The trial length in META_TRIAL_PERIOD units; named from when trials were days only.
-	public const META_TRIAL_DAYS   = '_subly_trial_days';
-	public const META_TRIAL_PERIOD = '_subly_trial_period';
-	public const META_SIGNUP_FEE   = '_subly_signup_fee';
+	public const META_TRIAL_DAYS   = '_submex_trial_days';
+	public const META_TRIAL_PERIOD = '_submex_trial_period';
+	public const META_SIGNUP_FEE   = '_submex_signup_fee';
 
 	public static function is_subscription( $product ): bool {
 		$product = self::resolve( $product );
@@ -77,7 +77,7 @@ class Subscription_Product {
 		 * @param \WC_Product|null $product
 		 * @param string           $key
 		 */
-		$value = apply_filters( 'subly_product_meta', $value, $product, $key );
+		$value = apply_filters( 'submex_product_meta', $value, $product, $key );
 
 		return '' === $value || null === $value ? $default : $value;
 	}
@@ -148,13 +148,13 @@ class Subscription_Product {
 		 *
 		 * Asked for every line. A subscription product can be sold as a one-off, and a line
 		 * bought that way is no more recurring than a bag of coffee; a normal product's line
-		 * can be sold as a subscription, on terms from `subly_line_terms`.
+		 * can be sold as a subscription, on terms from `submex_line_terms`.
 		 *
 		 * @param bool   $recurring Whether the product is a subscription product.
 		 * @param array  $item
 		 * @param string $key
 		 */
-		return (bool) apply_filters( 'subly_cart_item_is_subscription', self::is_subscription( $product ), $item, $key );
+		return (bool) apply_filters( 'submex_cart_item_is_subscription', self::is_subscription( $product ), $item, $key );
 	}
 
 	/**
@@ -171,14 +171,14 @@ class Subscription_Product {
 		 * Whether this order line starts a subscription.
 		 *
 		 * Asked for every product line. Answer as the cart line was answered by
-		 * `subly_cart_item_is_subscription`, from what the line carries.
+		 * `submex_cart_item_is_subscription`, from what the line carries.
 		 *
 		 * @param bool                   $create  Whether the product is a subscription product.
 		 * @param \WC_Order_Item_Product $item
 		 * @param \WC_Product            $product
 		 * @param \WC_Order              $order
 		 */
-		return (bool) apply_filters( 'subly_create_subscription_for_item', self::is_subscription( $product ), $item, $product, $order );
+		return (bool) apply_filters( 'submex_create_subscription_for_item', self::is_subscription( $product ), $item, $product, $order );
 	}
 
 	private static function resolve( $product ): ?\WC_Product {

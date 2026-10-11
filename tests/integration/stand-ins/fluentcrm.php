@@ -1,18 +1,18 @@
 <?php
 /**
- * The FluentCRM API Subly calls, for tests run where FluentCRM is not active; require it only then.
+ * The FluentCRM API Submex calls, for tests run where FluentCRM is not active; require it only then.
  *
  * Shaped like FluentCRM 2.x where it matters: tags and lists answer all() through __call, and a
  * contact's tags and lists are relations read as properties.
  *
- * @package Subly
+ * @package Submex
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$GLOBALS['subly_fcrm'] = array(
+$GLOBALS['submex_fcrm'] = array(
 	'tags'     => array(
 		5 => 'Member',
 		7 => 'VIP',
@@ -46,8 +46,8 @@ class ES_FCRM_Contact {
 
 	public function __get( $name ) {
 		$items = array();
-		foreach ( $GLOBALS['subly_fcrm']['contacts'][ $this->email ][ $name ] ?? array() as $id ) {
-			$items[] = (object) array( 'id' => $id, 'title' => $GLOBALS['subly_fcrm'][ $name ][ $id ] ?? '' );
+		foreach ( $GLOBALS['submex_fcrm']['contacts'][ $this->email ][ $name ] ?? array() as $id ) {
+			$items[] = (object) array( 'id' => $id, 'title' => $GLOBALS['submex_fcrm'][ $name ][ $id ] ?? '' );
 		}
 		return new ES_FCRM_Collection( $items );
 	}
@@ -69,11 +69,11 @@ class ES_FCRM_Contact {
 	}
 
 	private function change( string $relation, string $method, array $ids, bool $add ): void {
-		$GLOBALS['subly_fcrm']['calls'][] = array( $method, $this->email, array_values( $ids ) );
-		$held                          = $GLOBALS['subly_fcrm']['contacts'][ $this->email ][ $relation ] ?? array();
+		$GLOBALS['submex_fcrm']['calls'][] = array( $method, $this->email, array_values( $ids ) );
+		$held                          = $GLOBALS['submex_fcrm']['contacts'][ $this->email ][ $relation ] ?? array();
 		$held                          = $add ? array_merge( $held, $ids ) : array_diff( $held, $ids );
 
-		$GLOBALS['subly_fcrm']['contacts'][ $this->email ][ $relation ] = array_values( array_unique( array_map( 'intval', $held ) ) );
+		$GLOBALS['submex_fcrm']['contacts'][ $this->email ][ $relation ] = array_values( array_unique( array_map( 'intval', $held ) ) );
 	}
 }
 
@@ -81,8 +81,8 @@ class ES_FCRM_Contacts {
 
 	public function createOrUpdate( $data ) {
 		$email = (string) $data['email'];
-		if ( ! isset( $GLOBALS['subly_fcrm']['contacts'][ $email ] ) ) {
-			$GLOBALS['subly_fcrm']['contacts'][ $email ] = array(
+		if ( ! isset( $GLOBALS['submex_fcrm']['contacts'][ $email ] ) ) {
+			$GLOBALS['submex_fcrm']['contacts'][ $email ] = array(
 				'tags'  => array(),
 				'lists' => array(),
 			);
@@ -100,7 +100,7 @@ class ES_FCRM_Taxonomy {
 			throw new Exception( "Method {$method} does not exist." );
 		}
 		$items = array();
-		foreach ( $GLOBALS['subly_fcrm'][ $this->resource ] as $id => $title ) {
+		foreach ( $GLOBALS['submex_fcrm'][ $this->resource ] as $id => $title ) {
 			$items[] = (object) array( 'id' => $id, 'title' => $title );
 		}
 		return new ES_FCRM_Collection( $items );

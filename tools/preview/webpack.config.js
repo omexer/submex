@@ -10,14 +10,14 @@ const defaults = require( '@wordpress/scripts/config/webpack.config' );
 const DependencyExtraction = require( '@wordpress/dependency-extraction-webpack-plugin' );
 
 const free = path.resolve( __dirname, '../..' );
-const pro = path.resolve( free, '../subly-pro' );
+const pro = path.resolve( free, '../submex-pro' );
 const own = ( name ) => path.resolve( free, 'node_modules', name );
 
 module.exports = {
 	...defaults,
 	entry: { preview: path.resolve( __dirname, 'index.js' ) },
 	output: {
-		path: process.env.SUBLY_PREVIEW_OUT || path.resolve( free, '.preview' ),
+		path: process.env.SUBMEX_PREVIEW_OUT || path.resolve( free, '.preview' ),
 		filename: '[name].js',
 	},
 	externals: {},
@@ -26,8 +26,8 @@ module.exports = {
 		...defaults.resolve,
 		alias: {
 			...( defaults.resolve?.alias || {} ),
-			'@subly/ui': path.resolve( free, 'src/ui/index.js' ),
-			'@subly/pro': path.resolve( pro, 'src' ),
+			'@submex/ui': path.resolve( free, 'src/ui/index.js' ),
+			'@submex/pro': path.resolve( pro, 'src' ),
 			// One copy of each, whichever plugin imports it: two Reacts break every hook.
 			react: own( 'react' ),
 			'react-dom': own( 'react-dom' ),

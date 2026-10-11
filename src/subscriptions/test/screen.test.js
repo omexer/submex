@@ -10,7 +10,7 @@ jest.mock( '@wordpress/api-fetch' );
 
 const ROW = {
 	id: 812,
-	status: 'subly-active',
+	status: 'submex-active',
 	status_label: 'Active',
 	customer_name: 'Ada Lovelace',
 	customer_email: 'ada@example.com',
@@ -20,14 +20,14 @@ const ROW = {
 	next_payment: '',
 	end_date: '',
 	billable: true,
-	edit_url: '/wp-admin/admin.php?page=subly-list&subscription=812',
+	edit_url: '/wp-admin/admin.php?page=submex-list&subscription=812',
 };
 
 let container;
 
 async function render( query, setParams ) {
 	apiFetch.mockImplementation( ( options ) => {
-		if ( options.path.startsWith( '/subly/v1/subscriptions?' ) ) {
+		if ( options.path.startsWith( '/submex/v1/subscriptions?' ) ) {
 			return Promise.resolve( {
 				json: () => Promise.resolve( [ ROW ] ),
 				headers: { get: () => '1' },
@@ -75,21 +75,21 @@ describe( 'the subscriptions route', () => {
 	} );
 
 	it( 'filters the list by the status in the address', async () => {
-		await render( 'status=subly-on-hold', jest.fn() );
+		await render( 'status=submex-on-hold', jest.fn() );
 
 		const call = apiFetch.mock.calls.find( ( [ options ] ) =>
-			options.path.startsWith( '/subly/v1/subscriptions?' )
+			options.path.startsWith( '/submex/v1/subscriptions?' )
 		);
 		expect(
 			new URLSearchParams( call[ 0 ].path.split( '?' )[ 1 ] ).get(
 				'status'
 			)
-		).toBe( 'subly-on-hold' );
+		).toBe( 'submex-on-hold' );
 	} );
 
 	it( 'opens a subscription by adding it to the address, keeping the filter', async () => {
 		const setParams = jest.fn();
-		await render( 'status=subly-active', setParams );
+		await render( 'status=submex-active', setParams );
 
 		const link = [ ...container.querySelectorAll( 'a' ) ].find(
 			( a ) => a.textContent === 'Ada Lovelace'
@@ -99,13 +99,13 @@ describe( 'the subscriptions route', () => {
 		} );
 
 		expect( setParams.mock.calls[ 0 ][ 0 ].toString() ).toBe(
-			'status=subly-active&subscription=812'
+			'status=submex-active&subscription=812'
 		);
 	} );
 
 	it( 'shows the subscription the address names, with what extensions draw under it, and goes back by dropping it', async () => {
 		const setParams = jest.fn();
-		await render( 'subscription=812&status=subly-active', setParams );
+		await render( 'subscription=812&status=submex-active', setParams );
 
 		expect( container.textContent ).toContain( 'Subscription #812' );
 		expect(
@@ -120,7 +120,7 @@ describe( 'the subscriptions route', () => {
 		} );
 
 		expect( setParams.mock.calls[ 0 ][ 0 ].toString() ).toBe(
-			'status=subly-active'
+			'status=submex-active'
 		);
 	} );
 } );

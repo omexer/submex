@@ -1,10 +1,10 @@
 <?php
 
-namespace Subly\Lifecycle;
+namespace Submex\Lifecycle;
 
-use Subly\Data\Subscription_Query;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
+use Submex\Data\Subscription_Query;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -18,8 +18,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Role_Management {
 
-	private const OPTION_ACTIVE   = 'subly_active_role';
-	private const OPTION_INACTIVE = 'subly_inactive_role';
+	private const OPTION_ACTIVE   = 'submex_active_role';
+	private const OPTION_INACTIVE = 'submex_inactive_role';
 
 	/** Capabilities that mean a role can run the site or the store; no subscription grants them. */
 	public const ADMINISTRATIVE = array(
@@ -47,8 +47,8 @@ class Role_Management {
 	);
 
 	public function register(): void {
-		add_action( 'subly_subscription_status_changed', array( $this, 'on_status_change' ), 10, 3 );
-		add_action( 'subly_subscription_grace_ended', array( $this, 'demote' ) );
+		add_action( 'submex_subscription_status_changed', array( $this, 'on_status_change' ), 10, 3 );
+		add_action( 'submex_subscription_grace_ended', array( $this, 'demote' ) );
 	}
 
 	/**

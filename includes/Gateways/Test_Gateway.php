@@ -1,8 +1,8 @@
 <?php
 
-namespace Subly\Gateways;
+namespace Submex\Gateways;
 
-use Subly\Domain\Subscription;
+use Submex\Domain\Subscription;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -15,23 +15,23 @@ if ( ! defined( 'ABSPATH' ) ) {
  * timeout, then a soft decline, then a success on demand, and PayPal cannot be
  * time-travelled because it owns its own schedule. See Developer Guide 8.1.
  *
- * Registered only when SUBLY_ENABLE_TEST_GATEWAY is defined, and it refuses to charge
+ * Registered only when SUBMEX_ENABLE_TEST_GATEWAY is defined, and it refuses to charge
  * when WP_DEBUG is off so it cannot be turned on quietly in production.
  */
 class Test_Gateway implements Recurring_Gateway {
 
-	public const ID = 'subly_test';
+	public const ID = 'submex_test';
 
-	private const SCRIPT_META    = '_subly_test_script';
-	private const CURSOR_META    = '_subly_test_cursor';
-	private const RECONCILE_META = '_subly_test_reconcile';
+	private const SCRIPT_META    = '_submex_test_script';
+	private const CURSOR_META    = '_submex_test_cursor';
+	private const RECONCILE_META = '_submex_test_reconcile';
 
 	public function id(): string {
 		return self::ID;
 	}
 
 	public function title(): string {
-		return __( 'Subly test gateway (development only)', 'subly' );
+		return __( 'Submex test gateway (development only)', 'submex' );
 	}
 
 	public function model(): Gateway_Model {
@@ -55,7 +55,7 @@ class Test_Gateway implements Recurring_Gateway {
 		if ( ! $this->is_safe_to_run() ) {
 			return Charge_Result::hard_decline(
 				'test_gateway_disabled',
-				'The Subly test gateway is registered but WP_DEBUG is off, so it will not simulate charges.'
+				'The Submex test gateway is registered but WP_DEBUG is off, so it will not simulate charges.'
 			);
 		}
 

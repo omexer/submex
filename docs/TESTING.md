@@ -1,4 +1,4 @@
-# Testing Subly
+# Testing Submex
 
 Five kinds of check. **Static analysis** runs anywhere and catches type and standards problems before the code runs. **Integration tests** run the PHP against a real WordPress and WooCommerce. **JavaScript tests** cover the React admin screens. **Screenshots** of those screens catch what tests cannot see. **Sandbox tests** talk to a real payment gateway and are the only way to prove the parts that matter most.
 
@@ -9,18 +9,18 @@ Five kinds of check. **Static analysis** runs anywhere and catches type and stan
 Both plugins have a suite in `tests/integration/`: one PHP file per behaviour (22 in free, 47 in
 Pro as of 0.26.0 / 0.45.0), each run through `wp eval-file` inside a WordPress with WooCommerce
 and the plugin active. Every file requires `tests/integration/bootstrap.php`, prints `PASS` /
-`FAIL` per check and ends with `subly_test_done( $fail )`.
+`FAIL` per check and ends with `submex_test_done( $fail )`.
 
 ```bash
 tools/test.sh              # every file
 tools/test.sh renewal      # only files whose name contains "renewal"
 ```
 
-`SUBLY_WP` is the command that runs WP-CLI in the target site. It defaults to wp-env
+`SUBMEX_WP` is the command that runs WP-CLI in the target site. It defaults to wp-env
 (`npx wp-env run cli wp`, configured by `.wp-env.json`); point it at your own stack instead:
 
 ```bash
-SUBLY_WP="docker compose -f ~/wp-docker/docker-compose.yml exec -T wordpress wp --allow-root" tools/test.sh
+SUBMEX_WP="docker compose -f ~/wp-docker/docker-compose.yml exec -T wordpress wp --allow-root" tools/test.sh
 ```
 
 Pro's suite needs the free plugin active beside it.
@@ -36,7 +36,7 @@ Rules the suite depends on:
   file holding one very long string literal once did exactly that and counted as a pass with
   zero checks. `tools/test.sh` now fails any file that exits 0 without printing the
   bootstrap's `all checks passed` line. A test that cannot continue calls
-  `subly_test_abort()`, never a bare `exit`, which would report success.
+  `submex_test_abort()`, never a bare `exit`, which would report success.
 - **Pin the site settings a test depends on, and restore them.** A test that asserts a
   formatted amount, a role or a tax figure must set the option it relies on first and put the
   site's value back at the end: `woocommerce_currency_pos` (Pro's WhatsApp test pins `left`),
@@ -47,17 +47,17 @@ Rules the suite depends on:
 - **Gateways are tested with `pre_http_request` fakes.** No test contacts a real gateway: each
   gateway test answers the provider's API from a fake that matches requests by host (a site
   with WooCommerce usage tracking on can send other requests carrying the same query string).
-  Braintree is faked at its SDK. A passing gateway test proves Subly handles the answers the
+  Braintree is faked at its SDK. A passing gateway test proves Submex handles the answers the
   provider documents — not that the provider answers that way. See Pro's `docs/GATEWAYS.md`
   for the sandbox steps that close that gap.
 - **Stand-ins for premium plugins must be checked against licensed copies before release.**
   AffiliateWP and AutomateWoo cannot be installed in CI, so Pro's tests run against stand-ins
   (`tests/integration/automatewoo-stand-in.php`, built from AutomateWoo 6.9.0's GPL source; the
   AffiliateWP stand-in inside `test-affiliatewp.php`, built from its documentation). A stand-in
-  only proves Subly calls what it expects to call. Run both integrations once against a
+  only proves Submex calls what it expects to call. Run both integrations once against a
   licensed AffiliateWP and AutomateWoo on staging before each release that touches them.
   BuddyPress was run against BuddyPress 14.5.2 during development; where it is not active,
-  as in CI, `tests/integration/stand-ins/buddypress.php` stands in for the functions Subly
+  as in CI, `tests/integration/stand-ins/buddypress.php` stands in for the functions Submex
   calls.
 
 ---
@@ -115,7 +115,7 @@ npm ci
 
 `build/` is committed, because a plugin installed from a zip has no build step. `.github/workflows/admin-ui.yml` runs lint, tests and a build on every push, then **fails if `build/` differs from what was committed** — the check for source changed and assets not rebuilt.
 
-Pro's tests stand in for the free plugin's UI kit with `tools/subly-ui-stub.js`. At runtime that kit is a global the free plugin puts on the page, not a package Pro can import, so the stub is what makes Pro's screens testable on their own.
+Pro's tests stand in for the free plugin's UI kit with `tools/submex-ui-stub.js`. At runtime that kit is a global the free plugin puts on the page, not a package Pro can import, so the stub is what makes Pro's screens testable on their own.
 
 A few assertions are mutation-checked — broken on purpose to prove the test notices — noted in the commit that added them.
 
@@ -137,7 +137,7 @@ python3 -m http.server 8765 --directory .preview
 
 Then open `http://localhost:8765/#dashboard`, and swap the hash for `#list`, `#detail`, `#reports` or `#health`. Add `?setup=done` before the hash to see Home once setup is finished. Pro's screens are included, so check out the Pro plugin beside the free one first.
 
-The preview draws Subly's own frame but not WordPress's sidebar and admin bar. Look at the real admin once before a release.
+The preview draws Submex's own frame but not WordPress's sidebar and admin bar. Look at the real admin once before a release.
 
 ---
 
@@ -149,7 +149,7 @@ real ones, holds them on a wall-clock barrier until they are all spinning, and r
 them against the same subscription.
 
 ```bash
-docker compose exec -T wordpress php /var/www/html/wp-content/plugins/subly/tools/concurrency-test.php
+docker compose exec -T wordpress php /var/www/html/wp-content/plugins/submex/tools/concurrency-test.php
 ```
 
 Two rounds. The first asks the narrow question - eight workers call `claim_next()` on the
@@ -172,7 +172,7 @@ If you have run older builds, they left orphan rows behind — deleting a subscr
 to leave its ledger and activity rows in place forever. Clear them once with:
 
 ```bash
-docker compose exec -T wordpress php -r 'require "/var/www/html/wp-load.php"; printf("removed %d\n", Subly\Data\Cleanup::purge_orphans());'
+docker compose exec -T wordpress php -r 'require "/var/www/html/wp-load.php"; printf("removed %d\n", Submex\Data\Cleanup::purge_orphans());'
 ```
 
 ---
@@ -194,7 +194,7 @@ Never use a live key. The harness refuses anything that is not `sk_test_`, becau
 From the `wp-docker` directory:
 
 ```bash
-SUBLY_STRIPE_TEST_KEY='sk_test_your_key_here' docker compose exec -T -e SUBLY_STRIPE_TEST_KEY wordpress php /var/www/html/wp-content/plugins/subly/tools/sandbox-stripe.php
+SUBMEX_STRIPE_TEST_KEY='sk_test_your_key_here' docker compose exec -T -e SUBMEX_STRIPE_TEST_KEY wordpress php /var/www/html/wp-content/plugins/submex/tools/sandbox-stripe.php
 ```
 
 The key is read from the environment. It is never written to the database beyond the run, never printed, and never logged.
@@ -221,7 +221,7 @@ On a fast connection the read can finish inside the second, and you will see an 
 ### The other gateways
 
 No harness like this exists for any other gateway yet. The manual sandbox steps for every
-gateway — free's Stripe and PayPal and all of Pro's — are in Subly Pro's `docs/GATEWAYS.md`.
+gateway — free's Stripe and PayPal and all of Pro's — are in Submex Pro's `docs/GATEWAYS.md`.
 PayPal and Paddle own their billing schedules, so there is no charge of ours to interrupt:
 they need a sandbox subscription and a check that the webhook mirrors it, exactly once.
 
@@ -234,10 +234,10 @@ this build"* and the licence screens cannot be reached at all. To click through 
 this to `wp-config.php`:
 
 ```php
-define( 'SUBLY_PRO_TEST_LICENCE', true );
+define( 'SUBMEX_PRO_TEST_LICENCE', true );
 ```
 
-Then **Subly → Settings → Licence** gains a **Use a test licence** button. No store is
+Then **Submex → Settings → Licence** gains a **Use a test licence** button. No store is
 contacted and any key is accepted.
 
 | Key | What it shows |

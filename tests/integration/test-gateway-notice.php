@@ -6,7 +6,7 @@
  * which is not what happens: PayPal is offered and charges the customer, and every
  * webhook is then rejected, so no renewal is ever recorded.
  *
- * @package Subly
+ * @package Submex
  */
 
 require __DIR__ . '/bootstrap.php';
@@ -14,48 +14,48 @@ require __DIR__ . '/bootstrap.php';
 require_once ABSPATH . 'wp-admin/includes/class-wp-screen.php';
 require_once ABSPATH . 'wp-admin/includes/screen.php';
 
-$keys   = array( 'subly_paypal_enabled', 'subly_paypal_client_id', 'subly_paypal_secret', 'subly_paypal_webhook_id' );
+$keys   = array( 'submex_paypal_enabled', 'submex_paypal_client_id', 'submex_paypal_secret', 'submex_paypal_webhook_id' );
 $before = array();
 foreach ( $keys as $key ) {
 	$before[ $key ] = get_option( $key, null );
 }
 
 $saved_screen   = $GLOBALS['current_screen'] ?? null;
-$dismissed_meta = get_user_meta( 1, 'subly_dismissed_notices', true );
-delete_user_meta( 1, 'subly_dismissed_notices' );
-set_current_screen( 'toplevel_page_subly' );
+$dismissed_meta = get_user_meta( 1, 'submex_dismissed_notices', true );
+delete_user_meta( 1, 'submex_dismissed_notices' );
+set_current_screen( 'toplevel_page_submex' );
 
 $render = static function (): string {
 	ob_start();
-	( new \Subly\Admin\Gateway_Notice() )->render();
+	( new \Submex\Admin\Gateway_Notice() )->render();
 
 	return trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( (string) ob_get_clean() ) ) );
 };
 
-update_option( 'subly_paypal_enabled', 'yes' );
+update_option( 'submex_paypal_enabled', 'yes' );
 
-update_option( 'subly_paypal_client_id', 'AX' );
-update_option( 'subly_paypal_secret', 'SX' );
-update_option( 'subly_paypal_webhook_id', '' );
+update_option( 'submex_paypal_client_id', 'AX' );
+update_option( 'submex_paypal_secret', 'SX' );
+update_option( 'submex_paypal_webhook_id', '' );
 $text = $render();
 $check( 'a missing webhook ID says renewals go unrecorded', str_contains( $text, 'renewals will not be recorded' ), $text );
 $check( 'and does not claim PayPal is hidden at checkout', ! str_contains( $text, 'not offered at checkout' ), $text );
 
-update_option( 'subly_paypal_client_id', '' );
-update_option( 'subly_paypal_secret', '' );
+update_option( 'submex_paypal_client_id', '' );
+update_option( 'submex_paypal_secret', '' );
 $text = $render();
 $check( 'missing credentials say PayPal is not offered', str_contains( $text, 'not offered at checkout' ), $text );
 $check( 'and do not also claim customers can pay', ! str_contains( $text, 'Customers can pay' ), $text );
 
-update_option( 'subly_paypal_client_id', 'AX' );
-update_option( 'subly_paypal_secret', 'SX' );
-update_option( 'subly_paypal_webhook_id', 'WH-1' );
+update_option( 'submex_paypal_client_id', 'AX' );
+update_option( 'submex_paypal_secret', 'SX' );
+update_option( 'submex_paypal_webhook_id', 'WH-1' );
 $check( 'a complete setup shows nothing', '' === $render(), $render() );
 
 $GLOBALS['current_screen'] = $saved_screen; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
-'' === $dismissed_meta ? delete_user_meta( 1, 'subly_dismissed_notices' ) : update_user_meta( 1, 'subly_dismissed_notices', $dismissed_meta );
+'' === $dismissed_meta ? delete_user_meta( 1, 'submex_dismissed_notices' ) : update_user_meta( 1, 'submex_dismissed_notices', $dismissed_meta );
 foreach ( $before as $key => $value ) {
 	null === $value ? delete_option( $key ) : update_option( $key, $value );
 }
 
-subly_test_done( $fail );
+submex_test_done( $fail );

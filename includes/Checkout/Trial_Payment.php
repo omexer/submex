@@ -1,9 +1,9 @@
 <?php
 
-namespace Subly\Checkout;
+namespace Submex\Checkout;
 
-use Subly\Product\Line_Terms;
-use Subly\Product\Subscription_Product;
+use Submex\Product\Line_Terms;
+use Submex\Product\Subscription_Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Trial_Payment {
 
-	public const OPTION = 'subly_collect_payment_on_trial';
+	public const OPTION = 'submex_collect_payment_on_trial';
 
 	public function register(): void {
 		add_filter( 'woocommerce_cart_needs_payment', array( $this, 'cart_needs_payment' ), 10, 2 );
@@ -69,7 +69,7 @@ final class Trial_Payment {
 			return $needs_payment;
 		}
 
-		if ( 'subly_renewal' === $order->get_created_via() ) {
+		if ( 'submex_renewal' === $order->get_created_via() ) {
 			return $needs_payment;
 		}
 
@@ -95,7 +95,7 @@ final class Trial_Payment {
 		 * @param \WC_Product $product
 		 * @param string[]    $coupon_codes
 		 */
-		$amount = (float) apply_filters( 'subly_checkout_renewal_amount', (float) $terms->recurring_price()->decimal(), $product, $coupon_codes );
+		$amount = (float) apply_filters( 'submex_checkout_renewal_amount', (float) $terms->recurring_price()->decimal(), $product, $coupon_codes );
 
 		return $amount > 0;
 	}

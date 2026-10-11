@@ -1,11 +1,11 @@
 <?php
 
-namespace Subly\Frontend;
+namespace Submex\Frontend;
 
-use Subly\Domain\Billing_Schedule;
-use Subly\Domain\Money;
-use Subly\Product\Line_Terms;
-use Subly\Product\Subscription_Product;
+use Submex\Domain\Billing_Schedule;
+use Submex\Domain\Money;
+use Submex\Product\Line_Terms;
+use Submex\Product\Subscription_Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -41,7 +41,7 @@ class Disclosure {
 			$lines[] = array(
 				'key'  => 'trial',
 				/* translators: %s: trial length such as "14 days" or "1 month" */
-				'text' => sprintf( __( '%s free', 'subly' ), $schedule->describe_trial() ),
+				'text' => sprintf( __( '%s free', 'submex' ), $schedule->describe_trial() ),
 			);
 		}
 
@@ -49,7 +49,7 @@ class Disclosure {
 			$lines[] = array(
 				'key'  => 'signup_fee',
 				/* translators: %s: sign-up fee amount */
-				'text' => sprintf( __( '%s sign-up fee today', 'subly' ), $this->amount( $fee ) ),
+				'text' => sprintf( __( '%s sign-up fee today', 'submex' ), $this->amount( $fee ) ),
 			);
 		}
 
@@ -62,20 +62,20 @@ class Disclosure {
 			'key'  => 'first_payment',
 			'text' => $first_date
 				/* translators: 1: amount, 2: date */
-				? sprintf( __( 'First payment %1$s on %2$s', 'subly' ), $this->amount( $first_due ), $this->date( $first_date ) )
+				? sprintf( __( 'First payment %1$s on %2$s', 'submex' ), $this->amount( $first_due ), $this->date( $first_date ) )
 				/* translators: %s: amount */
-				: sprintf( __( 'First payment %s today', 'subly' ), $this->amount( $first_due ) ),
+				: sprintf( __( 'First payment %s today', 'submex' ), $this->amount( $first_due ) ),
 		);
 
 		$lines[] = array(
 			'key'  => 'recurring',
 			/* translators: 1: amount, 2: billing interval such as "every month" */
-			'text' => sprintf( __( 'Then %1$s %2$s', 'subly' ), $this->amount( $price ), $schedule->describe() ),
+			'text' => sprintf( __( 'Then %1$s %2$s', 'submex' ), $this->amount( $price ), $schedule->describe() ),
 		);
 
 		$lines[] = array(
 			'key'  => 'cancel',
-			'text' => __( 'Cancel anytime', 'subly' ),
+			'text' => __( 'Cancel anytime', 'submex' ),
 		);
 
 		/**
@@ -85,7 +85,7 @@ class Disclosure {
 		 * @param \WC_Product $product
 		 * @param Line_Terms  $terms   What they were written from; its cart_item() or order_item() is the line, if any.
 		 */
-		return apply_filters( 'subly_disclosure_lines', $lines, $product, $terms );
+		return apply_filters( 'submex_disclosure_lines', $lines, $product, $terms );
 	}
 
 	/**
@@ -101,7 +101,7 @@ class Disclosure {
 		 * @param \WC_Product $product
 		 * @param Line_Terms  $terms
 		 */
-		return (string) apply_filters( 'subly_disclosure_price_line', $this->default_price_line( $terms ), $product, $terms );
+		return (string) apply_filters( 'submex_disclosure_price_line', $this->default_price_line( $terms ), $product, $terms );
 	}
 
 	/**
@@ -125,13 +125,13 @@ class Disclosure {
 			return $line;
 		}
 
-		return $woo_html . ' <span class="subly-price-interval">' . esc_html( $terms->schedule()->describe() ) . '</span>';
+		return $woo_html . ' <span class="submex-price-interval">' . esc_html( $terms->schedule()->describe() ) . '</span>';
 	}
 
 	private function default_price_line( Line_Terms $terms ): string {
 		return sprintf(
 			/* translators: 1: price, 2: billing interval such as "every month" */
-			__( '%1$s %2$s', 'subly' ),
+			__( '%1$s %2$s', 'submex' ),
 			$this->amount( $terms->recurring_price() ),
 			$terms->schedule()->describe()
 		);
@@ -147,11 +147,11 @@ class Disclosure {
 
 		// No headline price here: the product's own price line says it, and saying it twice
 		// is what made the page read "$5.00" then "$5.00 every month".
-		$html  = '<div class="subly-disclosure" role="group" aria-label="' . esc_attr__( 'Subscription terms', 'subly' ) . '">';
-		$html .= '<ul class="subly-disclosure__facts">';
+		$html  = '<div class="submex-disclosure" role="group" aria-label="' . esc_attr__( 'Subscription terms', 'submex' ) . '">';
+		$html .= '<ul class="submex-disclosure__facts">';
 
 		foreach ( $this->lines( $product, null, $terms ) as $line ) {
-			$html .= '<li class="subly-disclosure__fact subly-disclosure__fact--' . esc_attr( $line['key'] ) . '">' . wp_kses_post( $line['text'] ) . '</li>';
+			$html .= '<li class="submex-disclosure__fact submex-disclosure__fact--' . esc_attr( $line['key'] ) . '">' . wp_kses_post( $line['text'] ) . '</li>';
 		}
 
 		return $html . '</ul></div>';
@@ -171,7 +171,7 @@ class Disclosure {
 		 * @param \WC_Product $product
 		 * @param Line_Terms  $terms
 		 */
-		return (string) apply_filters( 'subly_disclosure_sentence', $this->default_sentence( $terms ), $product, $terms );
+		return (string) apply_filters( 'submex_disclosure_sentence', $this->default_sentence( $terms ), $product, $terms );
 	}
 
 	private function default_sentence( Line_Terms $terms ): string {
@@ -181,7 +181,7 @@ class Disclosure {
 		if ( $schedule->has_trial() ) {
 			return sprintf(
 				/* translators: 1: trial length such as "14 days" or "1 month", 2: amount, 3: billing interval */
-				__( "You're starting a subscription. After a free trial of %1\$s you'll be charged %2\$s %3\$s until you cancel.", 'subly' ),
+				__( "You're starting a subscription. After a free trial of %1\$s you'll be charged %2\$s %3\$s until you cancel.", 'submex' ),
 				$schedule->describe_trial(),
 				$this->amount( $price ),
 				$schedule->describe()
@@ -190,7 +190,7 @@ class Disclosure {
 
 		return sprintf(
 			/* translators: 1: amount, 2: billing interval */
-			__( "You're starting a subscription. You'll be charged %1\$s %2\$s until you cancel.", 'subly' ),
+			__( "You're starting a subscription. You'll be charged %1\$s %2\$s until you cancel.", 'submex' ),
 			$this->amount( $price ),
 			$schedule->describe()
 		);

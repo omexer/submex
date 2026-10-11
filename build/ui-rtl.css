@@ -771,7 +771,7 @@
  * to restyle, and a plugin that redefines --background for the whole page is a plugin
  * that breaks the next one.
  */
-.subly-ui {
+.submex-ui {
 	--sb-background: 0 0% 100%;
 	--sb-foreground: 240 10% 12%;
 	--sb-card: 0 0% 100%;
@@ -798,9 +798,9 @@
 	line-height: 1.5;
 }
 
-:where(.subly-ui) *,
-:where(.subly-ui) *::before,
-:where(.subly-ui) *::after {
+:where(.submex-ui) *,
+:where(.submex-ui) *::before,
+:where(.submex-ui) *::after {
 	box-sizing: border-box;
 }
 
@@ -811,7 +811,7 @@
    supplies the style and colour. Without this every border class draws nothing.
    Zero specificity through :where(), or this reset ties with .sb-border and wins on order,
    which left every outline button and bordered panel with no border at all. */
-:where(.subly-ui) :where(*, *::before, *::after) {
+:where(.submex-ui) :where(*, *::before, *::after) {
 	border-width: 0;
 	border-style: solid;
 	border-color: hsl( var( --sb-border ) );
@@ -819,54 +819,54 @@
 
 /* The browser's and wp-admin's own button, input and link styles would otherwise show
    through every component built from those elements. */
-:where(.subly-ui) :where(button, input, select, textarea) {
+:where(.submex-ui) :where(button, input, select, textarea) {
 	margin: 0;
 	font: inherit;
 	color: inherit;
 	letter-spacing: inherit;
 }
 
-:where(.subly-ui) button {
+:where(.submex-ui) button {
 	background: transparent;
 	box-shadow: none;
 	cursor: pointer;
 	line-height: inherit;
 }
 
-:where(.subly-ui) button:disabled {
+:where(.submex-ui) button:disabled {
 	cursor: default;
 }
 
-:where(.subly-ui) a {
+:where(.submex-ui) a {
 	color: inherit;
 	text-decoration: none;
 	box-shadow: none;
 }
 
-:where(.subly-ui) :where(a, button):focus-visible {
+:where(.submex-ui) :where(a, button):focus-visible {
 	outline: 2px solid hsl( var( --sb-ring ) );
 	outline-offset: 2px;
 }
 
-:where(.subly-ui) svg {
+:where(.submex-ui) svg {
 	display: inline-block;
 	vertical-align: middle;
 }
 
-:where(.subly-ui) input[type="checkbox"] {
+:where(.submex-ui) input[type="checkbox"] {
 	border-width: 1px;
 }
-.subly-ui h2,
-.subly-ui h3,
-.subly-ui p,
-.subly-ui ul,
-.subly-ui ol {
+.submex-ui h2,
+.submex-ui h3,
+.submex-ui p,
+.submex-ui ul,
+.submex-ui ol {
 	margin: 0;
 	padding: 0;
 }
 
-.subly-ui ul,
-.subly-ui ol {
+.submex-ui ul,
+.submex-ui ol {
 	list-style: none;
 }
 

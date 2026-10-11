@@ -119,7 +119,7 @@ export function navigate( page, params = {} ) {
 		return;
 	}
 
-	window.history.pushState( { subly: page }, '', href );
+	window.history.pushState( { submex: page }, '', href );
 	commit( page, toParams( params ), 'navigate' );
 }
 
@@ -131,7 +131,7 @@ export function setParams( params, { replace = false } = {} ) {
 	const href = hrefFor( location.page, params );
 
 	window.history[ replace ? 'replaceState' : 'pushState' ](
-		{ subly: location.page },
+		{ submex: location.page },
 		'',
 		href
 	);

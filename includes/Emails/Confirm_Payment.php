@@ -1,8 +1,8 @@
 <?php
 
-namespace Subly\Emails;
+namespace Submex\Emails;
 
-use Subly\Domain\Subscription;
+use Submex\Domain\Subscription;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -20,20 +20,20 @@ class Confirm_Payment extends Subscription_Email {
 	private string $action_url = '';
 
 	public function __construct() {
-		$this->id             = 'subly_confirm_payment';
-		$this->title          = __( 'Confirm your payment', 'subly' );
-		$this->description    = __( 'Sent when the customer\'s bank asks them to confirm a renewal payment.', 'subly' );
+		$this->id             = 'submex_confirm_payment';
+		$this->title          = __( 'Confirm your payment', 'submex' );
+		$this->description    = __( 'Sent when the customer\'s bank asks them to confirm a renewal payment.', 'submex' );
 		$this->customer_email = true;
 
 		parent::__construct();
 	}
 
 	public function get_default_subject(): string {
-		return __( 'Confirm your payment', 'subly' );
+		return __( 'Confirm your payment', 'submex' );
 	}
 
 	public function get_default_heading(): string {
-		return __( 'One quick confirmation needed', 'subly' );
+		return __( 'One quick confirmation needed', 'submex' );
 	}
 
 	public function trigger( Subscription $subscription, \WC_Order $order, string $action_url ): void {
@@ -47,15 +47,15 @@ class Confirm_Payment extends Subscription_Email {
 	protected function intro(): string {
 		return sprintf(
 			/* translators: %s: amount */
-			__( 'Your bank needs you to confirm the %s payment for your subscription. It takes a few seconds and nothing has been charged yet.', 'subly' ),
+			__( 'Your bank needs you to confirm the %s payment for your subscription. It takes a few seconds and nothing has been charged yet.', 'submex' ),
 			$this->amount( $this->related_order ? $this->related_order->get_total() : $this->subscription->get_total() )
 		);
 	}
 
 	protected function facts(): array {
 		return array(
-			__( 'Subscription', 'subly' ) => '#' . $this->subscription->get_id(),
-			__( 'Amount', 'subly' )       => $this->amount( $this->related_order ? $this->related_order->get_total() : 0 ),
+			__( 'Subscription', 'submex' ) => '#' . $this->subscription->get_id(),
+			__( 'Amount', 'submex' )       => $this->amount( $this->related_order ? $this->related_order->get_total() : 0 ),
 		);
 	}
 
@@ -63,12 +63,12 @@ class Confirm_Payment extends Subscription_Email {
 		$url = $this->action_url ?: ( $this->related_order ? $this->related_order->get_checkout_payment_url() : '' );
 
 		return $url ? array(
-			'label' => __( 'Confirm payment', 'subly' ),
+			'label' => __( 'Confirm payment', 'submex' ),
 			'url'   => $url,
 		) : null;
 	}
 
 	protected function outro(): string {
-		return __( 'If the link has expired, open your account and pay from there - a fresh one is generated automatically.', 'subly' );
+		return __( 'If the link has expired, open your account and pay from there - a fresh one is generated automatically.', 'submex' );
 	}
 }

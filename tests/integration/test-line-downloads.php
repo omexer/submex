@@ -3,15 +3,15 @@
  * A normal product's files bought on a subscription line go when that subscription ends; the same
  * product bought once keeps them; a subscription product's files are gated as they always were.
  *
- * @package Subly
+ * @package Submex
  */
 
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
 
 require __DIR__ . '/bootstrap.php';
 
-$plugin = \Subly\Plugin::instance();
+$plugin = \Submex\Plugin::instance();
 
 $saved_taxes = get_option( 'woocommerce_calc_taxes', null );
 update_option( 'woocommerce_calc_taxes', 'no' );
@@ -29,15 +29,15 @@ $product->set_downloadable( true );
 $product->set_downloads( array( $file ) );
 $product->save();
 
-$sub_product = new \Subly\Product\Simple_Subscription();
+$sub_product = new \Submex\Product\Simple_Subscription();
 $sub_product->set_name( 'SK Line downloads subscription' );
 $sub_product->set_status( 'publish' );
 $sub_product->set_regular_price( '10' );
 $sub_product->set_virtual( true );
 $sub_product->set_downloadable( true );
 $sub_product->set_downloads( array( $file ) );
-$sub_product->update_meta_data( \Subly\Product\Subscription_Product::META_PERIOD, 'month' );
-$sub_product->update_meta_data( \Subly\Product\Subscription_Product::META_INTERVAL, 1 );
+$sub_product->update_meta_data( \Submex\Product\Subscription_Product::META_PERIOD, 'month' );
+$sub_product->update_meta_data( \Submex\Product\Subscription_Product::META_INTERVAL, 1 );
 $sub_product->save();
 $sub_product = wc_get_product( $sub_product->get_id() );
 
@@ -50,12 +50,12 @@ $customer = wp_insert_user(
 	)
 );
 if ( is_wp_error( $customer ) ) {
-	subly_test_abort( 'could not create the customer' );
+	submex_test_abort( 'could not create the customer' );
 }
 
 // What Pro does: the order line carries the choice, and the filter answers from it.
 $is_line = static fn( $create, $line ) => '' !== (string) $line->get_meta( '_sbt_subscribe' ) ? true : $create;
-add_filter( 'subly_create_subscription_for_item', $is_line, 10, 2 );
+add_filter( 'submex_create_subscription_for_item', $is_line, 10, 2 );
 
 $orders = array();
 $buy    = static function ( WC_Product $p, bool $subscribe, array $props = array() ) use ( $customer, $plugin, &$orders ): WC_Order {
@@ -95,17 +95,17 @@ $on_order = static function ( WC_Order $order ) use ( $customer ): int {
 
 echo "\n1. A normal product bought on a subscription line, and again once\n";
 $subscribed = $buy( $product, true );
-$sub        = wc_get_order( (int) $subscribed->get_meta( '_subly_subscription_id' ) );
+$sub        = wc_get_order( (int) $subscribed->get_meta( '_submex_subscription_id' ) );
 if ( ! $sub instanceof Subscription ) {
-	subly_test_abort( 'no subscription was created for the line' );
+	submex_test_abort( 'no subscription was created for the line' );
 }
 $orders[] = $sub->get_id();
 $once     = $buy( $product, false );
-$check( 'the one-off order started no subscription', ! $once->get_meta( '_subly_subscription_id' ) );
+$check( 'the one-off order started no subscription', ! $once->get_meta( '_submex_subscription_id' ) );
 $check( 'while the subscription is active, both orders list the file', array( $subscribed->get_id(), $once->get_id() ) === $listed(), $listed() );
 
-$renewal = $buy( $product, false, array( 'created_via' => 'subly_renewal' ) );
-$renewal->update_meta_data( '_subly_subscription_id', $sub->get_id() );
+$renewal = $buy( $product, false, array( 'created_via' => 'submex_renewal' ) );
+$renewal->update_meta_data( '_submex_subscription_id', $sub->get_id() );
 $renewal->save();
 $check( 'and so does its renewal order', in_array( $renewal->get_id(), $listed(), true ), $listed() );
 
@@ -119,13 +119,13 @@ $check( 'nor does the renewal', 0 === $on_order( $renewal ) );
 $check( 'the one-off order still does', 1 === $on_order( $once ) );
 
 echo "\n2. Nothing hooked in\n";
-remove_filter( 'subly_create_subscription_for_item', $is_line, 10 );
+remove_filter( 'submex_create_subscription_for_item', $is_line, 10 );
 $plain = $buy( $product, true );
-$check( 'the same line starts no subscription and keeps its file', ! $plain->get_meta( '_subly_subscription_id' ) && in_array( $plain->get_id(), $listed(), true ), $listed() );
+$check( 'the same line starts no subscription and keeps its file', ! $plain->get_meta( '_submex_subscription_id' ) && in_array( $plain->get_id(), $listed(), true ), $listed() );
 
 echo "\n3. A subscription product, as before\n";
 $bought = $buy( $sub_product, false );
-$own    = wc_get_order( (int) $bought->get_meta( '_subly_subscription_id' ) );
+$own    = wc_get_order( (int) $bought->get_meta( '_submex_subscription_id' ) );
 if ( $own instanceof Subscription ) {
 	$orders[] = $own->get_id();
 }
@@ -148,4 +148,4 @@ require_once ABSPATH . 'wp-admin/includes/user.php';
 wp_delete_user( $customer );
 null === $saved_taxes ? delete_option( 'woocommerce_calc_taxes' ) : update_option( 'woocommerce_calc_taxes', $saved_taxes );
 
-subly_test_done( $fail );
+submex_test_done( $fail );

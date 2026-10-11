@@ -5,11 +5,11 @@
 import { __, sprintf, _n } from '@wordpress/i18n';
 
 export function statusVariant( status ) {
-	if ( 'subly-active' === status || 'subly-trialling' === status ) {
+	if ( 'submex-active' === status || 'submex-trialling' === status ) {
 		return 'success';
 	}
 
-	if ( 'subly-on-hold' === status ) {
+	if ( 'submex-on-hold' === status ) {
 		return 'destructive';
 	}
 
@@ -28,38 +28,48 @@ export function describeSchedule( row ) {
 	switch ( row.billing_period ) {
 		case 'day':
 			return 1 === count
-				? __( 'every day', 'subly' )
+				? __( 'every day', 'submex' )
 				: sprintf(
 						/* translators: %d: number of days. */
-						_n( 'every %d day', 'every %d days', count, 'subly' ),
+						_n( 'every %d day', 'every %d days', count, 'submex' ),
 						count
 				  );
 		case 'week':
 			return 1 === count
-				? __( 'every week', 'subly' )
+				? __( 'every week', 'submex' )
 				: sprintf(
 						/* translators: %d: number of weeks. */
-						_n( 'every %d week', 'every %d weeks', count, 'subly' ),
+						_n(
+							'every %d week',
+							'every %d weeks',
+							count,
+							'submex'
+						),
 						count
 				  );
 		case 'year':
 			return 1 === count
-				? __( 'every year', 'subly' )
+				? __( 'every year', 'submex' )
 				: sprintf(
 						/* translators: %d: number of years. */
-						_n( 'every %d year', 'every %d years', count, 'subly' ),
+						_n(
+							'every %d year',
+							'every %d years',
+							count,
+							'submex'
+						),
 						count
 				  );
 		case 'month':
 			return 1 === count
-				? __( 'every month', 'subly' )
+				? __( 'every month', 'submex' )
 				: sprintf(
 						/* translators: %d: number of months. */
 						_n(
 							'every %d month',
 							'every %d months',
 							count,
-							'subly'
+							'submex'
 						),
 						count
 				  );
@@ -106,19 +116,19 @@ export function whenDue( stamp ) {
 				'%d day overdue',
 				'%d days overdue',
 				Math.abs( days ),
-				'subly'
+				'submex'
 			),
 			Math.abs( days )
 		);
 	}
 
 	if ( 0 === days ) {
-		return __( 'today', 'subly' );
+		return __( 'today', 'submex' );
 	}
 
 	return sprintf(
 		/* translators: %d: number of days. */
-		_n( 'in %d day', 'in %d days', days, 'subly' ),
+		_n( 'in %d day', 'in %d days', days, 'submex' ),
 		days
 	);
 }
@@ -172,12 +182,12 @@ export function daysAgo( stamp ) {
 	const days = Math.floor( ( Date.now() - date.getTime() ) / 86400000 );
 
 	if ( days < 1 ) {
-		return __( 'today', 'subly' );
+		return __( 'today', 'submex' );
 	}
 
 	return sprintf(
 		/* translators: %d: number of days. */
-		_n( '%d day ago', '%d days ago', days, 'subly' ),
+		_n( '%d day ago', '%d days ago', days, 'submex' ),
 		days
 	);
 }

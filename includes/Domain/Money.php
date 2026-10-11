@@ -1,6 +1,6 @@
 <?php
 
-namespace Subly\Domain;
+namespace Submex\Domain;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Money in integer minor units.
  *
  * Float arithmetic on prices is how installment plans end up a penny short across
- * three charges, so nothing in Subly does maths on a float.
+ * three charges, so nothing in Submex does maths on a float.
  */
 final class Money {
 

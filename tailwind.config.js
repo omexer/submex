@@ -7,7 +7,7 @@
  */
 module.exports = {
 	prefix: 'sb-',
-	darkMode: [ 'class', '.subly-ui--dark' ],
+	darkMode: [ 'class', '.submex-ui--dark' ],
 	corePlugins: { preflight: false },
 	content: [ './src/**/*.{js,jsx}' ],
 	theme: {

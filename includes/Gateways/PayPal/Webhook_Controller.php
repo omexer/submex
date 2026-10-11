@@ -1,15 +1,15 @@
 <?php
 
-namespace Subly\Gateways\PayPal;
+namespace Submex\Gateways\PayPal;
 
-use Subly\Billing\Renewal_Order_Factory;
-use Subly\Billing\Renewal_Scheduler;
-use Subly\Data\Activity_Repository;
-use Subly\Data\Charge_Slot_Repository;
-use Subly\Data\Subscription_Query;
-use Subly\Domain\Billing_Schedule;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
+use Submex\Billing\Renewal_Order_Factory;
+use Submex\Billing\Renewal_Scheduler;
+use Submex\Data\Activity_Repository;
+use Submex\Data\Charge_Slot_Repository;
+use Submex\Data\Subscription_Query;
+use Submex\Domain\Billing_Schedule;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -24,12 +24,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Webhook_Controller {
 
-	public const ACTION_PROCESS = 'subly_paypal_process_webhook';
+	public const ACTION_PROCESS = 'submex_paypal_process_webhook';
 
-	private const SEEN_PREFIX = 'subly_pp_evt_';
+	private const SEEN_PREFIX = 'submex_pp_evt_';
 
 	/** Records which PayPal transaction a renewal order came from. */
-	public const META_TXN_ID = '_subly_paypal_txn_id';
+	public const META_TXN_ID = '_submex_paypal_txn_id';
 
 	public function __construct(
 		private readonly PayPal_Client $client,
@@ -45,7 +45,7 @@ class Webhook_Controller {
 
 	public function register_route(): void {
 		register_rest_route(
-			'subly/v1',
+			'submex/v1',
 			'/webhook/paypal',
 			array(
 				'methods'             => 'POST',
@@ -91,7 +91,7 @@ class Webhook_Controller {
 	 * Ask PayPal whether the signature is genuine. Never trust the payload otherwise.
 	 */
 	private function verify( \WP_REST_Request $request, array $event ): bool {
-		$webhook_id = (string) get_option( 'subly_paypal_webhook_id', '' );
+		$webhook_id = (string) get_option( 'submex_paypal_webhook_id', '' );
 
 		if ( '' === $webhook_id ) {
 			return false;
@@ -202,7 +202,7 @@ class Webhook_Controller {
 			$this->activity->log(
 				$subscription->get_id(),
 				Activity_Repository::TYPE_CHARGE_ATTEMPT,
-				__( 'PayPal charged for a subscription that has already ended. Cancel the agreement in your PayPal account, and refund this payment if it was not due.', 'subly' )
+				__( 'PayPal charged for a subscription that has already ended. Cancel the agreement in your PayPal account, and refund this payment if it was not due.', 'submex' )
 			);
 		} else {
 			$subscription->set_next_payment( $covers_to->format( 'Y-m-d H:i:s' ) );
@@ -211,7 +211,7 @@ class Webhook_Controller {
 		$subscription->set_period_index( (int) $slot->period_index );
 		$this->set_status( $subscription, Subscription_Status::Active );
 
-		do_action( 'subly_renewal_succeeded', $subscription, $order );
+		do_action( 'submex_renewal_succeeded', $subscription, $order );
 	}
 
 	/**

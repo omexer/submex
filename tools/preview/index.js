@@ -6,8 +6,8 @@ import { createRoot } from '@wordpress/element';
 import { Dashboard } from '../../src/dashboard/index';
 import { List } from '../../src/subscriptions/list';
 import { Detail } from '../../src/subscriptions/detail';
-import { App as Reports } from '@subly/pro/reports/index';
-import { App as Health } from '@subly/pro/health/index';
+import { App as Reports } from '@submex/pro/reports/index';
+import { App as Health } from '@submex/pro/health/index';
 import { fixtures } from './fixtures';
 
 import '../../src/ui/globals.css';
@@ -57,11 +57,11 @@ function render() {
 	const name = window.location.hash.replace( '#', '' ) || 'dashboard';
 	const [ title, subtitle ] = titles[ name ] || titles.dashboard;
 
-	document.querySelector( '.subly-crumbs__current' ).textContent = title;
-	document.querySelector( '.subly-head__title' ).textContent = title;
-	document.querySelector( '.subly-head__subtitle' ).textContent = subtitle;
+	document.querySelector( '.submex-crumbs__current' ).textContent = title;
+	document.querySelector( '.submex-head__title' ).textContent = title;
+	document.querySelector( '.submex-head__subtitle' ).textContent = subtitle;
 	// The same class the real shell uses; the hidden attribute loses to the flex rule.
-	document.querySelector( '.subly-head' ).classList.toggle( 'screen-reader-text', 'dashboard' === name || 'detail' === name );
+	document.querySelector( '.submex-head' ).classList.toggle( 'screen-reader-text', 'dashboard' === name || 'detail' === name );
 
 	const host = document.getElementById( 'screen' );
 	host.innerHTML = '';

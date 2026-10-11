@@ -1,6 +1,6 @@
 <?php
 
-namespace Subly\Data;
+namespace Submex\Data;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * A slot is the right to call a gateway once. Winning the INSERT is what grants it —
  * locks can fail, unique constraints cannot. See Developer Guide 5.1.
  *
- * This is the one table in Subly that is a source of truth rather than an index.
+ * This is the one table in Submex that is a source of truth rather than an index.
  * Never truncate it in a migration.
  */
 // Our own table, and the ledger is the source of truth for whether a customer has been
@@ -30,7 +30,7 @@ class Charge_Slot_Repository {
 	private function table(): string {
 		global $wpdb;
 
-		return $wpdb->prefix . 'subly_charge_slot';
+		return $wpdb->prefix . 'submex_charge_slot';
 	}
 
 	/**
@@ -143,7 +143,7 @@ class Charge_Slot_Repository {
 
 		return 1 === (int) $wpdb->query(
 			$wpdb->prepare(
-				"UPDATE {$wpdb->prefix}subly_charge_slot SET state = %s, attempt_group = attempt_group + %d WHERE id = %d AND state = %s",
+				"UPDATE {$wpdb->prefix}submex_charge_slot SET state = %s, attempt_group = attempt_group + %d WHERE id = %d AND state = %s",
 				$state,
 				self::STATE_FAILED === $state ? 1 : 0,
 				$slot_id,
@@ -175,7 +175,7 @@ class Charge_Slot_Repository {
 
 		return 1 === (int) $wpdb->query(
 			$wpdb->prepare(
-				"UPDATE {$wpdb->prefix}subly_charge_slot SET state = %s, renewal_order_id = %d WHERE id = %d AND state IN ( %s, %s, %s, %s )",
+				"UPDATE {$wpdb->prefix}submex_charge_slot SET state = %s, renewal_order_id = %d WHERE id = %d AND state IN ( %s, %s, %s, %s )",
 				self::STATE_PAID,
 				$renewal_order_id,
 				$slot_id,
@@ -196,7 +196,7 @@ class Charge_Slot_Repository {
 
 		$wpdb->query(
 			$wpdb->prepare(
-				"UPDATE {$wpdb->prefix}subly_charge_slot SET state = %s, attempt_group = attempt_group + 1 WHERE id = %d",
+				"UPDATE {$wpdb->prefix}submex_charge_slot SET state = %s, attempt_group = attempt_group + 1 WHERE id = %d",
 				self::STATE_FAILED,
 				$slot_id
 			)
@@ -224,7 +224,7 @@ class Charge_Slot_Repository {
 
 		return $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->prefix}subly_charge_slot WHERE subscription_id = %d AND period_index = %d",
+				"SELECT * FROM {$wpdb->prefix}submex_charge_slot WHERE subscription_id = %d AND period_index = %d",
 				$subscription_id,
 				$period_index
 			)
@@ -242,7 +242,7 @@ class Charge_Slot_Repository {
 
 		return $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->prefix}subly_charge_slot
+				"SELECT * FROM {$wpdb->prefix}submex_charge_slot
 				 WHERE subscription_id = %d AND state IN ( %s, %s, %s, %s )
 				 ORDER BY period_index DESC LIMIT 1",
 				$subscription_id,
@@ -259,7 +259,7 @@ class Charge_Slot_Repository {
 
 		$max = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT MAX(period_index) FROM {$wpdb->prefix}subly_charge_slot WHERE subscription_id = %d",
+				"SELECT MAX(period_index) FROM {$wpdb->prefix}submex_charge_slot WHERE subscription_id = %d",
 				$subscription_id
 			)
 		);
@@ -280,7 +280,7 @@ class Charge_Slot_Repository {
 
 		return $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->prefix}subly_charge_slot WHERE state = %s AND created_gmt < %s",
+				"SELECT * FROM {$wpdb->prefix}submex_charge_slot WHERE state = %s AND created_gmt < %s",
 				self::STATE_CHARGING,
 				$cutoff
 			)
@@ -297,7 +297,7 @@ class Charge_Slot_Repository {
 
 		return $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->prefix}subly_charge_slot WHERE state = %s AND COALESCE( pending_gmt, created_gmt ) < %s ORDER BY COALESCE( pending_gmt, created_gmt ) ASC",
+				"SELECT * FROM {$wpdb->prefix}submex_charge_slot WHERE state = %s AND COALESCE( pending_gmt, created_gmt ) < %s ORDER BY COALESCE( pending_gmt, created_gmt ) ASC",
 				self::STATE_PENDING,
 				gmdate( 'Y-m-d H:i:s', time() - ( $older_than_days * DAY_IN_SECONDS ) )
 			)

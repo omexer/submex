@@ -1,27 +1,27 @@
 <?php
 
-namespace Subly\Rest;
+namespace Submex\Rest;
 
-use Subly\Admin\Menu;
-use Subly\Admin\Setup_Guide;
-use Subly\Data\Stats;
-use Subly\Data\Subscription_Query;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
+use Submex\Admin\Menu;
+use Submex\Admin\Setup_Guide;
+use Submex\Data\Stats;
+use Submex\Data\Subscription_Query;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
- * Everything the Subly home screen draws, in one request.
+ * Everything the Submex home screen draws, in one request.
  *
  * Read-only. Pro adds what only it knows - subscriptions at risk, revenue at risk -
- * through subly_dashboard_data rather than a second request.
+ * through submex_dashboard_data rather than a second request.
  */
 class Dashboard_Controller {
 
-	public const NAMESPACE = 'subly/v1';
+	public const NAMESPACE = 'submex/v1';
 
 	public function __construct(
 		private readonly Stats $stats,
@@ -65,21 +65,21 @@ class Dashboard_Controller {
 				'new_product'  => admin_url( 'post-new.php?post_type=product' ),
 				'list'         => admin_url( 'admin.php?page=' . Menu::LIST_SLUG ),
 				'integrations' => admin_url( 'admin.php?page=' . Menu::SLUG . '-integrations' ),
-				'settings'     => admin_url( 'admin.php?page=wc-settings&tab=subly' ),
+				'settings'     => admin_url( 'admin.php?page=wc-settings&tab=submex' ),
 				'help'         => admin_url( 'admin.php?page=' . Menu::SLUG . '-help' ),
 			),
 			'create'    => array(
 				'url'   => admin_url( 'admin-post.php' ),
-				'nonce' => wp_create_nonce( 'subly_create_product' ),
+				'nonce' => wp_create_nonce( 'submex_create_product' ),
 			),
 		);
 
 		/**
-		 * Filter what the Subly home screen draws.
+		 * Filter what the Submex home screen draws.
 		 *
 		 * @param array<string, mixed> $data
 		 */
-		return new \WP_REST_Response( (array) apply_filters( 'subly_dashboard_data', $data ) );
+		return new \WP_REST_Response( (array) apply_filters( 'submex_dashboard_data', $data ) );
 	}
 
 	/**
@@ -128,7 +128,7 @@ class Dashboard_Controller {
 			$items[] = array(
 				'key'   => 'on_hold',
 				/* translators: %d: number of subscriptions */
-				'label' => sprintf( _n( '%d subscription on hold after a failed payment', '%d subscriptions on hold after a failed payment', $on_hold, 'subly' ), $on_hold ),
+				'label' => sprintf( _n( '%d subscription on hold after a failed payment', '%d subscriptions on hold after a failed payment', $on_hold, 'submex' ), $on_hold ),
 				'count' => $on_hold,
 				'url'   => admin_url( 'admin.php?page=' . Menu::LIST_SLUG . '&status=' . Subscription_Status::OnHold->value ),
 				'tone'  => 'bad',
@@ -141,7 +141,7 @@ class Dashboard_Controller {
 			$items[] = array(
 				'key'   => 'pending_cancel',
 				/* translators: %d: number of subscriptions */
-				'label' => sprintf( _n( '%d subscription ends when its period runs out', '%d subscriptions end when their period runs out', $cancelling, 'subly' ), $cancelling ),
+				'label' => sprintf( _n( '%d subscription ends when its period runs out', '%d subscriptions end when their period runs out', $cancelling, 'submex' ), $cancelling ),
 				'count' => $cancelling,
 				'url'   => admin_url( 'admin.php?page=' . Menu::LIST_SLUG . '&status=' . Subscription_Status::PendingCancel->value ),
 				'tone'  => 'warn',
@@ -194,9 +194,9 @@ class Dashboard_Controller {
 		$name = wp_get_current_user()->first_name ?: wp_get_current_user()->display_name;
 
 		$greeting = match ( true ) {
-			$hour < 12 => __( 'Good morning', 'subly' ),
-			$hour < 18 => __( 'Good afternoon', 'subly' ),
-			default    => __( 'Good evening', 'subly' ),
+			$hour < 12 => __( 'Good morning', 'submex' ),
+			$hour < 18 => __( 'Good afternoon', 'submex' ),
+			default    => __( 'Good evening', 'submex' ),
 		};
 
 		return '' !== (string) $name ? $greeting . ', ' . $name : $greeting;

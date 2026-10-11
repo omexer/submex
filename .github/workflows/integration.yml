@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The lowest PHP Subly supports, and the newest. The syntax job only lints 8.4;
+        # The lowest PHP Submex supports, and the newest. The syntax job only lints 8.4;
         # this is where anything actually runs on it.
         php: [ '8.1', '8.4' ]
 
@@ -37,7 +37,7 @@ jobs:
       - run: npm ci
 
       # A disposable site with the plugin activated from WP-CLI and nobody ever opening
-      # wp-admin — how plenty of real stores are set up, and how Subly once lost its tables.
+      # wp-admin — how plenty of real stores are set up, and how Submex once lost its tables.
       - name: Start WordPress
         env:
           WP_ENV_PHP_VERSION: ${{ matrix.php }}

@@ -45,15 +45,15 @@ describe( 'the router', () => {
 		router.subscribe( seen );
 		const before = window.history.length;
 
-		router.navigate( 'list', { status: 'subly-active', empty: '' } );
+		router.navigate( 'list', { status: 'submex-active', empty: '' } );
 
 		expect( window.location.href ).toBe(
-			`${ ADMIN }?page=list&status=subly-active`
+			`${ ADMIN }?page=list&status=submex-active`
 		);
 		expect( window.history.length ).toBe( before + 1 );
 		expect( router.current().page ).toBe( 'list' );
 		expect( router.current().params.toString() ).toBe(
-			'status=subly-active'
+			'status=submex-active'
 		);
 		expect( seen ).toHaveBeenCalledWith(
 			expect.objectContaining( { page: 'list', kind: 'navigate' } )

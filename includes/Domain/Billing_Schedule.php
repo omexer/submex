@@ -1,6 +1,6 @@
 <?php
 
-namespace Subly\Domain;
+namespace Submex\Domain;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -140,13 +140,13 @@ final class Billing_Schedule {
 
 		return match ( $this->trial_period ) {
 			/* translators: %d: number of days */
-			'day'   => sprintf( _n( '%d day', '%d days', $n, 'subly' ), $n ),
+			'day'   => sprintf( _n( '%d day', '%d days', $n, 'submex' ), $n ),
 			/* translators: %d: number of weeks */
-			'week'  => sprintf( _n( '%d week', '%d weeks', $n, 'subly' ), $n ),
+			'week'  => sprintf( _n( '%d week', '%d weeks', $n, 'submex' ), $n ),
 			/* translators: %d: number of months */
-			'month' => sprintf( _n( '%d month', '%d months', $n, 'subly' ), $n ),
+			'month' => sprintf( _n( '%d month', '%d months', $n, 'submex' ), $n ),
 			/* translators: %d: number of years */
-			'year'  => sprintf( _n( '%d year', '%d years', $n, 'subly' ), $n ),
+			'year'  => sprintf( _n( '%d year', '%d years', $n, 'submex' ), $n ),
 			default => throw new \InvalidArgumentException( esc_html( 'Unsupported trial period: ' . $this->trial_period ) ),
 		};
 	}
@@ -158,23 +158,23 @@ final class Billing_Schedule {
 	public function describe(): string {
 		if ( 1 === $this->interval ) {
 			return match ( $this->period ) {
-				'day'   => __( 'every day', 'subly' ),
-				'week'  => __( 'every week', 'subly' ),
-				'month' => __( 'every month', 'subly' ),
-				'year'  => __( 'every year', 'subly' ),
+				'day'   => __( 'every day', 'submex' ),
+				'week'  => __( 'every week', 'submex' ),
+				'month' => __( 'every month', 'submex' ),
+				'year'  => __( 'every year', 'submex' ),
 				default => throw new \InvalidArgumentException( esc_html( 'Unsupported billing period: ' . $this->period ) ),
 			};
 		}
 
 		return match ( $this->period ) {
 			/* translators: %d: number of days */
-			'day'   => sprintf( _n( 'every %d day', 'every %d days', $this->interval, 'subly' ), $this->interval ),
+			'day'   => sprintf( _n( 'every %d day', 'every %d days', $this->interval, 'submex' ), $this->interval ),
 			/* translators: %d: number of weeks */
-			'week'  => sprintf( _n( 'every %d week', 'every %d weeks', $this->interval, 'subly' ), $this->interval ),
+			'week'  => sprintf( _n( 'every %d week', 'every %d weeks', $this->interval, 'submex' ), $this->interval ),
 			/* translators: %d: number of months */
-			'month' => sprintf( _n( 'every %d month', 'every %d months', $this->interval, 'subly' ), $this->interval ),
+			'month' => sprintf( _n( 'every %d month', 'every %d months', $this->interval, 'submex' ), $this->interval ),
 			/* translators: %d: number of years */
-			'year'  => sprintf( _n( 'every %d year', 'every %d years', $this->interval, 'subly' ), $this->interval ),
+			'year'  => sprintf( _n( 'every %d year', 'every %d years', $this->interval, 'submex' ), $this->interval ),
 			default => throw new \InvalidArgumentException( esc_html( 'Unsupported billing period: ' . $this->period ) ),
 		};
 	}

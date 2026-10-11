@@ -2,7 +2,7 @@
  * The subscriptions route: the list, or one subscription when the address names one.
  */
 import { __ } from '@wordpress/i18n';
-import { registerRoute } from '@subly/shell';
+import { registerRoute } from '@submex/shell';
 import { List } from './list';
 import { Detail } from './detail';
 
@@ -34,7 +34,7 @@ export function Screen( { params, setParams, fail } ) {
 }
 
 registerRoute( {
-	page: 'subly-list',
-	title: __( 'All subscriptions', 'subly' ),
+	page: 'submex-list',
+	title: __( 'All subscriptions', 'submex' ),
 	render: ( ctx ) => <Screen { ...ctx } />,
 } );

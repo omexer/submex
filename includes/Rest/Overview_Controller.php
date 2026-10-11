@@ -1,10 +1,10 @@
 <?php
 
-namespace Subly\Rest;
+namespace Submex\Rest;
 
-use Subly\Admin\Menu;
-use Subly\Data\Stats;
-use Subly\Domain\Subscription_Status;
+use Submex\Admin\Menu;
+use Submex\Data\Stats;
+use Submex\Domain\Subscription_Status;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Overview_Controller {
 
-	public const NAMESPACE = 'subly/v1';
+	public const NAMESPACE = 'submex/v1';
 
 	private Stats $stats;
 
@@ -119,13 +119,13 @@ class Overview_Controller {
 
 	/** Status colours, shared with the list screen's pills. */
 	private const COLOURS = array(
-		'subly-pending'        => '#dba617',
-		'subly-trialling'      => '#72aee6',
-		'subly-active'         => '#00a32a',
-		'subly-on-hold'        => '#d63638',
-		'subly-cancelling' => '#b26200',
-		'subly-cancelled'      => '#8c8f94',
-		'subly-expired'        => '#646970',
-		'subly-switched'       => '#a7aaad',
+		'submex-pending'        => '#dba617',
+		'submex-trialling'      => '#72aee6',
+		'submex-active'         => '#00a32a',
+		'submex-on-hold'        => '#d63638',
+		'submex-cancelling' => '#b26200',
+		'submex-cancelled'      => '#8c8f94',
+		'submex-expired'        => '#646970',
+		'submex-switched'       => '#a7aaad',
 	);
 }

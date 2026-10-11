@@ -1,10 +1,10 @@
 ( function () {
 	'use strict';
 
-	var config = window.sublyAdmin || {};
+	var config = window.submexAdmin || {};
 
 	document.addEventListener( 'click', function ( event ) {
-		var button = event.target.closest( '.subly-install' );
+		var button = event.target.closest( '.submex-install' );
 
 		if ( ! button || ! config.installAction ) {
 			return;
@@ -47,9 +47,9 @@
 	 * an ordinary submit and the page reloads, which is what happens with no JavaScript.
 	 */
 	document.addEventListener( 'click', function ( event ) {
-		var button = event.target.closest( '.subly-row-action' );
+		var button = event.target.closest( '.submex-row-action' );
 
-		if ( ! button || ! config.rowAction || ! button.dataset.sublyAction ) {
+		if ( ! button || ! config.rowAction || ! button.dataset.submexAction ) {
 			return;
 		}
 
@@ -60,8 +60,8 @@
 
 		body.append( 'action', config.rowAction );
 		body.append( '_wpnonce', config.rowNonce );
-		body.append( 'health_action', button.dataset.sublyAction );
-		body.append( 'subscription', button.dataset.sublyId );
+		body.append( 'health_action', button.dataset.submexAction );
+		body.append( 'subscription', button.dataset.submexId );
 
 		setBusy( row, true );
 
@@ -88,7 +88,7 @@
 			return;
 		}
 
-		row.classList.toggle( 'subly-row--busy', busy );
+		row.classList.toggle( 'submex-row--busy', busy );
 		row.querySelectorAll( 'button' ).forEach( function ( b ) { b.disabled = busy; } );
 	}
 
@@ -98,7 +98,7 @@
 		}
 
 		var cell = row.querySelector( 'td:last-child' ) || row;
-		var existing = cell.querySelector( '.subly-row-result' );
+		var existing = cell.querySelector( '.submex-row-result' );
 
 		if ( existing ) {
 			existing.remove();
@@ -106,17 +106,17 @@
 
 		var span = document.createElement( 'span' );
 
-		span.className = 'subly-row-result ' + ( good ? 'is-good' : 'is-bad' );
+		span.className = 'submex-row-result ' + ( good ? 'is-good' : 'is-bad' );
 		span.textContent = message;
 		cell.appendChild( span );
 
-		row.classList.toggle( 'subly-row--done', !! good );
+		row.classList.toggle( 'submex-row--done', !! good );
 	}
 
 	function notice( message ) {
 		var span = document.createElement( 'span' );
 
-		span.className = 'subly-inline-error';
+		span.className = 'submex-inline-error';
 		span.textContent = ' ' + message;
 
 		return span;
@@ -124,10 +124,10 @@
 }() );
 
 
-// Copy buttons: data-subly-copy names the field to copy from.
+// Copy buttons: data-submex-copy names the field to copy from.
 document.addEventListener( 'click', function ( event ) {
-	var button = event.target.closest( '[data-subly-copy]' );
-	var field = button && document.getElementById( button.getAttribute( 'data-subly-copy' ) );
+	var button = event.target.closest( '[data-submex-copy]' );
+	var field = button && document.getElementById( button.getAttribute( 'data-submex-copy' ) );
 
 	if ( ! field ) {
 		return;
@@ -135,7 +135,7 @@ document.addEventListener( 'click', function ( event ) {
 
 	var done = function () {
 		var label = button.textContent;
-		button.textContent = button.getAttribute( 'data-subly-copied' ) || label;
+		button.textContent = button.getAttribute( 'data-submex-copied' ) || label;
 		setTimeout( function () {
 			button.textContent = label;
 		}, 1600 );
@@ -155,7 +155,7 @@ document.addEventListener( 'click', function ( event ) {
 // The server header's notification centre opens without script; this only closes it like a menu.
 ( function () {
 	function close( keepFocus ) {
-		document.querySelectorAll( 'details[data-subly-notify][open]' ).forEach( function ( details ) {
+		document.querySelectorAll( 'details[data-submex-notify][open]' ).forEach( function ( details ) {
 			details.open = false;
 
 			if ( keepFocus ) {
@@ -165,34 +165,34 @@ document.addEventListener( 'click', function ( event ) {
 	}
 
 	document.addEventListener( 'mousedown', function ( event ) {
-		if ( ! event.target.closest( 'details[data-subly-notify]' ) ) {
+		if ( ! event.target.closest( 'details[data-submex-notify]' ) ) {
 			close( false );
 		}
 	} );
 
 	document.addEventListener( 'keydown', function ( event ) {
-		if ( 'Escape' === event.key && document.querySelector( 'details[data-subly-notify][open]' ) ) {
+		if ( 'Escape' === event.key && document.querySelector( 'details[data-submex-notify][open]' ) ) {
 			close( true );
 		}
 	} );
 } )();
 
-// Settings rows marked data-subly-show-if="<switch id>" show only while that switch, and its own parent, is on.
+// Settings rows marked data-submex-show-if="<switch id>" show only while that switch, and its own parent, is on.
 ( function () {
-	var rows = document.querySelectorAll( '[data-subly-show-if]' );
+	var rows = document.querySelectorAll( '[data-submex-show-if]' );
 
 	if ( ! rows.length ) {
 		return;
 	}
 
 	function shown( row, depth ) {
-		var parent = document.getElementById( row.getAttribute( 'data-subly-show-if' ) );
+		var parent = document.getElementById( row.getAttribute( 'data-submex-show-if' ) );
 
 		if ( ! parent || 'checkbox' !== parent.type || depth > 10 ) {
 			return true;
 		}
 
-		var parentRow = parent.closest( '[data-subly-show-if]' );
+		var parentRow = parent.closest( '[data-submex-show-if]' );
 
 		return parent.checked && ( ! parentRow || shown( parentRow, depth + 1 ) );
 	}

@@ -2,24 +2,24 @@
 /**
  * A renewal run by Action Scheduler queues the next one itself, instead of waiting for the hourly sweep.
  *
- * @package Subly
+ * @package Submex
  */
 
-use Subly\Billing\Renewal_Scheduler;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
-use Subly\Gateways\Charge_Result;
-use Subly\Gateways\Gateway_Model;
-use Subly\Gateways\Recurring_Gateway;
+use Submex\Billing\Renewal_Scheduler;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
+use Submex\Gateways\Charge_Result;
+use Submex\Gateways\Gateway_Model;
+use Submex\Gateways\Recurring_Gateway;
 
 require __DIR__ . '/bootstrap.php';
 
-$plugin = \Subly\Plugin::instance();
+$plugin = \Submex\Plugin::instance();
 
 $gateway = new class() implements Recurring_Gateway {
 	public int $charges = 0;
 	public bool $time_out = false;
-	public function id(): string { return 'subly_test_schedule_next'; }
+	public function id(): string { return 'submex_test_schedule_next'; }
 	public function title(): string { return 'Schedule next harness'; }
 	public function model(): Gateway_Model { return Gateway_Model::Tokenized; }
 	public function supports( string $f ): bool { return true; }
@@ -34,7 +34,7 @@ $gateway = new class() implements Recurring_Gateway {
 };
 $plugin->get( 'gateways' )->add( $gateway );
 
-$product   = subly_test_product();
+$product   = submex_test_product();
 $scheduler = $plugin->get( 'scheduler' );
 $made      = array();
 
@@ -46,7 +46,7 @@ $make = static function ( string $next ) use ( $product, $gateway, &$made ): Sub
 	$s->set_billing_interval( 1 );
 	$s->set_payment_method( $gateway->id() );
 	$s->set_address( array( 'first_name' => 'Schedule', 'email' => 'schedulenext@example.test' ), 'billing' );
-	$s->update_meta_data( '_subly_site_url', get_option( 'siteurl' ) );
+	$s->update_meta_data( '_submex_site_url', get_option( 'siteurl' ) );
 	$item = new WC_Order_Item_Product();
 	$item->set_props( array( 'name' => 'Schedule next probe', 'product_id' => $product->get_id(), 'quantity' => 1, 'subtotal' => '20', 'total' => '20' ) );
 	$s->add_item( $item );
@@ -71,7 +71,7 @@ $pending = static function ( Subscription $s ): array {
 
 // Through the Action Scheduler runner, which marks the action running while it executes.
 $run = static function ( int $action_id ): void {
-	ActionScheduler::runner()->process_action( $action_id, 'subly-test' );
+	ActionScheduler::runner()->process_action( $action_id, 'submex-test' );
 };
 
 $queue_now = static function ( Subscription $s ): int {
@@ -84,8 +84,8 @@ $orders_for = static function ( Subscription $s ): array {
 	return array_map(
 		'intval',
 		$hpos
-			? $wpdb->get_col( $wpdb->prepare( 'SELECT order_id FROM %i WHERE meta_key = %s AND meta_value = %d AND order_id <> %d', $wpdb->prefix . 'wc_orders_meta', '_subly_subscription_id', $s->get_id(), $s->get_id() ) )
-			: $wpdb->get_col( $wpdb->prepare( 'SELECT post_id FROM %i WHERE meta_key = %s AND meta_value = %d AND post_id <> %d', $wpdb->postmeta, '_subly_subscription_id', $s->get_id(), $s->get_id() ) )
+			? $wpdb->get_col( $wpdb->prepare( 'SELECT order_id FROM %i WHERE meta_key = %s AND meta_value = %d AND order_id <> %d', $wpdb->prefix . 'wc_orders_meta', '_submex_subscription_id', $s->get_id(), $s->get_id() ) )
+			: $wpdb->get_col( $wpdb->prepare( 'SELECT post_id FROM %i WHERE meta_key = %s AND meta_value = %d AND post_id <> %d', $wpdb->postmeta, '_submex_subscription_id', $s->get_id(), $s->get_id() ) )
 	);
 };
 
@@ -148,4 +148,4 @@ foreach ( $made as $s ) {
 	$s->delete( true );
 }
 
-subly_test_done( $fail );
+submex_test_done( $fail );

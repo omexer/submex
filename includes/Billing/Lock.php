@@ -1,6 +1,6 @@
 <?php
 
-namespace Subly\Billing;
+namespace Submex\Billing;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -101,6 +101,6 @@ class Lock {
 	}
 
 	private function name( int $subscription_id ): string {
-		return 'subly_lock_' . $subscription_id;
+		return 'submex_lock_' . $subscription_id;
 	}
 }

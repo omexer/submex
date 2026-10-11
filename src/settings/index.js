@@ -4,9 +4,9 @@ import { PAGE, Settings } from './settings';
 export { registerEmailEditor } from './extend';
 export { Row } from './field';
 
-window.subly?.shell?.registerRoute( {
+window.submex?.shell?.registerRoute( {
 	page: PAGE,
-	title: __( 'Settings', 'subly' ),
+	title: __( 'Settings', 'submex' ),
 	render: ( { params, setParams } ) => (
 		<Settings params={ params } setParams={ setParams } />
 	),

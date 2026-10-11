@@ -3,7 +3,7 @@
  */
 import { act } from 'react';
 import { createRoot, useState } from '@wordpress/element';
-import { Switch } from '@subly/ui';
+import { Switch } from '@submex/ui';
 
 let container;
 let root;

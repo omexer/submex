@@ -25,7 +25,7 @@ const item = ( overrides = {} ) => ( {
 
 const INSTALLER = {
 	url: '/wp-admin/admin-ajax.php',
-	action: 'subly_install_integration',
+	action: 'submex_install_integration',
 	nonce: 'n0nce',
 };
 
@@ -126,7 +126,7 @@ describe( 'the integrations screen', () => {
 		const [ url, options ] = window.fetch.mock.calls[ 0 ];
 		expect( url ).toBe( '/wp-admin/admin-ajax.php' );
 		expect( options.body.get( 'action' ) ).toBe(
-			'subly_install_integration'
+			'submex_install_integration'
 		);
 		expect( options.body.get( '_wpnonce' ) ).toBe( 'n0nce' );
 		expect( options.body.get( 'slug' ) ).toBe( 'sfwd-lms' );

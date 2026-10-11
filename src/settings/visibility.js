@@ -1,6 +1,6 @@
 // Shown while its switch is on, and that switch's own switch, as the PHP page decides it.
 export function isShown( field, byId, valueOf, depth = 0 ) {
-	const parent = byId[ field.subly_show_if ];
+	const parent = byId[ field.submex_show_if ];
 
 	if ( ! parent || parent.type !== 'checkbox' || depth > 10 ) {
 		return true;

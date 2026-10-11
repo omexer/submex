@@ -2,23 +2,23 @@
 /**
  * A free trial signs up for nothing, keeps its card, and converts to a paid renewal at the real price.
  *
- * @package Subly
+ * @package Submex
  */
 
-use Subly\Domain\Subscription;
-use Subly\Gateways\Test_Gateway;
+use Submex\Domain\Subscription;
+use Submex\Gateways\Test_Gateway;
 
 require __DIR__ . '/bootstrap.php';
 
-\Subly\Plugin::instance()->get( 'gateways' )->add(
-	new class() implements \Subly\Gateways\Recurring_Gateway {
+\Submex\Plugin::instance()->get( 'gateways' )->add(
+	new class() implements \Submex\Gateways\Recurring_Gateway {
 		public function id(): string { return Test_Gateway::ID; }
 		public function title(): string { return 'Harness approver'; }
-		public function model(): \Subly\Gateways\Gateway_Model { return \Subly\Gateways\Gateway_Model::Tokenized; }
+		public function model(): \Submex\Gateways\Gateway_Model { return \Submex\Gateways\Gateway_Model::Tokenized; }
 		public function supports( string $f ): bool { return true; }
-		public function create_mandate( Subscription $s, \WC_Order $o ): \Subly\Gateways\Charge_Result { return \Subly\Gateways\Charge_Result::success( 'mandate-' . $s->get_id() ); }
-		public function charge_renewal( Subscription $s, \WC_Order $r, string $k ): \Subly\Gateways\Charge_Result { return \Subly\Gateways\Charge_Result::success( 'charge-' . $r->get_id() ); }
-		public function reconcile( Subscription $s, string $k ): ?\Subly\Gateways\Charge_Result { return null; }
+		public function create_mandate( Subscription $s, \WC_Order $o ): \Submex\Gateways\Charge_Result { return \Submex\Gateways\Charge_Result::success( 'mandate-' . $s->get_id() ); }
+		public function charge_renewal( Subscription $s, \WC_Order $r, string $k ): \Submex\Gateways\Charge_Result { return \Submex\Gateways\Charge_Result::success( 'charge-' . $r->get_id() ); }
+		public function reconcile( Subscription $s, string $k ): ?\Submex\Gateways\Charge_Result { return null; }
 		public function cancel_mandate( Subscription $s ): bool { return true; }
 		public function update_payment_method( Subscription $s, string $t ): bool { return true; }
 	}
@@ -27,11 +27,11 @@ require __DIR__ . '/bootstrap.php';
 $id = wp_insert_post( array( 'post_title' => 'SK trial flow', 'post_type' => 'product', 'post_status' => 'publish' ) );
 $p  = wc_get_product( $id );
 $p->set_regular_price( '20' ); $p->set_price( '20' );
-$p->update_meta_data( '_subly_enabled', 'yes' );
-$p->update_meta_data( '_subly_period', 'month' );
-$p->update_meta_data( '_subly_interval', 1 );
-$p->update_meta_data( '_subly_trial_days', 14 );
-$p->update_meta_data( '_subly_trial_period', 'day' );
+$p->update_meta_data( '_submex_enabled', 'yes' );
+$p->update_meta_data( '_submex_period', 'month' );
+$p->update_meta_data( '_submex_interval', 1 );
+$p->update_meta_data( '_submex_trial_days', 14 );
+$p->update_meta_data( '_submex_trial_period', 'day' );
 $p->save();
 $p = wc_get_product( $id );
 
@@ -57,9 +57,9 @@ do_action( 'woocommerce_checkout_order_processed', $order->get_id() );
 $order = wc_get_order( $order->get_id() );
 $order->update_status( 'processing' );
 
-$sub = wc_get_order( (int) wc_get_order( $order->get_id() )->get_meta( '_subly_subscription_id' ) );
+$sub = wc_get_order( (int) wc_get_order( $order->get_id() )->get_meta( '_submex_subscription_id' ) );
 $check( 'subscription created', $sub instanceof Subscription );
-if ( ! $sub instanceof Subscription ) { subly_test_abort( 'cannot continue without it' ); }
+if ( ! $sub instanceof Subscription ) { submex_test_abort( 'cannot continue without it' ); }
 
 $check( 'status is trialling', str_contains( $sub->get_status(), 'trialling' ), $sub->get_status() );
 $check( 'recurring amount is the real price, not the trial total', '20.00' === wc_format_decimal( $sub->get_total(), 2 ), $sub->get_total() );
@@ -69,10 +69,10 @@ $check( 'first payment falls on the day the trial ends', substr( (string) $sub->
 // Bring the renewal forward and let the real processor run it.
 $sub->set_next_payment( gmdate( 'Y-m-d H:i:s', time() - 60 ) );
 $sub->save();
-\Subly\Plugin::instance()->get( 'processor' )->process( $sub->get_id() );
+\Submex\Plugin::instance()->get( 'processor' )->process( $sub->get_id() );
 
 global $wpdb;
-$ids = $wpdb->get_col( $wpdb->prepare( "SELECT order_id FROM {$wpdb->prefix}wc_orders_meta WHERE meta_key='_subly_subscription_id' AND meta_value=%d AND order_id<>%d", $sub->get_id(), $order->get_id() ) );
+$ids = $wpdb->get_col( $wpdb->prepare( "SELECT order_id FROM {$wpdb->prefix}wc_orders_meta WHERE meta_key='_submex_subscription_id' AND meta_value=%d AND order_id<>%d", $sub->get_id(), $order->get_id() ) );
 $renewal = $ids ? wc_get_order( (int) end( $ids ) ) : null;
 $check( 'a renewal order was raised', $renewal instanceof \WC_Order );
 if ( $renewal ) {
@@ -82,4 +82,4 @@ if ( $renewal ) {
 }
 
 WC()->cart->empty_cart();
-subly_test_done( $fail );
+submex_test_done( $fail );

@@ -1,8 +1,8 @@
 <?php
 /**
- * Subly email body (HTML).
+ * Submex email body (HTML).
  *
- * Override at yourtheme/subly/emails/subscription-email.php
+ * Override at yourtheme/submex/emails/subscription-email.php
  *
  * @var string      $email_heading
  * @var string      $intro
@@ -24,14 +24,14 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); // phpcs:ignore
 <?php if ( ! empty( $facts ) ) : ?>
 	<table cellspacing="0" cellpadding="6" style="width:100%;border:1px solid #e5e5e5;margin-bottom:1.5em" border="1">
 		<tbody>
-		<?php foreach ( $facts as $subly_label => $subly_value ) : ?>
+		<?php foreach ( $facts as $submex_label => $submex_value ) : ?>
 			<?php
-			if ( '' === $subly_value ) {
+			if ( '' === $submex_value ) {
 				continue; }
 			?>
 			<tr>
-				<th scope="row" style="text-align:left;width:40%;border:1px solid #e5e5e5;padding:8px"><?php echo esc_html( $subly_label ); ?></th>
-				<td style="border:1px solid #e5e5e5;padding:8px"><?php echo esc_html( $subly_value ); ?></td>
+				<th scope="row" style="text-align:left;width:40%;border:1px solid #e5e5e5;padding:8px"><?php echo esc_html( $submex_label ); ?></th>
+				<td style="border:1px solid #e5e5e5;padding:8px"><?php echo esc_html( $submex_value ); ?></td>
 			</tr>
 		<?php endforeach; ?>
 		</tbody>

@@ -3,37 +3,37 @@
  * The reactivated email: queued once, sent once, nothing when switched off or when the
  * subscription has moved on, and a renewal is never mistaken for a reactivation.
  *
- * @package Subly
+ * @package Submex
  */
 
-use Subly\Billing\Renewal_Scheduler;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
-use Subly\Emails\Mailer;
-use Subly\Gateways\Test_Gateway;
+use Submex\Billing\Renewal_Scheduler;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
+use Submex\Emails\Mailer;
+use Submex\Gateways\Test_Gateway;
 
 require __DIR__ . '/bootstrap.php';
 
-\Subly\Plugin::instance()->get( 'gateways' )->add(
-	new class() implements \Subly\Gateways\Recurring_Gateway {
+\Submex\Plugin::instance()->get( 'gateways' )->add(
+	new class() implements \Submex\Gateways\Recurring_Gateway {
 		public function id(): string { return Test_Gateway::ID; }
 		public function title(): string { return 'Harness approver'; }
-		public function model(): \Subly\Gateways\Gateway_Model { return \Subly\Gateways\Gateway_Model::Tokenized; }
+		public function model(): \Submex\Gateways\Gateway_Model { return \Submex\Gateways\Gateway_Model::Tokenized; }
 		public function supports( string $f ): bool { return true; }
-		public function create_mandate( Subscription $s, \WC_Order $o ): \Subly\Gateways\Charge_Result { return \Subly\Gateways\Charge_Result::success( 'mandate-' . $s->get_id() ); }
-		public function charge_renewal( Subscription $s, \WC_Order $r, string $k ): \Subly\Gateways\Charge_Result { return \Subly\Gateways\Charge_Result::success( 'charge-' . $r->get_id() ); }
-		public function reconcile( Subscription $s, string $k ): ?\Subly\Gateways\Charge_Result { return null; }
+		public function create_mandate( Subscription $s, \WC_Order $o ): \Submex\Gateways\Charge_Result { return \Submex\Gateways\Charge_Result::success( 'mandate-' . $s->get_id() ); }
+		public function charge_renewal( Subscription $s, \WC_Order $r, string $k ): \Submex\Gateways\Charge_Result { return \Submex\Gateways\Charge_Result::success( 'charge-' . $r->get_id() ); }
+		public function reconcile( Subscription $s, string $k ): ?\Submex\Gateways\Charge_Result { return null; }
 		public function cancel_mandate( Subscription $s ): bool { return true; }
 		public function update_payment_method( Subscription $s, string $t ): bool { return true; }
 	}
 );
 
-$scheduler = \Subly\Plugin::instance()->get( 'scheduler' );
+$scheduler = \Submex\Plugin::instance()->get( 'scheduler' );
 $mailer    = WC()->mailer();
 $emails    = $mailer->get_emails();
 
 $absent  = new stdClass();
-$options = array( $emails['Subly_Subscription_Reactivated']->get_option_key() );
+$options = array( $emails['Submex_Subscription_Reactivated']->get_option_key() );
 $was = array();
 foreach ( $options as $name ) {
 	$was[ $name ] = get_option( $name, $absent );
@@ -45,7 +45,7 @@ $switch = static function ( string $key, string $on ) use ( $emails ): void {
 	update_option( $option, array_merge( (array) get_option( $option, array() ), array( 'enabled' => $on ) ) );
 	WC()->mailer()->init();
 };
-$switch( 'Subly_Subscription_Reactivated', 'yes' );
+$switch( 'Submex_Subscription_Reactivated', 'yes' );
 
 $mail = array();
 add_filter(
@@ -62,7 +62,7 @@ $to = static function ( Subscription $s ) use ( &$mail ): array {
 	return array_values( array_filter( $mail, static fn( $m ) => $m['to'] === $s->get_billing_email() ) );
 };
 
-$product = subly_test_product();
+$product = submex_test_product();
 $made    = array();
 $make    = static function ( Subscription_Status $status, array $dates ) use ( $product, &$made ): Subscription {
 	$s = new Subscription();
@@ -72,7 +72,7 @@ $make    = static function ( Subscription_Status $status, array $dates ) use ( $
 	$s->set_billing_interval( 1 );
 	$s->set_payment_method( Test_Gateway::ID );
 	$s->set_address( array( 'first_name' => 'Notify', 'email' => 'sub' . wp_generate_password( 6, false, false ) . '@notify.example.test', 'country' => 'US' ), 'billing' );
-	$s->update_meta_data( '_subly_site_url', get_option( 'siteurl' ) );
+	$s->update_meta_data( '_submex_site_url', get_option( 'siteurl' ) );
 	$i = new WC_Order_Item_Product();
 	$i->set_props( array( 'name' => 'Harness', 'product_id' => $product->get_id(), 'quantity' => 1, 'subtotal' => '20', 'total' => '20' ) );
 	$s->add_item( $i );
@@ -103,7 +103,7 @@ $pending = static function ( string $hook, ?int $subscription_id = null ): array
 };
 $run = static function ( array $actions ): void {
 	foreach ( array_keys( $actions ) as $id ) {
-		ActionScheduler_QueueRunner::instance()->process_action( $id, 'subly-test' );
+		ActionScheduler_QueueRunner::instance()->process_action( $id, 'submex-test' );
 	}
 };
 
@@ -115,7 +115,7 @@ $reactivations = static fn( Subscription $s ): array => $pending( Mailer::ACTION
 $undone = $make( Subscription_Status::Active, array( 'next_payment' => 10 * $day ) );
 $undone->transition_to( Subscription_Status::PendingCancel );
 $undone->save();
-$request = new WP_REST_Request( 'POST', '/subly/v1/subscriptions/' . $undone->get_id() . '/actions' );
+$request = new WP_REST_Request( 'POST', '/submex/v1/subscriptions/' . $undone->get_id() . '/actions' );
 $request->set_param( 'action', 'reactivate' );
 $check( 'fixture: the store reactivates a cancelling subscription', 200 === rest_do_request( $request )->get_status() );
 $queued = $reactivations( $undone );
@@ -126,7 +126,7 @@ $run( $queued );
 $got = $to( $undone );
 $check( 'the customer is told once', 1 === count( $got ) && 'Your subscription is active again' === $got[0]['subject'], $got );
 $again = reset( $queued );
-$mailer_service = \Subly\Plugin::instance()->get( 'mailer' );
+$mailer_service = \Submex\Plugin::instance()->get( 'mailer' );
 $mailer_service->send_reactivated( $again->get_args()['subscription_id'], $again->get_args()['at'] );
 $check( 'running it again sends nothing', 1 === count( $to( $undone ) ) );
 
@@ -153,12 +153,12 @@ $run( $queued );
 $check( 'withdrawn and then switched away in the same request: nothing is sent', 1 === count( $queued ) && array() === $mail, array( count( $queued ), $mail ) );
 
 $resumed = $make( Subscription_Status::Active, array( 'next_payment' => 10 * $day ) );
-do_action( 'subly_subscription_resumed', $resumed );
+do_action( 'submex_subscription_resumed', $resumed );
 $mail = array();
 $run( $reactivations( $resumed ) );
 $check( 'a paused subscription resuming is told', 1 === count( $to( $resumed ) ), $to( $resumed ) );
 
-$switch( 'Subly_Subscription_Reactivated', 'no' );
+$switch( 'Submex_Subscription_Reactivated', 'no' );
 $muted = $make( Subscription_Status::Active, array( 'next_payment' => 10 * $day ) );
 $muted->transition_to( Subscription_Status::PendingCancel );
 $muted->save();
@@ -168,14 +168,14 @@ $mail   = array();
 $queued = $reactivations( $muted );
 $run( $queued );
 $check( 'switched off, nothing is sent', 1 === count( $queued ) && array() === $mail, array( count( $queued ), $mail ) );
-$switch( 'Subly_Subscription_Reactivated', 'yes' );
+$switch( 'Submex_Subscription_Reactivated', 'yes' );
 
 echo "\n2. Renewals are not reactivations\n";
 $trial = $make( Subscription_Status::Trialling, array( 'trial_end' => -60, 'next_payment' => -60 ) );
-\Subly\Plugin::instance()->get( 'processor' )->process( $trial->get_id() );
+\Submex\Plugin::instance()->get( 'processor' )->process( $trial->get_id() );
 $check( 'fixture: the trial converted by renewing', Subscription_Status::Active === wc_get_order( $trial->get_id() )->get_status_enum(), wc_get_order( $trial->get_id() )->get_status() );
 $active = $make( Subscription_Status::Active, array( 'next_payment' => -60 ) );
-\Subly\Plugin::instance()->get( 'processor' )->process( $active->get_id() );
+\Submex\Plugin::instance()->get( 'processor' )->process( $active->get_id() );
 $check( 'fixture: an active subscription renewed', strtotime( (string) wc_get_order( $active->get_id() )->get_next_payment() . ' UTC' ) > time() );
 $held = $make( Subscription_Status::OnHold, array( 'next_payment' => -60 ) );
 $held->transition_to( Subscription_Status::Active, 'Retrying the failed payment.' );
@@ -193,7 +193,7 @@ foreach ( $made as $id ) {
 	}
 }
 global $wpdb;
-$wpdb->query( "DELETE FROM {$wpdb->prefix}subly_charge_slot WHERE subscription_id IN (" . implode( ',', array_map( 'intval', $made ) ) . ')' );
+$wpdb->query( "DELETE FROM {$wpdb->prefix}submex_charge_slot WHERE subscription_id IN (" . implode( ',', array_map( 'intval', $made ) ) . ')' );
 foreach ( $was as $name => $value ) {
 	if ( $absent === $value ) {
 		delete_option( $name );
@@ -202,4 +202,4 @@ foreach ( $was as $name => $value ) {
 	}
 }
 
-subly_test_done( $fail );
+submex_test_done( $fail );

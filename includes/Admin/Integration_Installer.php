@@ -1,6 +1,6 @@
 <?php
 
-namespace Subly\Admin;
+namespace Submex\Admin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Integration_Installer {
 
-	public const ACTION = 'subly_install_integration';
+	public const ACTION = 'submex_install_integration';
 
 	public function register(): void {
 		add_action( 'wp_ajax_' . self::ACTION, array( $this, 'handle' ) );
@@ -30,13 +30,13 @@ class Integration_Installer {
 		// install_plugins and activate_plugins are separate capabilities on purpose, and a
 		// site can grant one without the other.
 		if ( ! current_user_can( 'install_plugins' ) || ! current_user_can( 'activate_plugins' ) ) {
-			wp_send_json_error( array( 'message' => __( 'You do not have permission to install plugins.', 'subly' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'You do not have permission to install plugins.', 'submex' ) ), 403 );
 		}
 
 		$slug = isset( $_POST['slug'] ) ? sanitize_key( wp_unslash( $_POST['slug'] ) ) : '';
 
 		if ( '' === $slug || ! in_array( $slug, $this->allowed(), true ) ) {
-			wp_send_json_error( array( 'message' => __( 'That is not an integration Subly offers.', 'subly' ) ), 400 );
+			wp_send_json_error( array( 'message' => __( 'That is not an integration Submex offers.', 'submex' ) ), 400 );
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -61,7 +61,7 @@ class Integration_Installer {
 			wp_send_json_error( array( 'message' => $activated->get_error_message() ), 500 );
 		}
 
-		wp_send_json_success( array( 'message' => __( 'Installed and activated.', 'subly' ) ) );
+		wp_send_json_success( array( 'message' => __( 'Installed and activated.', 'submex' ) ) );
 	}
 
 	/**
@@ -70,7 +70,7 @@ class Integration_Installer {
 	private function allowed(): array {
 		$slugs = array();
 
-		foreach ( (array) apply_filters( 'subly_admin_integrations', array() ) as $integration ) {
+		foreach ( (array) apply_filters( 'submex_admin_integrations', array() ) as $integration ) {
 			$slug = (string) ( $integration['slug'] ?? '' );
 
 			if ( '' !== $slug ) {
@@ -103,7 +103,7 @@ class Integration_Installer {
 		$download = isset( $fields['download_link'] ) ? (string) $fields['download_link'] : '';
 
 		if ( '' === $download ) {
-			return new \WP_Error( 'subly_no_download', __( 'WordPress.org did not offer a download for that plugin.', 'subly' ) );
+			return new \WP_Error( 'submex_no_download', __( 'WordPress.org did not offer a download for that plugin.', 'submex' ) );
 		}
 
 		$upgrader = new \Plugin_Upgrader( new \WP_Ajax_Upgrader_Skin() );
@@ -114,12 +114,12 @@ class Integration_Installer {
 		}
 
 		if ( true !== $result ) {
-			return new \WP_Error( 'subly_install_failed', __( 'WordPress could not install that plugin.', 'subly' ) );
+			return new \WP_Error( 'submex_install_failed', __( 'WordPress could not install that plugin.', 'submex' ) );
 		}
 
 		$file = $this->installed_file( $slug );
 
-		return $file ?: new \WP_Error( 'subly_install_missing', __( 'The plugin installed but could not be found afterwards.', 'subly' ) );
+		return $file ?: new \WP_Error( 'submex_install_missing', __( 'The plugin installed but could not be found afterwards.', 'submex' ) );
 	}
 
 	private function installed_file( string $slug ): string {

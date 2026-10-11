@@ -13,7 +13,7 @@ import {
 	useState,
 } from '@wordpress/element';
 import { __, _n, sprintf } from '@wordpress/i18n';
-import { Button, Card, CardContent, Skeleton } from '@subly/ui';
+import { Button, Card, CardContent, Skeleton } from '@submex/ui';
 import {
 	browser,
 	current,
@@ -27,7 +27,7 @@ import { highlightMenu, interceptLinks } from './links';
 import { createNotices } from './notices';
 
 // Set by the server on pages the shell draws; the stylesheet hides their notices until they are moved.
-const APP_PAGE = 'subly-app-page';
+const APP_PAGE = 'submex-app-page';
 const FOCUSABLE =
 	'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])';
 
@@ -68,7 +68,7 @@ function Failed() {
 		<Card>
 			<CardContent className="sb-flex sb-flex-col sb-items-start sb-gap-3 sb-p-6">
 				<p className="sb-font-medium">
-					{ __( 'This page did not load.', 'subly' ) }
+					{ __( 'This page did not load.', 'submex' ) }
 				</p>
 				<Button asChild variant="outline" size="sm">
 					<a
@@ -78,7 +78,7 @@ function Failed() {
 							browser.reload();
 						} }
 					>
-						{ __( 'Reload', 'subly' ) }
+						{ __( 'Reload', 'submex' ) }
 					</a>
 				</Button>
 			</CardContent>
@@ -167,21 +167,21 @@ function NoticeCentre( { count, open, setOpen, listRef } ) {
 
 	const label = sprintf(
 		/* translators: %d: number of notifications */
-		_n( '%d notification', '%d notifications', count, 'subly' ),
+		_n( '%d notification', '%d notifications', count, 'submex' ),
 		count
 	);
 
 	return (
-		<div ref={ wrapRef } className="subly-notify">
+		<div ref={ wrapRef } className="submex-notify">
 			{ count > 0 ? (
 				<button
 					ref={ bellRef }
 					type="button"
-					className="subly-notify__bell"
+					className="submex-notify__bell"
 					aria-label={ label }
 					title={ label }
 					aria-expanded={ shown }
-					aria-controls="subly-notify-panel"
+					aria-controls="submex-notify-panel"
 					onClick={ () => setOpen( ! open ) }
 				>
 					<svg
@@ -198,7 +198,7 @@ function NoticeCentre( { count, open, setOpen, listRef } ) {
 					>
 						<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0" />
 					</svg>
-					<span className="subly-notify__count" aria-hidden="true">
+					<span className="submex-notify__count" aria-hidden="true">
 						{ count }
 					</span>
 				</button>
@@ -206,17 +206,17 @@ function NoticeCentre( { count, open, setOpen, listRef } ) {
 			{ /* Always mounted: the notices live in the list whether or not it is open. */ }
 			<div
 				ref={ panelRef }
-				id="subly-notify-panel"
-				className="subly-notify__panel"
+				id="submex-notify-panel"
+				className="submex-notify__panel"
 				role="dialog"
-				aria-label={ __( 'Notifications', 'subly' ) }
+				aria-label={ __( 'Notifications', 'submex' ) }
 				tabIndex={ -1 }
 				hidden={ ! shown }
 			>
-				<p className="subly-notify__head">
-					{ __( 'Notifications', 'subly' ) }
+				<p className="submex-notify__head">
+					{ __( 'Notifications', 'submex' ) }
 				</p>
-				<div ref={ listRef } className="subly-notify__list" />
+				<div ref={ listRef } className="submex-notify__list" />
 			</div>
 		</div>
 	);
@@ -284,7 +284,7 @@ export function Shell( { fallback, links } ) {
 				notices.current = null;
 				document.body.classList.remove( APP_PAGE );
 				fallback
-					.querySelectorAll( '[data-subly-header-end]' )
+					.querySelectorAll( '[data-submex-header-end]' )
 					.forEach( ( marker ) =>
 						marker.classList.add( 'wp-header-end' )
 					);
@@ -368,33 +368,33 @@ export function Shell( { fallback, links } ) {
 	}
 
 	return (
-		<div className="subly-shell">
-			<header className="subly-shell__bar">
-				<div className="subly-shell__inner">
+		<div className="submex-shell">
+			<header className="submex-shell__bar">
+				<div className="submex-shell__inner">
 					<nav
-						className="subly-crumbs"
-						aria-label={ __( 'Breadcrumb', 'subly' ) }
+						className="submex-crumbs"
+						aria-label={ __( 'Breadcrumb', 'submex' ) }
 					>
-						<a className="subly-crumbs__home" href={ links.home }>
+						<a className="submex-crumbs__home" href={ links.home }>
 							<img
-								className="subly-logo"
+								className="submex-logo"
 								src={ links.logo }
 								width="92"
 								height="28"
-								alt={ __( 'Subly', 'subly' ) }
+								alt={ __( 'Submex', 'submex' ) }
 							/>
 						</a>
-						<span className="subly-crumbs__sep" aria-hidden="true">
+						<span className="submex-crumbs__sep" aria-hidden="true">
 							/
 						</span>
 						<span
-							className="subly-crumbs__current"
+							className="submex-crumbs__current"
 							aria-current="page"
 						>
 							{ route.title }
 						</span>
 					</nav>
-					<div className="subly-shell__meta">
+					<div className="submex-shell__meta">
 						<NoticeCentre
 							count={ counts.centre }
 							open={ centreOpen }
@@ -412,18 +412,18 @@ export function Shell( { fallback, links } ) {
 								/>
 								<path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.4M12 16.6h.01" />
 							</Icon>
-							{ __( 'Help', 'subly' ) }
+							{ __( 'Help', 'submex' ) }
 						</a>
 						<a href={ links.settings }>
 							<Icon>
 								<circle cx="12" cy="12" r="3" />
 								<path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z" />
 							</Icon>
-							{ __( 'Settings', 'subly' ) }
+							{ __( 'Settings', 'submex' ) }
 						</a>
 						{ links.upgrade ? (
 							<a
-								className="subly-shell__upgrade"
+								className="submex-shell__upgrade"
 								href={ links.upgrade }
 								target="_blank"
 								rel="noopener noreferrer"
@@ -431,27 +431,27 @@ export function Shell( { fallback, links } ) {
 								<Icon>
 									<path d="M3 8l4.5 4L12 6l4.5 6L21 8l-2 10H5z" />
 								</Icon>
-								{ __( 'Upgrade to Pro', 'subly' ) }
+								{ __( 'Upgrade to Pro', 'submex' ) }
 								<span className="screen-reader-text">
 									{ ' ' }
-									{ __( '(opens in a new tab)', 'subly' ) }
+									{ __( '(opens in a new tab)', 'submex' ) }
 								</span>
 							</a>
 						) : null }
 					</div>
 				</div>
 			</header>
-			<div className="wrap subly-shell__body">
+			<div className="wrap submex-shell__body">
 				<h1 className="screen-reader-text">{ route.title }</h1>
-				<div className="subly-app__landing">
+				<div className="submex-app__landing">
 					<hr className="wp-header-end" />
 				</div>
-				<div ref={ alertsRef } className="subly-alerts" />
+				<div ref={ alertsRef } className="submex-alerts" />
 				{ counts.more > 0 ? (
 					<button
 						type="button"
-						className="subly-alerts__more"
-						aria-controls="subly-notify-panel"
+						className="submex-alerts__more"
+						aria-controls="submex-notify-panel"
 						onClick={ () => setCentreOpen( true ) }
 					>
 						{ sprintf(
@@ -460,13 +460,13 @@ export function Shell( { fallback, links } ) {
 								'and %d more',
 								'and %d more',
 								counts.more,
-								'subly'
+								'submex'
 							),
 							counts.more
 						) }
 					</button>
 				) : null }
-				<div ref={ routeRef } className="subly-app__route">
+				<div ref={ routeRef } className="submex-app__route">
 					{ failedAt === loc.nav ? (
 						<Failed />
 					) : (
@@ -486,13 +486,13 @@ export function Shell( { fallback, links } ) {
  * Draws the route the server named, and takes over navigation between routes.
  */
 export function boot() {
-	const host = document.getElementById( 'subly-app' );
+	const host = document.getElementById( 'submex-app' );
 
 	if ( ! host ) {
 		return null;
 	}
 
-	const fallback = document.getElementById( 'subly-fallback' );
+	const fallback = document.getElementById( 'submex-fallback' );
 
 	if ( ! getRoute( host.dataset.page ) ) {
 		document.body.classList.remove( APP_PAGE );
@@ -500,7 +500,7 @@ export function boot() {
 		// WordPress moves notices under this marker; ours sits under the app's header instead.
 		fallback.querySelectorAll( '.wp-header-end' ).forEach( ( marker ) => {
 			marker.classList.remove( 'wp-header-end' );
-			marker.setAttribute( 'data-subly-header-end', '' );
+			marker.setAttribute( 'data-submex-header-end', '' );
 		} );
 	}
 
@@ -512,7 +512,7 @@ export function boot() {
 	root.render(
 		<Shell
 			fallback={ fallback }
-			links={ window.sublyShellData?.links || {} }
+			links={ window.submexShellData?.links || {} }
 		/>
 	);
 

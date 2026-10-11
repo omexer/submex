@@ -1,23 +1,23 @@
 /* Until the shell moves them: nothing but important notices shows on a page it draws. */
-body.subly-app-page.js #wpbody-content :is(div.notice, div.error, div.updated):not(.subly-notice--important, .inline, .below-h2, .subly-notify__list *, .subly-app__route *) {
+body.submex-app-page.js #wpbody-content :is(div.notice, div.error, div.updated):not(.submex-notice--important, .inline, .below-h2, .submex-notify__list *, .submex-app__route *) {
 	display: none;
 }
 
-.subly-app__landing {
+.submex-app__landing {
 	display: contents;
 }
 
-.subly-alerts:empty {
+.submex-alerts:empty {
 	display: none;
 }
 
-.subly-alerts {
+.submex-alerts {
 	display: grid;
 	gap: 8px;
-	margin: 0 0 var(--subly-gap);
+	margin: 0 0 var(--submex-gap);
 }
 
-.subly-shell .notice.subly-alert {
+.submex-shell .notice.submex-alert {
 	position: relative;
 	display: flex;
 	align-items: center;
@@ -25,37 +25,37 @@ body.subly-app-page.js #wpbody-content :is(div.notice, div.error, div.updated):n
 	min-width: 0;
 	margin: 0;
 	padding: 8px 12px 8px 10px;
-	border: 1px solid var(--subly-line);
-	border-right: 3px solid var(--subly-alert-tone, var(--subly-accent));
-	border-radius: var(--subly-radius-sm);
-	background: var(--subly-bg);
-	box-shadow: var(--subly-shadow);
+	border: 1px solid var(--submex-line);
+	border-right: 3px solid var(--submex-alert-tone, var(--submex-accent));
+	border-radius: var(--submex-radius-sm);
+	background: var(--submex-bg);
+	box-shadow: var(--submex-shadow);
 	font-size: 13px;
 	line-height: 1.45;
-	color: var(--subly-ink);
+	color: var(--submex-ink);
 }
 
-.subly-shell .subly-alert--error { --subly-alert-tone: var(--subly-bad); }
-.subly-shell .subly-alert--warning { --subly-alert-tone: var(--subly-warn); }
-.subly-shell .subly-alert--success { --subly-alert-tone: var(--subly-good); }
+.submex-shell .submex-alert--error { --submex-alert-tone: var(--submex-bad); }
+.submex-shell .submex-alert--warning { --submex-alert-tone: var(--submex-warn); }
+.submex-shell .submex-alert--success { --submex-alert-tone: var(--submex-good); }
 
-.subly-shell .subly-alert.is-open {
+.submex-shell .submex-alert.is-open {
 	align-items: flex-start;
 }
 
-.subly-alert__icon {
+.submex-alert__icon {
 	display: grid;
 	flex: none;
 	place-items: center;
-	color: var(--subly-alert-tone, var(--subly-accent));
+	color: var(--submex-alert-tone, var(--submex-accent));
 }
 
-.subly-alert__text {
+.submex-alert__text {
 	flex: 1;
 	min-width: 0;
 }
 
-.subly-shell .subly-alert p.subly-alert__title {
+.submex-shell .submex-alert p.submex-alert__title {
 	margin: 0;
 	padding: 0;
 	overflow: hidden;
@@ -64,53 +64,53 @@ body.subly-app-page.js #wpbody-content :is(div.notice, div.error, div.updated):n
 	text-overflow: ellipsis;
 }
 
-.subly-alert__detail {
+.submex-alert__detail {
 	overflow: hidden;
-	color: var(--subly-ink-soft);
+	color: var(--submex-ink-soft);
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
 
-.subly-shell .subly-alert__detail :is(p, ul, ol, li) {
+.submex-shell .submex-alert__detail :is(p, ul, ol, li) {
 	display: inline;
 	margin: 0 !important; /* Beats the inline list styles some notices carry. */
 	padding: 0;
 }
 
-.subly-alert__detail li + li::before {
+.submex-alert__detail li + li::before {
 	content: " ";
 }
 
-.subly-shell .subly-alert.is-open :is(.subly-alert__title, .subly-alert__detail) {
+.submex-shell .submex-alert.is-open :is(.submex-alert__title, .submex-alert__detail) {
 	white-space: normal;
 }
 
-.subly-shell .subly-alert.is-open .subly-alert__detail :is(p, ul, ol) {
+.submex-shell .submex-alert.is-open .submex-alert__detail :is(p, ul, ol) {
 	display: block;
 	margin: 4px 0 0 !important;
 }
 
-.subly-shell .subly-alert.is-open .subly-alert__detail ul {
+.submex-shell .submex-alert.is-open .submex-alert__detail ul {
 	padding-right: 18px;
 	list-style: disc;
 }
 
-.subly-shell .subly-alert.is-open .subly-alert__detail li {
+.submex-shell .submex-alert.is-open .submex-alert__detail li {
 	display: list-item;
 }
 
-.subly-alert.is-open .subly-alert__detail li + li::before {
+.submex-alert.is-open .submex-alert__detail li + li::before {
 	content: none;
 }
 
-.subly-alert__actions {
+.submex-alert__actions {
 	display: flex;
 	flex: none;
 	align-items: center;
 	gap: 6px;
 }
 
-.subly-shell .subly-alert__actions .button {
+.submex-shell .submex-alert__actions .button {
 	min-height: 28px;
 	margin: 0;
 	padding: 0 10px;
@@ -118,54 +118,54 @@ body.subly-app-page.js #wpbody-content :is(div.notice, div.error, div.updated):n
 	line-height: 26px;
 }
 
-.subly-alert__more,
-.subly-alerts__more {
+.submex-alert__more,
+.submex-alerts__more {
 	padding: 4px 6px;
 	border: 0;
 	border-radius: 6px;
 	background: none;
-	color: var(--subly-accent);
+	color: var(--submex-accent);
 	font: inherit;
 	font-size: 12px;
 	font-weight: 500;
 	cursor: pointer;
 }
 
-.subly-alert__more:hover,
-.subly-alerts__more:hover {
-	background: var(--subly-accent-soft);
+.submex-alert__more:hover,
+.submex-alerts__more:hover {
+	background: var(--submex-accent-soft);
 }
 
-.subly-alert__more[aria-expanded="true"] {
-	background: var(--subly-accent-soft);
+.submex-alert__more[aria-expanded="true"] {
+	background: var(--submex-accent-soft);
 }
 
-.subly-alerts__more {
-	margin: -8px 0 var(--subly-gap);
+.submex-alerts__more {
+	margin: -8px 0 var(--submex-gap);
 	padding-right: 0;
 }
 
-.subly-alert__dismiss {
+.submex-alert__dismiss {
 	display: grid;
 	place-items: center;
 	width: 28px;
 	height: 28px;
 	border-radius: 6px;
-	color: var(--subly-ink-soft);
+	color: var(--submex-ink-soft);
 }
 
-.subly-alert__dismiss:hover,
-.subly-alert__dismiss:focus {
-	background: var(--subly-line-soft);
-	color: var(--subly-ink);
+.submex-alert__dismiss:hover,
+.submex-alert__dismiss:focus {
+	background: var(--submex-line-soft);
+	color: var(--submex-ink);
 }
 
 /* WordPress adds its own close button to dismissible notices, positioned for its layout. */
-.subly-shell .subly-alert.is-dismissible {
+.submex-shell .submex-alert.is-dismissible {
 	padding-left: 10px;
 }
 
-.subly-shell .subly-alert > .notice-dismiss {
+.submex-shell .submex-alert > .notice-dismiss {
 	position: static;
 	flex: none;
 	width: 28px;
@@ -174,36 +174,36 @@ body.subly-app-page.js #wpbody-content :is(div.notice, div.error, div.updated):n
 	border-radius: 6px;
 }
 
-.subly-shell .subly-alert > .notice-dismiss::before {
+.submex-shell .submex-alert > .notice-dismiss::before {
 	font-size: 18px;
 	line-height: 28px;
 }
 
-.subly-alert :is(.subly-alert__more, .subly-alert__dismiss, .notice-dismiss):focus-visible,
-.subly-alerts__more:focus-visible {
-	outline: 2px solid var(--subly-accent);
+.submex-alert :is(.submex-alert__more, .submex-alert__dismiss, .notice-dismiss):focus-visible,
+.submex-alerts__more:focus-visible {
+	outline: 2px solid var(--submex-accent);
 	outline-offset: 1px;
 	box-shadow: none;
 }
 
 /* An important notice past the first few sits in the notification centre like any other. */
-.subly-shell .subly-notify__list .notice.subly-alert {
+.submex-shell .submex-notify__list .notice.submex-alert {
 	border-width: 0 3px 0 0;
-	border-bottom: 1px solid var(--subly-line-soft);
+	border-bottom: 1px solid var(--submex-line-soft);
 	border-radius: 0;
 	box-shadow: none;
 }
 
 @media screen and (max-width: 600px) {
-	.subly-shell .notice.subly-alert {
+	.submex-shell .notice.submex-alert {
 		flex-wrap: wrap;
 	}
 
-	.subly-alert__text {
+	.submex-alert__text {
 		flex-basis: calc(100% - 40px);
 	}
 
-	.subly-alert__actions {
+	.submex-alert__actions {
 		margin-right: 28px;
 	}
 }

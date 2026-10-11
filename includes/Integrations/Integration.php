@@ -1,15 +1,15 @@
 <?php
 
-namespace Subly\Integrations;
+namespace Submex\Integrations;
 
-use Subly\Domain\Subscription;
+use Submex\Domain\Subscription;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
- * Something a subscription hands the customer while it is live. Add one through the subly_integrations filter.
+ * Something a subscription hands the customer while it is live. Add one through the submex_integrations filter.
  *
  * An integration may also have hooks(): void, called once at boot while it is available, for
  * events the grant/revoke rule cannot express, such as renewals.

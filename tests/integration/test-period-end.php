@@ -2,20 +2,20 @@
 /**
  * A subscription cancelled "at the end of the period" really ends when that period does.
  *
- * @package Subly
+ * @package Submex
  */
 
-use Subly\Billing\Renewal_Scheduler;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
-use Subly\Gateways\Charge_Result;
-use Subly\Gateways\Gateway_Model;
-use Subly\Gateways\Recurring_Gateway;
+use Submex\Billing\Renewal_Scheduler;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
+use Submex\Gateways\Charge_Result;
+use Submex\Gateways\Gateway_Model;
+use Submex\Gateways\Recurring_Gateway;
 
 require __DIR__ . '/bootstrap.php';
 require_once ABSPATH . 'wp-admin/includes/user.php';
 
-$plugin = \Subly\Plugin::instance();
+$plugin = \Submex\Plugin::instance();
 
 $gateway_for = static function ( string $id, Gateway_Model $model ): Recurring_Gateway {
 	return new class( $id, $model ) implements Recurring_Gateway {
@@ -42,20 +42,20 @@ $gateway_for = static function ( string $id, Gateway_Model $model ): Recurring_G
 	};
 };
 
-$tokenized = $gateway_for( 'subly_test_period_end', Gateway_Model::Tokenized );
-$managed   = $gateway_for( 'subly_test_period_end_managed', Gateway_Model::GatewayManaged );
-$uncertain = $gateway_for( 'subly_test_period_end_uncertain', Gateway_Model::Tokenized );
+$tokenized = $gateway_for( 'submex_test_period_end', Gateway_Model::Tokenized );
+$managed   = $gateway_for( 'submex_test_period_end_managed', Gateway_Model::GatewayManaged );
+$uncertain = $gateway_for( 'submex_test_period_end_uncertain', Gateway_Model::Tokenized );
 $plugin->get( 'gateways' )->add( $tokenized );
 $plugin->get( 'gateways' )->add( $managed );
 $plugin->get( 'gateways' )->add( $uncertain );
 
 $succeeded = 0;
-add_action( 'subly_renewal_succeeded', function () use ( &$succeeded ) { ++$succeeded; } );
+add_action( 'submex_renewal_succeeded', function () use ( &$succeeded ) { ++$succeeded; } );
 
 $sent = array();
 add_filter( 'wp_mail', function ( $a ) use ( &$sent ) { $sent[] = $a['to']; return $a; }, 999 );
 
-$product   = subly_test_product();
+$product   = submex_test_product();
 $processor = $plugin->get( 'processor' );
 $scheduler = $plugin->get( 'scheduler' );
 $made      = array();
@@ -64,7 +64,7 @@ $users     = array();
 $customer = static function ( string $login ) use ( &$users ): int {
 	$id = wp_insert_user( array( 'user_login' => $login . '_' . wp_generate_password( 6, false, false ), 'user_pass' => wp_generate_password(), 'role' => 'customer' ) );
 	if ( is_wp_error( $id ) ) {
-		subly_test_abort( 'could not create a customer: ' . $id->get_error_message() );
+		submex_test_abort( 'could not create a customer: ' . $id->get_error_message() );
 	}
 	$users[] = $id;
 	return $id;
@@ -78,7 +78,7 @@ $make = static function ( Subscription_Status $status, ?string $next, Recurring_
 	$s->set_billing_interval( 1 );
 	$s->set_payment_method( $gateway->id() );
 	$s->set_address( array( 'first_name' => 'Period', 'email' => 'periodend@example.test' ), 'billing' );
-	$s->update_meta_data( '_subly_site_url', get_option( 'siteurl' ) );
+	$s->update_meta_data( '_submex_site_url', get_option( 'siteurl' ) );
 	$item = new WC_Order_Item_Product();
 	$item->set_props( array( 'name' => 'Period end probe', 'product_id' => $product->get_id(), 'quantity' => 1, 'subtotal' => '20', 'total' => '20' ) );
 	$s->add_item( $item );
@@ -100,7 +100,7 @@ $make = static function ( Subscription_Status $status, ?string $next, Recurring_
 $ago   = static fn( int $seconds ): string => gmdate( 'Y-m-d H:i:s', time() - $seconds );
 $fresh = static fn( Subscription $s ): Subscription => wc_get_order( $s->get_id() );
 
-$rest       = new \Subly\Rest\Subscriptions_Controller( $plugin->get( 'activity' ), $processor );
+$rest       = new \Submex\Rest\Subscriptions_Controller( $plugin->get( 'activity' ), $processor );
 $transition = new ReflectionMethod( $rest, 'transition' );
 $transition->setAccessible( true );
 
@@ -110,8 +110,8 @@ $orders_for = static function ( Subscription $s ): array {
 	return array_map(
 		'intval',
 		$hpos
-			? $wpdb->get_col( $wpdb->prepare( 'SELECT order_id FROM %i WHERE meta_key = %s AND meta_value = %d AND order_id <> %d', $wpdb->prefix . 'wc_orders_meta', '_subly_subscription_id', $s->get_id(), $s->get_id() ) )
-			: $wpdb->get_col( $wpdb->prepare( 'SELECT post_id FROM %i WHERE meta_key = %s AND meta_value = %d AND post_id <> %d', $wpdb->postmeta, '_subly_subscription_id', $s->get_id(), $s->get_id() ) )
+			? $wpdb->get_col( $wpdb->prepare( 'SELECT order_id FROM %i WHERE meta_key = %s AND meta_value = %d AND order_id <> %d', $wpdb->prefix . 'wc_orders_meta', '_submex_subscription_id', $s->get_id(), $s->get_id() ) )
+			: $wpdb->get_col( $wpdb->prepare( 'SELECT post_id FROM %i WHERE meta_key = %s AND meta_value = %d AND post_id <> %d', $wpdb->postmeta, '_submex_subscription_id', $s->get_id(), $s->get_id() ) )
 	);
 };
 
@@ -150,9 +150,9 @@ $swept = static function ( Subscription $s ) use ( $scheduler, $due_ids ): bool 
 };
 
 $has_access = static function ( int $user_id ) use ( $product ): bool {
-	$m = new ReflectionMethod( \Subly\Frontend\Downloadable_Access::class, 'has_live_subscription' );
+	$m = new ReflectionMethod( \Submex\Frontend\Downloadable_Access::class, 'has_live_subscription' );
 	$m->setAccessible( true );
-	return $m->invoke( new \Subly\Frontend\Downloadable_Access(), $user_id, $product->get_id() );
+	return $m->invoke( new \Submex\Frontend\Downloadable_Access(), $user_id, $product->get_id() );
 };
 
 $ended_log = static function ( Subscription $s ) use ( $plugin ): int {
@@ -238,14 +238,14 @@ $check( 'and told only once', 1 === $managed->released, $managed->released );
 
 echo "\nRefusals\n";
 $locked = $make( Subscription_Status::PendingCancel, $ago( HOUR_IN_SECONDS ), $tokenized );
-$lock   = new \Subly\Billing\Lock();
+$lock   = new \Submex\Billing\Lock();
 $lock->acquire( $locked->get_id() );
 $processor->process( $locked->get_id() );
 $lock->release( $locked->get_id() );
 $check( 'another worker holding the lock stops it', Subscription_Status::PendingCancel === $fresh( $locked )->get_status_enum(), $fresh( $locked )->get_status() );
 
 $clone = $make( Subscription_Status::PendingCancel, $ago( HOUR_IN_SECONDS ), $managed );
-$clone->update_meta_data( '_subly_site_url', 'https://live-store.example.test' );
+$clone->update_meta_data( '_submex_site_url', 'https://live-store.example.test' );
 $clone->save();
 $processor->process( $clone->get_id() );
 $check( 'a staging clone does not end it', Subscription_Status::PendingCancel === $fresh( $clone )->get_status_enum(), $fresh( $clone )->get_status() );
@@ -269,7 +269,7 @@ $check( 'not logged as ended', 0 === $ended_log( $back ), $ended_log( $back ) );
 echo "\nA renewal of unknown outcome is settled before ending\n";
 $slot_of = static function ( Subscription $s ): ?object {
 	global $wpdb;
-	return $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE subscription_id = %d ORDER BY period_index DESC LIMIT 1', $wpdb->prefix . 'subly_charge_slot', $s->get_id() ) );
+	return $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE subscription_id = %d ORDER BY period_index DESC LIMIT 1', $wpdb->prefix . 'submex_charge_slot', $s->get_id() ) );
 };
 $timed_out = static function ( int $customer_id = 1 ) use ( $make, $ago, $uncertain, $processor, $rest, $transition, $fresh ): Subscription {
 	$uncertain->answer = Charge_Result::error( 'Timed out.' );
@@ -330,4 +330,4 @@ foreach ( $users as $user_id ) {
 	wp_delete_user( $user_id );
 }
 
-subly_test_done( $fail );
+submex_test_done( $fail );

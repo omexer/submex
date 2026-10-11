@@ -1,69 +1,69 @@
 <?php
 
-namespace Subly;
+namespace Submex;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-use Subly\Billing\Lock;
-use Subly\Billing\Renewal_Order_Factory;
-use Subly\Billing\Renewal_Processor;
-use Subly\Billing\Renewal_Scheduler;
-use Subly\Billing\Renewal_Tax_Repair;
-use Subly\Data\Activity_Repository;
-use Subly\Data\Charge_Slot_Repository;
-use Subly\Data\Cleanup;
-use Subly\Data\Migrator;
-use Subly\Data\Order_Type;
-use Subly\Data\Stats;
-use Subly\Rest\Dashboard_Controller;
-use Subly\Rest\Help_Controller;
-use Subly\Rest\Integrations_Controller;
-use Subly\Rest\Overview_Controller;
-use Subly\Rest\Settings_Controller;
-use Subly\Rest\Subscriptions_Controller;
-use Subly\Checkout\Cart_Validation;
-use Subly\Checkout\Guest_Checkout;
-use Subly\Checkout\Store_Api;
-use Subly\Checkout\Subscription_Factory;
-use Subly\Checkout\Initial_Payment;
-use Subly\Checkout\Renewal_Order_Pay;
-use Subly\Checkout\Trial_Payment;
-use Subly\Frontend\Disclosure;
-use Subly\Frontend\Product_Display;
-use Subly\Gateways\Gateway_Registry;
-use Subly\Gateways\PayPal\PayPal_Checkout_Gateway;
-use Subly\Gateways\PayPal\PayPal_Client;
-use Subly\Gateways\PayPal\PayPal_Plans;
-use Subly\Gateways\PayPal\PayPal_Gateway;
-use Subly\Gateways\PayPal\Webhook_Controller as PayPal_Webhooks;
-use Subly\Integrations\FluentCRM;
-use Subly\Integrations\Integrations;
-use Subly\Product\Product_Meta_Fields;
-use Subly\Product\Product_Types;
-use Subly\Admin\App_Host;
-use Subly\Admin\Assets as Admin_Assets;
-use Subly\Admin\Help_Page;
-use Subly\Admin\Integration_Installer;
-use Subly\Admin\Integrations_Page;
-use Subly\Admin\Gateway_Notice;
-use Subly\Blocks\Gateway_Support;
-use Subly\Admin\Menu;
-use Subly\Admin\Notice_Dismissals;
-use Subly\Admin\Notices;
-use Subly\Admin\Settings;
-use Subly\Admin\Settings_Page;
-use Subly\Admin\Setup_Guide;
-use Subly\Emails\Mailer;
-use Subly\Emails\Notification_Settings;
-use Subly\Privacy\Personal_Data;
-use Subly\Lifecycle\Auto_Renewal;
-use Subly\Lifecycle\Cancellation_Survey;
-use Subly\Lifecycle\Role_Management;
-use Subly\Frontend\Downloadable_Access;
-use Subly\Frontend\MyAccount\Account_Endpoint;
-use Subly\Frontend\MyAccount\Assets as Account_Assets;
+use Submex\Billing\Lock;
+use Submex\Billing\Renewal_Order_Factory;
+use Submex\Billing\Renewal_Processor;
+use Submex\Billing\Renewal_Scheduler;
+use Submex\Billing\Renewal_Tax_Repair;
+use Submex\Data\Activity_Repository;
+use Submex\Data\Charge_Slot_Repository;
+use Submex\Data\Cleanup;
+use Submex\Data\Migrator;
+use Submex\Data\Order_Type;
+use Submex\Data\Stats;
+use Submex\Rest\Dashboard_Controller;
+use Submex\Rest\Help_Controller;
+use Submex\Rest\Integrations_Controller;
+use Submex\Rest\Overview_Controller;
+use Submex\Rest\Settings_Controller;
+use Submex\Rest\Subscriptions_Controller;
+use Submex\Checkout\Cart_Validation;
+use Submex\Checkout\Guest_Checkout;
+use Submex\Checkout\Store_Api;
+use Submex\Checkout\Subscription_Factory;
+use Submex\Checkout\Initial_Payment;
+use Submex\Checkout\Renewal_Order_Pay;
+use Submex\Checkout\Trial_Payment;
+use Submex\Frontend\Disclosure;
+use Submex\Frontend\Product_Display;
+use Submex\Gateways\Gateway_Registry;
+use Submex\Gateways\PayPal\PayPal_Checkout_Gateway;
+use Submex\Gateways\PayPal\PayPal_Client;
+use Submex\Gateways\PayPal\PayPal_Plans;
+use Submex\Gateways\PayPal\PayPal_Gateway;
+use Submex\Gateways\PayPal\Webhook_Controller as PayPal_Webhooks;
+use Submex\Integrations\FluentCRM;
+use Submex\Integrations\Integrations;
+use Submex\Product\Product_Meta_Fields;
+use Submex\Product\Product_Types;
+use Submex\Admin\App_Host;
+use Submex\Admin\Assets as Admin_Assets;
+use Submex\Admin\Help_Page;
+use Submex\Admin\Integration_Installer;
+use Submex\Admin\Integrations_Page;
+use Submex\Admin\Gateway_Notice;
+use Submex\Blocks\Gateway_Support;
+use Submex\Admin\Menu;
+use Submex\Admin\Notice_Dismissals;
+use Submex\Admin\Notices;
+use Submex\Admin\Settings;
+use Submex\Admin\Settings_Page;
+use Submex\Admin\Setup_Guide;
+use Submex\Emails\Mailer;
+use Submex\Emails\Notification_Settings;
+use Submex\Privacy\Personal_Data;
+use Submex\Lifecycle\Auto_Renewal;
+use Submex\Lifecycle\Cancellation_Survey;
+use Submex\Lifecycle\Role_Management;
+use Submex\Frontend\Downloadable_Access;
+use Submex\Frontend\MyAccount\Account_Endpoint;
+use Submex\Frontend\MyAccount\Assets as Account_Assets;
 
 /**
  * Service registration. Deliberately a plain registry rather than a DI container —
@@ -195,7 +195,7 @@ final class Plugin {
 		);
 
 		add_action(
-			'subly_register_gateways',
+			'submex_register_gateways',
 			function ( Gateway_Registry $registry ): void {
 				if ( $this->services['paypal_client']->is_enabled() ) {
 					$registry->add( new PayPal_Gateway( $this->services['paypal_client'] ) );
@@ -309,16 +309,16 @@ final class Plugin {
 		$this->services['integrations'] = new Integrations();
 		add_action( 'plugins_loaded', array( $this->services['integrations'], 'register' ), 20, 0 );
 
-		add_filter( 'subly_admin_integrations', array( FluentCRM::class, 'describe' ) );
+		add_filter( 'submex_admin_integrations', array( FluentCRM::class, 'describe' ) );
 
 		/**
-		 * Fires once Subly Free is loaded and its public API is available.
+		 * Fires once Submex Free is loaded and its public API is available.
 		 *
-		 * Subly Pro boots from this hook; see Developer Guide 4.
+		 * Submex Pro boots from this hook; see Developer Guide 4.
 		 *
 		 * @param string $version Free plugin version.
 		 */
-		do_action( 'subly_loaded', SUBLY_VERSION );
+		do_action( 'submex_loaded', SUBMEX_VERSION );
 	}
 
 	public function get( string $id ): ?object {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Subly\Admin;
+namespace Submex\Admin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -11,9 +11,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Notices {
 
-	public const IMPORTANT = 'subly-notice--important';
+	public const IMPORTANT = 'submex-notice--important';
 
-	public const FEEDBACK = 'subly-notice--feedback';
+	public const FEEDBACK = 'submex-notice--feedback';
 
 	private const HOOKS = array( 'admin_notices', 'all_admin_notices', 'user_admin_notices' );
 
@@ -49,7 +49,7 @@ class Notices {
 	}
 
 	/**
-	 * Subly's own screens and WooCommerce → Settings, plus the orders screens when asked: where a notice is about the page in front of the merchant.
+	 * Submex's own screens and WooCommerce → Settings, plus the orders screens when asked: where a notice is about the page in front of the merchant.
 	 */
 	public static function in_context( bool $with_orders = false ): bool {
 		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
@@ -70,7 +70,7 @@ class Notices {
 		self::$current = $this;
 
 		add_action( 'in_admin_header', array( $this, 'collect' ), 1 );
-		// Last resort: a Subly screen that draws no shell would otherwise swallow them.
+		// Last resort: a Submex screen that draws no shell would otherwise swallow them.
 		add_action( 'admin_footer', array( $this, 'render_leftovers' ), 99 );
 	}
 
@@ -128,19 +128,19 @@ class Notices {
 
 		$label = sprintf(
 			/* translators: %d: number of notifications */
-			_n( '%d notification', '%d notifications', $notices->count, 'subly' ),
+			_n( '%d notification', '%d notifications', $notices->count, 'submex' ),
 			$notices->count
 		);
 
 		printf(
-			'<details class="subly-notify" data-subly-notify><summary class="subly-notify__bell" aria-label="%s" title="%s">%s<span class="subly-notify__count" aria-hidden="true">%s</span></summary>'
-				. '<div class="subly-notify__panel" id="subly-other-notices" role="region" aria-label="%s"><p class="subly-notify__head">%s</p><div class="subly-notify__list">',
+			'<details class="submex-notify" data-submex-notify><summary class="submex-notify__bell" aria-label="%s" title="%s">%s<span class="submex-notify__count" aria-hidden="true">%s</span></summary>'
+				. '<div class="submex-notify__panel" id="submex-other-notices" role="region" aria-label="%s"><p class="submex-notify__head">%s</p><div class="submex-notify__list">',
 			esc_attr( $label ),
 			esc_attr( $label ),
 			wp_kses( self::bell(), Allowed_Html::svg() ),
 			esc_html( number_format_i18n( $notices->count ) ),
-			esc_attr__( 'Notifications', 'subly' ),
-			esc_html__( 'Notifications', 'subly' )
+			esc_attr__( 'Notifications', 'submex' ),
+			esc_html__( 'Notifications', 'submex' )
 		);
 
 		echo wp_kses( $notices->html, Allowed_Html::form() );
@@ -172,7 +172,7 @@ class Notices {
 
 		$this->shown = true;
 
-		echo '<div class="subly-other-notices">' . wp_kses( $this->html, Allowed_Html::form() ) . '</div>';
+		echo '<div class="submex-other-notices">' . wp_kses( $this->html, Allowed_Html::form() ) . '</div>';
 	}
 
 	public static function bell(): string {
@@ -181,7 +181,7 @@ class Notices {
 	}
 
 	/**
-	 * Whether a notice callback belongs to Subly or an Subly extension.
+	 * Whether a notice callback belongs to Submex or an Submex extension.
 	 *
 	 * @param callable $callback
 	 */
@@ -202,14 +202,14 @@ class Notices {
 
 		$class = $reflection instanceof \ReflectionMethod ? $reflection->getDeclaringClass()->getName() : '';
 
-		if ( str_starts_with( $class, 'Subly' ) ) {
+		if ( str_starts_with( $class, 'Submex' ) ) {
 			return true;
 		}
 
 		$file = wp_normalize_path( (string) $reflection->getFileName() );
 
 		// A plugin folder named for us: the free plugin, Pro, and add-ons, however their zip unpacked.
-		return str_starts_with( $file, wp_normalize_path( trailingslashit( WP_PLUGIN_DIR ) ) . 'subly' );
+		return str_starts_with( $file, wp_normalize_path( trailingslashit( WP_PLUGIN_DIR ) ) . 'submex' );
 	}
 
 	private static function is_important( string $html ): bool {

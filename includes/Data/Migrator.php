@@ -1,6 +1,6 @@
 <?php
 
-namespace Subly\Data;
+namespace Submex\Data;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -19,7 +19,7 @@ class Migrator {
 
 	public const DB_VERSION = 2;
 
-	private const OPTION = 'subly_db_version';
+	private const OPTION = 'submex_db_version';
 
 	public function register(): void {
 		// Early in init, before anything else there reads the tables.
@@ -50,7 +50,7 @@ class Migrator {
 
 		// Derived index for "which subscriptions are due?" — rebuildable from order data.
 		dbDelta(
-			"CREATE TABLE {$prefix}subly_schedule (
+			"CREATE TABLE {$prefix}submex_schedule (
 				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 				subscription_id BIGINT UNSIGNED NOT NULL,
 				status VARCHAR(20) NOT NULL,
@@ -69,7 +69,7 @@ class Migrator {
 
 		// Append-only audit trail.
 		dbDelta(
-			"CREATE TABLE {$prefix}subly_activity (
+			"CREATE TABLE {$prefix}submex_activity (
 				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 				subscription_id BIGINT UNSIGNED NOT NULL,
 				type VARCHAR(40) NOT NULL,
@@ -84,7 +84,7 @@ class Migrator {
 
 		// The double-charge guard. uq_slot is the whole feature — see Developer Guide 5.1.
 		dbDelta(
-			"CREATE TABLE {$prefix}subly_charge_slot (
+			"CREATE TABLE {$prefix}submex_charge_slot (
 				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 				subscription_id BIGINT UNSIGNED NOT NULL,
 				period_index INT UNSIGNED NOT NULL,
@@ -116,7 +116,7 @@ class Migrator {
 		// only way to notice dbDelta silently skipping the unique key.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$index = $wpdb->get_results(
-			"SHOW INDEX FROM {$wpdb->prefix}subly_charge_slot WHERE Key_name = 'uq_slot'"
+			"SHOW INDEX FROM {$wpdb->prefix}submex_charge_slot WHERE Key_name = 'uq_slot'"
 		);
 
 		return 2 === count( $index );

@@ -2,7 +2,7 @@
 /**
  * What a subscription costs today: trials, sign-up fees, coupons, and the payment step a zero total would skip.
  *
- * @package Subly
+ * @package Submex
  */
 
 require __DIR__ . '/bootstrap.php';
@@ -14,14 +14,14 @@ $equals = static function ( string $what, $got, $want ) use ( $check ): void {
 $make = function ( float $price, int $trial, float $fee ) {
 	$id = wp_insert_post( array( 'post_title' => 'SK probe', 'post_type' => 'product', 'post_status' => 'publish' ) );
 	$p = wc_get_product( $id );
-	$p->update_meta_data( '_subly_enabled', 'yes' );
+	$p->update_meta_data( '_submex_enabled', 'yes' );
 	$p->set_regular_price( (string) $price );
 	$p->set_price( (string) $price );
-	$p->update_meta_data( '_subly_period', 'month' );
-	$p->update_meta_data( '_subly_interval', 1 );
-	$p->update_meta_data( '_subly_trial_days', $trial );
-	$p->update_meta_data( '_subly_trial_period', 'day' );
-	$p->update_meta_data( '_subly_signup_fee', (string) $fee );
+	$p->update_meta_data( '_submex_period', 'month' );
+	$p->update_meta_data( '_submex_interval', 1 );
+	$p->update_meta_data( '_submex_trial_days', $trial );
+	$p->update_meta_data( '_submex_trial_period', 'day' );
+	$p->update_meta_data( '_submex_signup_fee', (string) $fee );
 	$p->save();
 	return $id;
 };
@@ -38,7 +38,7 @@ $a = $make( 20, 14, 5 );
 list( $total, $needs ) = $cart_total( $a );
 $equals( 'charged today', $total, '5.00' );
 $equals( 'payment step shown', $needs, true );
-$equals( 'recurring price still 20', \Subly\Product\Subscription_Product::recurring_price( wc_get_product( $a ) )->decimal(), '20.00' );
+$equals( 'recurring price still 20', \Submex\Product\Subscription_Product::recurring_price( wc_get_product( $a ) )->decimal(), '20.00' );
 
 echo "\n2. 14-day trial, no sign-up fee (the zero-total case)\n";
 $b = $make( 20, 14, 0 );
@@ -47,10 +47,10 @@ $equals( 'charged today', $total, '0.00' );
 $equals( 'payment step still shown', $needs, true );
 
 echo "\n3. Same, with the setting switched off\n";
-update_option( \Subly\Checkout\Trial_Payment::OPTION, 'no' );
+update_option( \Submex\Checkout\Trial_Payment::OPTION, 'no' );
 list( $total, $needs ) = $cart_total( $b );
 $equals( 'payment step skipped', $needs, false );
-delete_option( \Subly\Checkout\Trial_Payment::OPTION );
+delete_option( \Submex\Checkout\Trial_Payment::OPTION );
 
 echo "\n4. No trial, \$5 sign-up fee\n";
 $c = $make( 20, 0, 5 );
@@ -87,10 +87,10 @@ $equals( 'charged today', $total, '0.00' );
 $equals( 'payment step still shown, so the renewal has a card', $needs, true );
 list( $total, $needs ) = $with_coupon( $d );
 $equals( 'a plain product made free by the same coupon skips it', $needs, false );
-update_option( \Subly\Checkout\Trial_Payment::OPTION, 'no' );
+update_option( \Submex\Checkout\Trial_Payment::OPTION, 'no' );
 list( $total, $needs ) = $with_coupon( $e );
 $equals( 'and so does the subscription with the setting off', $needs, false );
-delete_option( \Subly\Checkout\Trial_Payment::OPTION );
+delete_option( \Submex\Checkout\Trial_Payment::OPTION );
 
 $order = wc_create_order( array( 'customer_id' => 1 ) );
 $order->add_product( wc_get_product( $e ), 1 );
@@ -114,4 +114,4 @@ $order->delete( true );
 
 WC()->cart->empty_cart();
 foreach ( array( $a, $b, $c, $d, $e, $f ) as $id ) { wp_delete_post( $id, true ); }
-subly_test_done( $fail );
+submex_test_done( $fail );

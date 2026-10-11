@@ -1,29 +1,29 @@
 <?php
 
-namespace Subly\Gateways;
+namespace Submex\Gateways;
 
-use Subly\Domain\Subscription;
+use Submex\Domain\Subscription;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
- * Manual renewal: Subly raises the renewal order and the customer pays it themselves.
+ * Manual renewal: Submex raises the renewal order and the customer pays it themselves.
  *
  * This is the fallback for offline methods (BACS, cheque, COD) and for any gateway that
  * cannot be charged off-session.
  */
 class Manual_Gateway implements Recurring_Gateway {
 
-	public const ID = 'subly_manual';
+	public const ID = 'submex_manual';
 
 	public function id(): string {
 		return self::ID;
 	}
 
 	public function title(): string {
-		return __( 'Manual renewal', 'subly' );
+		return __( 'Manual renewal', 'submex' );
 	}
 
 	public function model(): Gateway_Model {

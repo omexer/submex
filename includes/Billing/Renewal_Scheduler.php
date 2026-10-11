@@ -1,11 +1,11 @@
 <?php
 
-namespace Subly\Billing;
+namespace Submex\Billing;
 
-use Subly\Data\Activity_Repository;
-use Subly\Data\Charge_Slot_Repository;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
+use Submex\Data\Activity_Repository;
+use Submex\Data\Charge_Slot_Repository;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -20,12 +20,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Renewal_Scheduler {
 
-	public const ACTION_RENEWAL  = 'subly_scheduled_renewal';
-	public const ACTION_REMINDER = 'subly_renewal_reminder';
-	public const ACTION_SWEEP    = 'subly_sweep_overdue';
-	public const GROUP           = 'subly';
+	public const ACTION_RENEWAL  = 'submex_scheduled_renewal';
+	public const ACTION_REMINDER = 'submex_renewal_reminder';
+	public const ACTION_SWEEP    = 'submex_sweep_overdue';
+	public const GROUP           = 'submex';
 
-	public const OPTION_REMINDER_HOURS = 'subly_renewal_reminder_hours';
+	public const OPTION_REMINDER_HOURS = 'submex_renewal_reminder_hours';
 	public const DEFAULT_HOURS         = 24;
 
 	/** Cap per sweep so a site dark for a month does not fire thousands of charges at once. */
@@ -34,7 +34,7 @@ class Renewal_Scheduler {
 	// Due rows already holding a scheduled action are skipped; stop scanning past these.
 	private const SWEEP_SCAN = 1000;
 
-	private const META_UNKNOWN_RETRY = '_subly_unknown_retry';
+	private const META_UNKNOWN_RETRY = '_submex_unknown_retry';
 
 	private const MAX_UNKNOWN_RETRIES = 5;
 
@@ -76,7 +76,7 @@ class Renewal_Scheduler {
 		 *
 		 * @param Subscription $subscription
 		 */
-		do_action( 'subly_next_payment_scheduled', $subscription );
+		do_action( 'submex_next_payment_scheduled', $subscription );
 	}
 
 	/**
@@ -156,7 +156,7 @@ class Renewal_Scheduler {
 		 *
 		 * @param Subscription $subscription
 		 */
-		do_action( 'subly_renewal_due_soon', $subscription );
+		do_action( 'submex_renewal_due_soon', $subscription );
 	}
 
 	/**
@@ -235,7 +235,7 @@ class Renewal_Scheduler {
 		 *
 		 * @param int $subscription_id
 		 */
-		do_action( 'subly_renewals_unscheduled', $subscription_id );
+		do_action( 'submex_renewals_unscheduled', $subscription_id );
 	}
 
 	/**
@@ -274,7 +274,7 @@ class Renewal_Scheduler {
 		}
 
 		if ( $queued > 0 ) {
-			do_action( 'subly_swept_overdue', $queued );
+			do_action( 'submex_swept_overdue', $queued );
 		}
 	}
 
@@ -302,14 +302,14 @@ class Renewal_Scheduler {
 
 		// A renewal awaiting its gateway's answer cannot move until that answer comes; queuing it only uses up the batch.
 		$pending = Charge_Slot_Repository::STATE_PENDING;
-		$slots   = $wpdb->prefix . 'subly_charge_slot';
+		$slots   = $wpdb->prefix . 'submex_charge_slot';
 
 		if ( $hpos ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- no API filters orders by meta and status together.
-			$ids = $wpdb->get_col( $wpdb->prepare( "SELECT o.id FROM %i o LEFT JOIN %i m ON m.order_id = o.id AND m.meta_key = %s WHERE o.type = %s AND ( ( o.status IN ( %s, %s, %s ) AND m.meta_value <> '' AND m.meta_value <= %s ) OR ( o.status = %s AND COALESCE( m.meta_value, '' ) = '' ) ) AND NOT EXISTS ( SELECT 1 FROM %i s WHERE s.subscription_id = o.id AND s.state = %s ) ORDER BY m.meta_value ASC, o.id ASC LIMIT %d OFFSET %d", $wpdb->prefix . 'wc_orders', $wpdb->prefix . 'wc_orders_meta', '_subly_next_payment', Subscription::TYPE, $active, $trialling, $ending, $cutoff, $ending, $slots, $pending, $limit, $offset ) );
+			$ids = $wpdb->get_col( $wpdb->prepare( "SELECT o.id FROM %i o LEFT JOIN %i m ON m.order_id = o.id AND m.meta_key = %s WHERE o.type = %s AND ( ( o.status IN ( %s, %s, %s ) AND m.meta_value <> '' AND m.meta_value <= %s ) OR ( o.status = %s AND COALESCE( m.meta_value, '' ) = '' ) ) AND NOT EXISTS ( SELECT 1 FROM %i s WHERE s.subscription_id = o.id AND s.state = %s ) ORDER BY m.meta_value ASC, o.id ASC LIMIT %d OFFSET %d", $wpdb->prefix . 'wc_orders', $wpdb->prefix . 'wc_orders_meta', '_submex_next_payment', Subscription::TYPE, $active, $trialling, $ending, $cutoff, $ending, $slots, $pending, $limit, $offset ) );
 		} else {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- no API filters orders by meta on legacy storage.
-			$ids = $wpdb->get_col( $wpdb->prepare( "SELECT p.ID FROM {$wpdb->posts} p LEFT JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key = %s WHERE p.post_type = %s AND ( ( p.post_status IN ( %s, %s, %s ) AND m.meta_value <> '' AND m.meta_value <= %s ) OR ( p.post_status = %s AND COALESCE( m.meta_value, '' ) = '' ) ) AND NOT EXISTS ( SELECT 1 FROM %i s WHERE s.subscription_id = p.ID AND s.state = %s ) ORDER BY m.meta_value ASC, p.ID ASC LIMIT %d OFFSET %d", '_subly_next_payment', Subscription::TYPE, $active, $trialling, $ending, $cutoff, $ending, $slots, $pending, $limit, $offset ) );
+			$ids = $wpdb->get_col( $wpdb->prepare( "SELECT p.ID FROM {$wpdb->posts} p LEFT JOIN {$wpdb->postmeta} m ON m.post_id = p.ID AND m.meta_key = %s WHERE p.post_type = %s AND ( ( p.post_status IN ( %s, %s, %s ) AND m.meta_value <> '' AND m.meta_value <= %s ) OR ( p.post_status = %s AND COALESCE( m.meta_value, '' ) = '' ) ) AND NOT EXISTS ( SELECT 1 FROM %i s WHERE s.subscription_id = p.ID AND s.state = %s ) ORDER BY m.meta_value ASC, p.ID ASC LIMIT %d OFFSET %d", '_submex_next_payment', Subscription::TYPE, $active, $trialling, $ending, $cutoff, $ending, $slots, $pending, $limit, $offset ) );
 		}
 
 		return array_map( 'intval', (array) $ids );

@@ -1,9 +1,9 @@
 <?php
 
-namespace Subly\Data;
+namespace Submex\Data;
 
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -14,9 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * wc_get_orders() resolves an omitted status — and 'any' — to the shop_order status
  * list, which never contains our es-* slugs, so a bare
- * wc_get_orders( array( 'type' => 'subly_sub' ) ) silently returns nothing. Statuses
+ * wc_get_orders( array( 'type' => 'submex_sub' ) ) silently returns nothing. Statuses
  * must also be passed wc- prefixed even though the object reports them unprefixed.
- * Everything in Subly queries through here so that asymmetry lives in one place.
+ * Everything in Submex queries through here so that asymmetry lives in one place.
  */
 class Subscription_Query {
 

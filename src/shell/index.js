@@ -1,5 +1,5 @@
 /**
- * The Subly admin app, published as window.subly.shell for every route bundle.
+ * The Submex admin app, published as window.submex.shell for every route bundle.
  */
 import { registerRoute, navigate, current } from './router';
 import { boot } from './app';

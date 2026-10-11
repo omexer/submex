@@ -1,8 +1,8 @@
 <?php
 
-namespace Subly\Gateways;
+namespace Submex\Gateways;
 
-use Subly\Domain\Subscription;
+use Submex\Domain\Subscription;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -24,7 +24,7 @@ class Gateway_Registry {
 		$this->add( new Manual_Gateway() );
 
 		// Never present on a production site unless the constant is deliberately defined.
-		if ( defined( 'SUBLY_ENABLE_TEST_GATEWAY' ) ) {
+		if ( defined( 'SUBMEX_ENABLE_TEST_GATEWAY' ) ) {
 			$this->add( new Test_Gateway() );
 		}
 
@@ -33,7 +33,7 @@ class Gateway_Registry {
 		 *
 		 * @param Gateway_Registry $registry
 		 */
-		do_action( 'subly_register_gateways', $this );
+		do_action( 'submex_register_gateways', $this );
 	}
 
 	public function add( Recurring_Gateway $gateway ): void {
@@ -49,11 +49,11 @@ class Gateway_Registry {
 	 */
 	public function all(): array {
 		/**
-		 * Filter the gateways Subly will consider for recurring payments.
+		 * Filter the gateways Submex will consider for recurring payments.
 		 *
 		 * @param array<string, Recurring_Gateway> $gateways
 		 */
-		return apply_filters( 'subly_available_gateways', $this->gateways );
+		return apply_filters( 'submex_available_gateways', $this->gateways );
 	}
 
 	/**
@@ -75,7 +75,7 @@ class Gateway_Registry {
 		 * @param Subscription           $subscription
 		 * @param Gateway_Registry       $registry
 		 */
-		$gateway = apply_filters( 'subly_gateway_for_subscription', $gateway, $subscription, $this );
+		$gateway = apply_filters( 'submex_gateway_for_subscription', $gateway, $subscription, $this );
 
 		return $gateway instanceof Recurring_Gateway ? $gateway : $this->get( Manual_Gateway::ID );
 	}

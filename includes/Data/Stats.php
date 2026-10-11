@@ -1,11 +1,11 @@
 <?php
 
-namespace Subly\Data;
+namespace Submex\Data;
 
-use Subly\Billing\Renewal_Scheduler;
-use Subly\Domain\Money;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
+use Submex\Billing\Renewal_Scheduler;
+use Submex\Domain\Money;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -20,9 +20,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Stats {
 
-	public const ACTION_SNAPSHOT = 'subly_daily_snapshot';
+	public const ACTION_SNAPSHOT = 'submex_daily_snapshot';
 
-	private const OPTION_HISTORY = 'subly_mrr_history';
+	private const OPTION_HISTORY = 'submex_mrr_history';
 
 	/** Just over a year, so a year-on-year comparison always has its other end. */
 	private const KEEP_DAYS = 400;

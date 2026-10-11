@@ -3,19 +3,19 @@
  * Cart & checkout settings: mixed carts refused in both directions and at both checkouts when
  * turned off, and the subscribe button on the product page and in product lists.
  *
- * @package Subly
+ * @package Submex
  */
 
-use Subly\Checkout\Cart_Validation;
+use Submex\Checkout\Cart_Validation;
 
 require __DIR__ . '/bootstrap.php';
 
-if ( ! class_exists( 'Subly_Test_Redirected' ) ) {
+if ( ! class_exists( 'Submex_Test_Redirected' ) ) {
 	// Handlers redirect and exit once they act; stop at the redirect and read the state.
-	final class Subly_Test_Redirected extends Exception {}
+	final class Submex_Test_Redirected extends Exception {}
 }
 $stop_at_redirect = static function ( $to ) {
-	throw new Subly_Test_Redirected( (string) $to );
+	throw new Submex_Test_Redirected( (string) $to );
 };
 add_filter( 'wp_redirect', $stop_at_redirect, 1 );
 add_filter( 'woocommerce_store_api_disable_nonce_check', '__return_true' );
@@ -30,13 +30,13 @@ update_option( 'woocommerce_cart_redirect_after_add', 'no' );
 
 $save = static function ( array $values ): WP_REST_Response {
 	wp_set_current_user( 1 );
-	$request = new WP_REST_Request( 'POST', '/subly/v1/settings/checkout' );
+	$request = new WP_REST_Request( 'POST', '/submex/v1/settings/checkout' );
 	$request->set_header( 'content-type', 'application/json' );
 	$request->set_body( wp_json_encode( array( 'values' => $values ) ) );
 	return rest_do_request( $request );
 };
 
-$subscription = subly_test_product();
+$subscription = submex_test_product();
 $one_time     = new WC_Product_Simple();
 $one_time->set_name( 'SK Checkout One-time' );
 $one_time->set_status( 'publish' );
@@ -56,7 +56,7 @@ $classic_add = static function ( int $product_id ): array {
 	$redirect                = null;
 	try {
 		WC_Form_Handler::add_to_cart_action();
-	} catch ( Subly_Test_Redirected $redirected ) {
+	} catch ( Submex_Test_Redirected $redirected ) {
 		$redirect = $redirected->getMessage();
 	}
 	unset( $_REQUEST['add-to-cart'] );
@@ -102,7 +102,7 @@ $store_checkout_errors = static function (): array {
 $mentions = static fn( array $messages ): bool => (bool) array_filter( $messages, static fn( $message ): bool => str_contains( (string) $message, 'checked out on their own' ) );
 
 echo "\n1. The settings are on the Cart & checkout page, saved through the settings API\n";
-$page   = rest_do_request( new WP_REST_Request( 'GET', '/subly/v1/settings/checkout' ) )->get_data();
+$page   = rest_do_request( new WP_REST_Request( 'GET', '/submex/v1/settings/checkout' ) )->get_data();
 $fields = array();
 foreach ( $page['cards'] ?? array() as $card ) {
 	foreach ( $card['rows'] as $row ) {
@@ -111,7 +111,7 @@ foreach ( $page['cards'] ?? array() as $card ) {
 		}
 	}
 }
-$check( 'the guest checkout row is still there', isset( $fields['subly_guest_checkout'] ) );
+$check( 'the guest checkout row is still there', isset( $fields['submex_guest_checkout'] ) );
 $check( 'mixed checkout is a switch, on by default', 'checkbox' === ( $fields[ Cart_Validation::OPTION_MIXED ]['type'] ?? '' ) && 'yes' === ( $fields[ Cart_Validation::OPTION_MIXED ]['default'] ?? '' ) );
 $check( 'no row for multiple subscriptions per cart', ! array_filter( array_keys( $fields ), static fn( $id ): bool => str_contains( (string) $id, 'multiple' ) ) );
 
@@ -122,7 +122,7 @@ WC()->cart->empty_cart();
 $first = $classic_add( $subscription->get_id() );
 $then  = $classic_add( $one_time->get_id() );
 $check( 'a one-time product joins a cart holding a subscription', array() === $first['errors'] && array() === $then['errors'] && array( $subscription->get_id(), $one_time->get_id() ) === $in_cart(), array( $first, $then, $in_cart() ) );
-$check( '  and neither checkout objects', ! $mentions( $classic_checkout_errors() ) && ! in_array( 'subly_mixed_cart', $store_checkout_errors(), true ) );
+$check( '  and neither checkout objects', ! $mentions( $classic_checkout_errors() ) && ! in_array( 'submex_mixed_cart', $store_checkout_errors(), true ) );
 WC()->cart->empty_cart();
 $classic_add( $one_time->get_id() );
 $after = $classic_add( $subscription->get_id() );
@@ -163,11 +163,11 @@ $check( 'Store API: a one-time product alone is fine', in_array( $store->get_sta
 // A cart filled before the setting changed.
 $fill( array( $subscription->get_id(), $one_time->get_id() ) );
 $check( 'classic checkout refuses a mixed cart', $mentions( $classic_checkout_errors() ) );
-$check( 'Store API checkout refuses a mixed cart', in_array( 'subly_mixed_cart', $store_checkout_errors(), true ) );
+$check( 'Store API checkout refuses a mixed cart', in_array( 'submex_mixed_cart', $store_checkout_errors(), true ) );
 $fill( array( $subscription->get_id() ) );
-$check( 'a subscription on its own checks out', ! $mentions( $classic_checkout_errors() ) && ! in_array( 'subly_mixed_cart', $store_checkout_errors(), true ) );
+$check( 'a subscription on its own checks out', ! $mentions( $classic_checkout_errors() ) && ! in_array( 'submex_mixed_cart', $store_checkout_errors(), true ) );
 $fill( array( $one_time->get_id() ) );
-$check( 'one-time products on their own check out', ! $mentions( $classic_checkout_errors() ) && ! in_array( 'subly_mixed_cart', $store_checkout_errors(), true ) );
+$check( 'one-time products on their own check out', ! $mentions( $classic_checkout_errors() ) && ! in_array( 'submex_mixed_cart', $store_checkout_errors(), true ) );
 
 delete_option( Cart_Validation::OPTION_MIXED );
 
@@ -203,4 +203,4 @@ foreach ( $snapshot as $option => $value ) {
 	$absent === $value ? delete_option( $option ) : update_option( $option, $value );
 }
 
-subly_test_done( $fail );
+submex_test_done( $fail );

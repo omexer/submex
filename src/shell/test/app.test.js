@@ -17,14 +17,14 @@ const SERVER = `
 		<li><a href="admin.php?page=second">Second</a></li>
 	</ul></li></ul>
 	<div id="wpbody-content">
-		<div id="subly-app" class="subly-ui" data-page="first"></div><div id="subly-fallback">
-			<header><details class="subly-notify" data-subly-notify><summary class="subly-notify__bell">1</summary>
-				<div class="subly-notify__panel" id="subly-other-notices"><div class="subly-notify__list"><div class="notice notice-info"><p>Elsewhere</p></div></div></div>
+		<div id="submex-app" class="submex-ui" data-page="first"></div><div id="submex-fallback">
+			<header><details class="submex-notify" data-submex-notify><summary class="submex-notify__bell">1</summary>
+				<div class="submex-notify__panel" id="submex-other-notices"><div class="submex-notify__list"><div class="notice notice-info"><p>Elsewhere</p></div></div></div>
 			</details></header>
 			<div class="wrap">
 				<h1>First</h1>
 				<hr class="wp-header-end">
-				<div class="notice notice-success subly-notice--important subly-notice--feedback"><p>Saved.</p></div>
+				<div class="notice notice-success submex-notice--important submex-notice--feedback"><p>Saved.</p></div>
 				<p>Server first</p>
 				<div class="notice inline"><p>Inline hint</p></div>
 			</div>
@@ -66,8 +66,8 @@ async function click( node ) {
 	} );
 }
 
-const fallback = () => document.getElementById( 'subly-fallback' );
-const host = () => document.getElementById( 'subly-app' );
+const fallback = () => document.getElementById( 'submex-fallback' );
+const host = () => document.getElementById( 'submex-app' );
 const menu = ( text ) =>
 	[ ...document.querySelectorAll( '#adminmenu a' ) ].find(
 		( a ) => a.textContent === text
@@ -86,8 +86,8 @@ beforeEach( () => {
 	window.history.replaceState( {}, '', `${ ADMIN }?page=first` );
 	document.title = 'Old ‹ Shop — WordPress';
 	document.body.innerHTML = SERVER;
-	document.body.className = 'js subly-app-page';
-	window.sublyShellData = {
+	document.body.className = 'js submex-app-page';
+	window.submexShellData = {
 		links: {
 			home: '/home',
 			help: '/help',
@@ -121,38 +121,38 @@ describe( 'the app shell', () => {
 
 		expect( host().textContent ).toContain( 'Route one' );
 		expect(
-			host().querySelector( '.subly-crumbs__current' ).textContent
+			host().querySelector( '.submex-crumbs__current' ).textContent
 		).toBe( 'First route' );
 		expect( fallback().hidden ).toBe( true );
-		expect( host().querySelector( '.subly-alerts' ).textContent ).toContain(
-			'Saved.'
-		);
 		expect(
-			host().querySelector( '.subly-notify__bell' ).textContent
+			host().querySelector( '.submex-alerts' ).textContent
+		).toContain( 'Saved.' );
+		expect(
+			host().querySelector( '.submex-notify__bell' ).textContent
 		).toBe( '1' );
 		expect(
-			host().querySelector( '.subly-notify__list' ).textContent
+			host().querySelector( '.submex-notify__list' ).textContent
 		).toBe( 'Elsewhere' );
 		expect( fallback().textContent ).toContain( 'Inline hint' );
-		expect( document.body.classList.contains( 'subly-app-page' ) ).toBe(
+		expect( document.body.classList.contains( 'submex-app-page' ) ).toBe(
 			true
 		);
 		expect( document.title ).toBe( 'First route ‹ Shop — WordPress' );
 		expect(
 			host()
-				.querySelector( 'a.subly-shell__upgrade' )
+				.querySelector( 'a.submex-shell__upgrade' )
 				.getAttribute( 'href' )
 		).toBe( 'https://example.test/pro' );
 	} );
 
 	it( 'leaves out Upgrade when there is nothing to upgrade to', async () => {
-		window.sublyShellData.links.upgrade = '';
+		window.submexShellData.links.upgrade = '';
 
 		await boot( [
 			{ page: 'first', title: 'First', render: () => <p>Route one</p> },
 		] );
 
-		expect( host().querySelector( '.subly-shell__upgrade' ) ).toBeNull();
+		expect( host().querySelector( '.submex-shell__upgrade' ) ).toBeNull();
 	} );
 
 	it( 'moves to another route in place, dropping the server render and the first page’s notices', async () => {
@@ -173,7 +173,7 @@ describe( 'the app shell', () => {
 		expect( fallback() ).toBeNull();
 		expect( host().textContent ).not.toContain( 'Saved.' );
 		expect(
-			host().querySelector( '.subly-notify__list' ).textContent
+			host().querySelector( '.submex-notify__list' ).textContent
 		).toBe( 'Elsewhere' );
 		expect( document.title ).toBe( 'Second ‹ Shop — WordPress' );
 		expect( menu( 'Second' ).classList.contains( 'current' ) ).toBe( true );
@@ -236,9 +236,9 @@ describe( 'the app shell', () => {
 		expect( host().childElementCount ).toBe( 0 );
 		expect( fallback().textContent ).toContain( 'Saved.' );
 		expect(
-			fallback().querySelector( '.subly-notify__list' ).textContent
+			fallback().querySelector( '.submex-notify__list' ).textContent
 		).toBe( 'Elsewhere' );
-		expect( document.body.classList.contains( 'subly-app-page' ) ).toBe(
+		expect( document.body.classList.contains( 'submex-app-page' ) ).toBe(
 			false
 		);
 		expect(
@@ -353,7 +353,7 @@ describe( 'the app shell', () => {
 		expect( fallback() ).toBeNull();
 		expect( host().textContent ).toContain( 'Route two' );
 		expect(
-			host().querySelector( '.subly-notify__list' ).textContent
+			host().querySelector( '.submex-notify__list' ).textContent
 		).toBe( 'Elsewhere' );
 	} );
 

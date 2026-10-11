@@ -55,8 +55,8 @@ function field( id, kind, value, extra = {} ) {
 		value,
 		placeholder: '',
 		custom_attributes: {},
-		subly_show_if: '',
-		subly_joins: '',
+		submex_show_if: '',
+		submex_joins: '',
 		joined: [],
 		...extra,
 	};
@@ -77,7 +77,7 @@ const PAGES = {
 						help: 'Customers can cancel from <strong>My Account</strong>.',
 					} ),
 					field( 'cancel_when', 'select', 'end', {
-						subly_show_if: 'allow_cancel',
+						submex_show_if: 'allow_cancel',
 						options: [
 							{ value: 'end', label: 'End of billing cycle' },
 							{ value: 'now', label: 'Immediately' },
@@ -85,11 +85,11 @@ const PAGES = {
 					} ),
 					field( 'allow_pause', 'checkbox', 'yes' ),
 					field( 'pause_length', 'number', '3', {
-						subly_show_if: 'allow_pause',
+						submex_show_if: 'allow_pause',
 						joined: [
 							field( 'pause_unit', 'select', 'month', {
-								subly_show_if: 'allow_pause',
-								subly_joins: 'pause_length',
+								submex_show_if: 'allow_pause',
+								submex_joins: 'pause_length',
 								options: [
 									{ value: 'day', label: 'Days' },
 									{ value: 'month', label: 'Months' },
@@ -98,10 +98,10 @@ const PAGES = {
 						],
 					} ),
 					field( 'pause_reason', 'checkbox', 'yes', {
-						subly_show_if: 'allow_pause',
+						submex_show_if: 'allow_pause',
 					} ),
 					field( 'reason_prompt', 'text', 'Why?', {
-						subly_show_if: 'pause_reason',
+						submex_show_if: 'pause_reason',
 					} ),
 				],
 			},
@@ -118,8 +118,8 @@ const PAGES = {
 				anchor: 'general',
 				rows: [
 					{
-						type: 'subly_status',
-						html: '<div class="subly-checks">Renewal queue</div>',
+						type: 'submex_status',
+						html: '<div class="submex-checks">Renewal queue</div>',
 					},
 				],
 			},
@@ -144,12 +144,12 @@ PAGES.notifications = {
 			anchor: 'notifications',
 			rows: [
 				field(
-					'woocommerce_subly_renewal_reminder_settings[enabled]',
+					'woocommerce_submex_renewal_reminder_settings[enabled]',
 					'checkbox',
 					'yes',
 					{
 						title: 'Renewal reminder',
-						subly_email: 'subly_renewal_reminder',
+						submex_email: 'submex_renewal_reminder',
 						preview_url:
 							'/wp-admin/?preview_woocommerce_mail=true&type=Reminder',
 					}
@@ -168,9 +168,9 @@ function respond() {
 			return saveReply( options );
 		}
 
-		if ( options.path.startsWith( '/subly/v1/settings/' ) ) {
+		if ( options.path.startsWith( '/submex/v1/settings/' ) ) {
 			const section = options.path
-				.slice( '/subly/v1/settings/'.length )
+				.slice( '/submex/v1/settings/'.length )
 				.split( '?' )[ 0 ];
 
 			return Promise.resolve( PAGES[ section ] );
@@ -262,7 +262,7 @@ async function save() {
 }
 
 beforeAll( () => {
-	window.subly = {
+	window.submex = {
 		shell: {
 			registerRoute: ( registered ) => {
 				route = registered;
@@ -277,7 +277,7 @@ beforeEach( () => {
 	window.history.replaceState(
 		{},
 		'',
-		'/wp-admin/admin.php?page=subly-settings'
+		'/wp-admin/admin.php?page=submex-settings'
 	);
 	apiFetch.mockReset();
 	respond();
@@ -300,7 +300,7 @@ afterEach( () => {
 } );
 
 test( 'registers itself with the shell for the Settings page', () => {
-	expect( route.page ).toBe( 'subly-settings' );
+	expect( route.page ).toBe( 'submex-settings' );
 	expect( route.title ).toBe( 'Settings' );
 } );
 
@@ -321,8 +321,8 @@ test( 'draws a section from its fields', async () => {
 		'allow_cancel-help'
 	);
 	expect( el( '#pause_unit' ).value ).toBe( 'month' );
-	expect( el( '#pause_length' ).closest( '.subly-settings__control' ) ).toBe(
-		el( '#pause_unit' ).closest( '.subly-settings__control' )
+	expect( el( '#pause_length' ).closest( '.submex-settings__control' ) ).toBe(
+		el( '#pause_unit' ).closest( '.submex-settings__control' )
 	);
 	expect( el( 'label[for="pause_unit"]' ).className ).toBe(
 		'screen-reader-text'
@@ -336,8 +336,8 @@ test( 'draws a section from its fields', async () => {
 test( 'draws PHP-rendered rows as they come', async () => {
 	await render( '' );
 
-	expect( el( '.subly-settings__row--wide' ).innerHTML ).toBe(
-		'<div class="subly-checks">Renewal queue</div>'
+	expect( el( '.submex-settings__row--wide' ).innerHTML ).toBe(
+		'<div class="submex-checks">Renewal queue</div>'
 	);
 	expect(
 		Array.from( container.querySelectorAll( 'h2' ) ).map(
@@ -354,7 +354,7 @@ test( 'switching sections keeps unsaved edits, without reloading the page', asyn
 
 	expect( setParams ).toHaveBeenLastCalledWith( {} );
 	expect( el( '#role_after' ) ).not.toBeNull();
-	expect( el( '.subly-settings__save-note' ).textContent ).toBe(
+	expect( el( '.submex-settings__save-note' ).textContent ).toBe(
 		'You have unsaved changes.'
 	);
 
@@ -367,7 +367,7 @@ test( 'switching sections keeps unsaved edits, without reloading the page', asyn
 	expect( el( 'button[type="submit"]' ).disabled ).toBe( false );
 
 	const fetched = apiFetch.mock.calls.filter( ( [ options ] ) =>
-		options.path.startsWith( '/subly/v1/settings/customer_controls' )
+		options.path.startsWith( '/submex/v1/settings/customer_controls' )
 	);
 
 	expect( fetched ).toHaveLength( 1 );
@@ -378,13 +378,13 @@ test( 'a notice from the last page load is shown until the next section', async 
 	await render();
 	MENU.notices = [];
 
-	expect( el( '.subly-notice--good' ).textContent ).toBe(
+	expect( el( '.submex-notice--good' ).textContent ).toBe(
 		'Licence activated.'
 	);
 
 	await click( link( 'General' ) );
 
-	expect( el( '.subly-notice--good' ) ).toBeNull();
+	expect( el( '.submex-notice--good' ) ).toBeNull();
 } );
 
 test( 'a listed group shows its sections under it once open', async () => {
@@ -454,14 +454,14 @@ test( 'saving sends only the fields that changed', async () => {
 
 	expect( posts ).toHaveLength( 1 );
 	expect( posts[ 0 ][ 0 ].path ).toBe(
-		'/subly/v1/settings/customer_controls'
+		'/submex/v1/settings/customer_controls'
 	);
 	expect( posts[ 0 ][ 0 ].data ).toEqual( {
 		values: { cancel_when: 'now', pause_length: '6' },
 	} );
 	expect( el( '[role="status"]' ).textContent ).toBe( 'Settings saved.' );
 	expect( el( 'button[type="submit"]' ).disabled ).toBe( true );
-	expect( el( '.subly-settings__save-note' ).textContent ).not.toBe(
+	expect( el( '.submex-settings__save-note' ).textContent ).not.toBe(
 		'You have unsaved changes.'
 	);
 } );
@@ -504,7 +504,7 @@ test( 'warnings the store raised on save are shown instead of the toast', async 
 test( 'a refused save shows why and keeps the edits', async () => {
 	saveReply = () =>
 		Promise.reject( {
-			code: 'subly_unknown_setting',
+			code: 'submex_unknown_setting',
 			message: 'Not saved: cancel_when is not a setting on this page.',
 		} );
 
@@ -524,7 +524,7 @@ test( 'leaving the route with unsaved changes asks first', async () => {
 
 	const away = document.createElement( 'a' );
 
-	away.href = 'admin.php?page=subly';
+	away.href = 'admin.php?page=submex';
 	// Stands in for the shell, which routes the link itself.
 	away.addEventListener( 'click', ( event ) => event.preventDefault() );
 	document.body.appendChild( away );
@@ -561,7 +561,7 @@ test( 'leaving the route with unsaved changes asks first', async () => {
 
 test( 'a section that cannot load says so', async () => {
 	apiFetch.mockImplementation( ( options ) =>
-		options.path.startsWith( '/subly/v1/settings/' )
+		options.path.startsWith( '/submex/v1/settings/' )
 			? Promise.reject( {
 					message: 'There is no such settings section.',
 			  } )
@@ -576,7 +576,7 @@ test( 'a section that cannot load says so', async () => {
 } );
 
 test( 'an email row offers its preview in a new tab, and nothing to edit it with', async () => {
-	await render( 'section=notifications&email=subly_renewal_reminder' );
+	await render( 'section=notifications&email=submex_renewal_reminder' );
 
 	const preview = Array.from( container.querySelectorAll( 'a' ) ).find(
 		( a ) => a.textContent.startsWith( 'Preview' )
@@ -591,7 +591,7 @@ test( 'an email row offers its preview in a new tab, and nothing to edit it with
 		'Preview Renewal reminder (opens in a new tab)'
 	);
 	expect(
-		el( '#plain_switch' ).closest( '.subly-settings__row' ).textContent
+		el( '#plain_switch' ).closest( '.submex-settings__row' ).textContent
 	).not.toContain( 'Preview' );
 	expect( container.textContent ).not.toContain( 'Edit' );
 	// Without an editor, an email in the address is ignored and the list is drawn.
@@ -625,16 +625,18 @@ describe( 'with an email editor registered', () => {
 		await render( 'section=notifications' );
 
 		expect(
-			el( '#plain_switch' ).closest( '.subly-settings__row' ).textContent
+			el( '#plain_switch' ).closest( '.submex-settings__row' ).textContent
 		).not.toContain( 'Edit' );
 
 		await click( el( 'button[aria-label="Edit Renewal reminder"]' ) );
 
 		expect( setParams ).toHaveBeenLastCalledWith( {
 			section: 'notifications',
-			email: 'subly_renewal_reminder',
+			email: 'submex_renewal_reminder',
 		} );
-		expect( el( '#editing' ).textContent ).toBe( 'subly_renewal_reminder' );
+		expect( el( '#editing' ).textContent ).toBe(
+			'submex_renewal_reminder'
+		);
 
 		await click( button( 'Back' ) );
 
@@ -645,7 +647,7 @@ describe( 'with an email editor registered', () => {
 	} );
 
 	test( 'leaving an editor with unsaved edits asks first', async () => {
-		await render( 'section=notifications&email=subly_renewal_reminder' );
+		await render( 'section=notifications&email=submex_renewal_reminder' );
 		await click( button( 'Dirty' ) );
 
 		const confirm = jest

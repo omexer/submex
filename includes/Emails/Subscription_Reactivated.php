@@ -1,8 +1,8 @@
 <?php
 
-namespace Subly\Emails;
+namespace Submex\Emails;
 
-use Subly\Domain\Subscription;
+use Submex\Domain\Subscription;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -14,20 +14,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Subscription_Reactivated extends Subscription_Email {
 
 	public function __construct() {
-		$this->id             = 'subly_subscription_reactivated';
-		$this->title          = __( 'Subscription reactivated', 'subly' );
-		$this->description    = __( 'Sent to the customer when a paused or cancelled subscription becomes active again.', 'subly' );
+		$this->id             = 'submex_subscription_reactivated';
+		$this->title          = __( 'Subscription reactivated', 'submex' );
+		$this->description    = __( 'Sent to the customer when a paused or cancelled subscription becomes active again.', 'submex' );
 		$this->customer_email = true;
 
 		parent::__construct();
 	}
 
 	public function get_default_subject(): string {
-		return __( 'Your subscription is active again', 'subly' );
+		return __( 'Your subscription is active again', 'submex' );
 	}
 
 	public function get_default_heading(): string {
-		return __( 'Your subscription is active again', 'subly' );
+		return __( 'Your subscription is active again', 'submex' );
 	}
 
 	public function trigger( Subscription $subscription ): void {
@@ -40,12 +40,12 @@ class Subscription_Reactivated extends Subscription_Email {
 		$next = $this->subscription->get_next_payment();
 
 		if ( ! $next ) {
-			return __( 'Your subscription is active again.', 'subly' );
+			return __( 'Your subscription is active again.', 'submex' );
 		}
 
 		return sprintf(
 			/* translators: 1: amount, 2: date */
-			__( 'Your subscription is active again. The next payment of %1$s is due on %2$s.', 'subly' ),
+			__( 'Your subscription is active again. The next payment of %1$s is due on %2$s.', 'submex' ),
 			$this->amount( $this->subscription->get_total() ),
 			$this->date( $next )
 		);
@@ -53,9 +53,9 @@ class Subscription_Reactivated extends Subscription_Email {
 
 	protected function facts(): array {
 		return array(
-			__( 'Subscription', 'subly' ) => '#' . $this->subscription->get_id(),
-			__( 'Amount', 'subly' )       => $this->amount( $this->subscription->get_total() ),
-			__( 'Next payment', 'subly' ) => $this->date( $this->subscription->get_next_payment() ),
+			__( 'Subscription', 'submex' ) => '#' . $this->subscription->get_id(),
+			__( 'Amount', 'submex' )       => $this->amount( $this->subscription->get_total() ),
+			__( 'Next payment', 'submex' ) => $this->date( $this->subscription->get_next_payment() ),
 		);
 	}
 
@@ -63,12 +63,12 @@ class Subscription_Reactivated extends Subscription_Email {
 		$url = $this->manage_url();
 
 		return $url ? array(
-			'label' => __( 'Manage your subscription', 'subly' ),
+			'label' => __( 'Manage your subscription', 'submex' ),
 			'url'   => $url,
 		) : null;
 	}
 
 	protected function outro(): string {
-		return __( 'You can change or cancel it at any time from your account.', 'subly' );
+		return __( 'You can change or cancel it at any time from your account.', 'submex' );
 	}
 }

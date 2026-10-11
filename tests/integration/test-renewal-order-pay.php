@@ -2,20 +2,20 @@
 /**
  * A declined renewal paid through its payment link settles once, keeps the new card, and is never charged again.
  *
- * @package Subly
+ * @package Submex
  */
 
-use Subly\Billing\Renewal_Processor;
-use Subly\Data\Charge_Slot_Repository;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
-use Subly\Gateways\Charge_Result;
-use Subly\Gateways\Gateway_Model;
-use Subly\Gateways\Test_Gateway;
+use Submex\Billing\Renewal_Processor;
+use Submex\Data\Charge_Slot_Repository;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
+use Submex\Gateways\Charge_Result;
+use Submex\Gateways\Gateway_Model;
+use Submex\Gateways\Test_Gateway;
 
 require __DIR__ . '/bootstrap.php';
 
-$harness = new class() implements \Subly\Gateways\Recurring_Gateway {
+$harness = new class() implements \Submex\Gateways\Recurring_Gateway {
 	public string $next     = 'hard_decline';
 	public int $charges     = 0;
 	public array $mandates  = array();
@@ -27,7 +27,7 @@ $harness = new class() implements \Subly\Gateways\Recurring_Gateway {
 	public function supports( string $f ): bool { return true; }
 	public function create_mandate( Subscription $s, \WC_Order $o ): Charge_Result {
 		$this->mandates[] = $o->get_id();
-		$s->update_meta_data( '_subly_harness_card', $this->keeps_card ? 'card-from-' . $o->get_id() : 'half-written' );
+		$s->update_meta_data( '_submex_harness_card', $this->keeps_card ? 'card-from-' . $o->get_id() : 'half-written' );
 		if ( ! $this->keeps_card ) { return Charge_Result::error( 'That order carries no reusable card.' ); }
 		$s->save();
 		return Charge_Result::success( 'card-from-' . $o->get_id() );
@@ -45,8 +45,8 @@ $harness = new class() implements \Subly\Gateways\Recurring_Gateway {
 	public function update_payment_method( Subscription $s, string $t ): bool { return true; }
 };
 
-$plan_billed = new class() implements \Subly\Gateways\Recurring_Gateway {
-	public function id(): string { return 'subly_harness_plan'; }
+$plan_billed = new class() implements \Submex\Gateways\Recurring_Gateway {
+	public function id(): string { return 'submex_harness_plan'; }
 	public function title(): string { return 'Plan-billed harness'; }
 	public function model(): Gateway_Model { return Gateway_Model::GatewayManaged; }
 	public function supports( string $f ): bool { return false; }
@@ -57,18 +57,18 @@ $plan_billed = new class() implements \Subly\Gateways\Recurring_Gateway {
 	public function update_payment_method( Subscription $s, string $t ): bool { return false; }
 };
 
-$free = \Subly\Plugin::instance();
+$free = \Submex\Plugin::instance();
 $free->get( 'gateways' )->add( $harness );
 $free->get( 'gateways' )->add( $plan_billed );
 
 $processor = $free->get( 'processor' );
 $slots     = $free->get( 'charge_slots' );
 $lock      = $free->get( 'lock' );
-$product   = subly_test_product();
+$product   = submex_test_product();
 $made      = array();
 
 $succeeded = array();
-add_action( 'subly_renewal_succeeded', function ( $s ) use ( &$succeeded ) { $succeeded[ $s->get_id() ] = ( $succeeded[ $s->get_id() ] ?? 0 ) + 1; }, 10, 1 );
+add_action( 'submex_renewal_succeeded', function ( $s ) use ( &$succeeded ) { $succeeded[ $s->get_id() ] = ( $succeeded[ $s->get_id() ] ?? 0 ) + 1; }, 10, 1 );
 
 $receipts = array();
 add_filter( 'wp_mail', function ( $args ) use ( &$receipts ) {
@@ -88,7 +88,7 @@ $make = function ( string $email, string $method = Test_Gateway::ID ) use ( $pro
 	$item->set_props( array( 'name' => 'Pay link probe', 'product_id' => $product->get_id(), 'quantity' => 1, 'subtotal' => '20', 'total' => '20' ) );
 	$s->add_item( $item );
 	$s->set_next_payment( gmdate( 'Y-m-d H:i:s', time() - HOUR_IN_SECONDS ) );
-	$s->update_meta_data( '_subly_site_url', get_option( 'siteurl' ) );
+	$s->update_meta_data( '_submex_site_url', get_option( 'siteurl' ) );
 	$s->transition_to( Subscription_Status::Pending );
 	$s->calculate_totals( false );
 	$s->save();
@@ -105,7 +105,7 @@ $decline = function ( Subscription $s ) use ( $processor, $slots, $harness ): ar
 	$slot  = $slots->latest_unsettled( $s->get_id() );
 	$order = $slot ? wc_get_order( (int) $slot->renewal_order_id ) : null;
 	if ( ! $slot || ! $order instanceof WC_Order || Charge_Slot_Repository::STATE_FAILED !== $slot->state ) {
-		subly_test_abort( 'the harness decline did not leave a failed slot with a renewal order' );
+		submex_test_abort( 'the harness decline did not leave a failed slot with a renewal order' );
 	}
 	return array( $slot, $order );
 };
@@ -134,9 +134,9 @@ $settled = $slots->find( $s1->get_id(), (int) $slot->period_index );
 $check( 'the slot is paid', Charge_Slot_Repository::STATE_PAID === $settled->state && (int) $settled->renewal_order_id === $order->get_id(), $settled );
 $check( 'the subscription is active again', Subscription_Status::Active === $s1->get_status_enum(), $s1->get_status() );
 $check( 'the next payment is the end of the period just paid for', strtotime( (string) $s1->get_next_payment() . ' UTC' ) === strtotime( $slot->covers_to_gmt . ' UTC' ), array( $s1->get_next_payment(), $slot->covers_to_gmt ) );
-$check( 'subly_renewal_succeeded fired once', 1 === ( $succeeded[ $s1->get_id() ] ?? 0 ), $succeeded );
+$check( 'submex_renewal_succeeded fired once', 1 === ( $succeeded[ $s1->get_id() ] ?? 0 ), $succeeded );
 $check( 'one receipt was sent', array( 'paylink-1@example.test' ) === $receipts, $receipts );
-$check( 'the card it was paid with is kept for renewals', array( $order->get_id() ) === $harness->mandates && 'card-from-' . $order->get_id() === $s1->get_meta( '_subly_harness_card' ), $harness->mandates );
+$check( 'the card it was paid with is kept for renewals', array( $order->get_id() ) === $harness->mandates && 'card-from-' . $order->get_id() === $s1->get_meta( '_submex_harness_card' ), $harness->mandates );
 
 $next_before = $s1->get_next_payment();
 $retry( $s1->get_id() );
@@ -155,7 +155,7 @@ $charges_before       = $harness->charges;
 $lock->acquire( $s2->get_id() );
 wc_get_order( $order2->get_id() )->payment_complete( 'paylink_txn_2' );
 $check( 'nothing is settled under somebody else\'s lock', Charge_Slot_Repository::STATE_FAILED === $slots->find( $s2->get_id(), (int) $slot2->period_index )->state );
-$check( 'settling is queued for later', (bool) as_next_scheduled_action( Renewal_Processor::ACTION_SETTLE, array( 'order_id' => $order2->get_id() ), 'subly' ) );
+$check( 'settling is queued for later', (bool) as_next_scheduled_action( Renewal_Processor::ACTION_SETTLE, array( 'order_id' => $order2->get_id() ), 'submex' ) );
 $lock->release( $s2->get_id() );
 
 $retry( $s2->get_id() );
@@ -165,26 +165,26 @@ $check( 'and restarts the subscription once', Subscription_Status::Active === $s
 
 $processor->settle_paid_order( $order2->get_id() );
 $check( 'the queued settle then finds nothing to do', 1 === $succeeded[ $s2->get_id() ] );
-as_unschedule_all_actions( Renewal_Processor::ACTION_SETTLE, array( 'order_id' => $order2->get_id() ), 'subly' );
+as_unschedule_all_actions( Renewal_Processor::ACTION_SETTLE, array( 'order_id' => $order2->get_id() ), 'submex' );
 
 echo "\n3. A renewal the pipeline charges itself\n";
 $s3             = $make( 'paylink-3@example.test' );
 $receipts       = array();
 $harness->next  = 'success';
 $processor->process( $s3->get_id() );
-$check( 'still fires subly_renewal_succeeded exactly once', 1 === ( $succeeded[ $s3->get_id() ] ?? 0 ), $succeeded );
+$check( 'still fires submex_renewal_succeeded exactly once', 1 === ( $succeeded[ $s3->get_id() ] ?? 0 ), $succeeded );
 $check( 'and sends one receipt', array( 'paylink-3@example.test' ) === $receipts, $receipts );
 $paid3 = $slots->find( $s3->get_id(), 0 );
-$check( 'without queueing a settle of its own order', $paid3 && ! as_next_scheduled_action( Renewal_Processor::ACTION_SETTLE, array( 'order_id' => (int) $paid3->renewal_order_id ), 'subly' ) );
+$check( 'without queueing a settle of its own order', $paid3 && ! as_next_scheduled_action( Renewal_Processor::ACTION_SETTLE, array( 'order_id' => (int) $paid3->renewal_order_id ), 'submex' ) );
 
-$pp            = $make( 'paylink-pp@example.test', 'subly_harness_plan' );
-$pp->update_meta_data( \Subly\Gateways\PayPal\PayPal_Gateway::META_SUBSCRIPTION_ID, 'I-HARNESS-' . $pp->get_id() );
+$pp            = $make( 'paylink-pp@example.test', 'submex_harness_plan' );
+$pp->update_meta_data( \Submex\Gateways\PayPal\PayPal_Gateway::META_SUBSCRIPTION_ID, 'I-HARNESS-' . $pp->get_id() );
 $pp->save();
 $pp_event      = 'WH-HARNESS-' . $pp->get_id();
 $receipts      = array();
-set_transient( 'subly_pp_evt_body_' . md5( $pp_event ), array( 'id' => $pp_event, 'event_type' => 'PAYMENT.SALE.COMPLETED', 'resource' => array( 'id' => 'SALE-' . $pp->get_id(), 'billing_agreement_id' => 'I-HARNESS-' . $pp->get_id() ) ), HOUR_IN_SECONDS );
+set_transient( 'submex_pp_evt_body_' . md5( $pp_event ), array( 'id' => $pp_event, 'event_type' => 'PAYMENT.SALE.COMPLETED', 'resource' => array( 'id' => 'SALE-' . $pp->get_id(), 'billing_agreement_id' => 'I-HARNESS-' . $pp->get_id() ) ), HOUR_IN_SECONDS );
 $free->get( 'paypal_webhooks' )->process( $pp_event );
-delete_transient( 'subly_pp_evt_body_' . md5( $pp_event ) );
+delete_transient( 'submex_pp_evt_body_' . md5( $pp_event ) );
 $check( 'a PayPal sale is recorded once', 1 === ( $succeeded[ $pp->get_id() ] ?? 0 ) && array( 'paylink-pp@example.test' ) === $receipts, array( $succeeded, $receipts ) );
 
 echo "\n4. Refusals\n";
@@ -201,7 +201,7 @@ $harness->keeps_card  = false;
 wc_get_order( $order5->get_id() )->payment_complete( 'paylink_txn_5' );
 $harness->keeps_card  = true;
 $s5                   = wc_get_order( $s5->get_id() );
-$check( 'a gateway that will not keep the card leaves the old one alone', '' === (string) $s5->get_meta( '_subly_harness_card' ), $s5->get_meta( '_subly_harness_card' ) );
+$check( 'a gateway that will not keep the card leaves the old one alone', '' === (string) $s5->get_meta( '_submex_harness_card' ), $s5->get_meta( '_submex_harness_card' ) );
 $check( 'and the payment still settles', Subscription_Status::Active === $s5->get_status_enum() );
 
 $s6                   = $make( 'paylink-6@example.test' );
@@ -228,8 +228,8 @@ $woo        = WC()->payment_gateways()->payment_gateways();
 $stand_in   = reset( $woo );
 $offered    = array(
 	Test_Gateway::ID      => $stand_in,
-	'subly_paypal'       => $stand_in,
-	'subly_harness_plan' => $stand_in,
+	'submex_paypal'       => $stand_in,
+	'submex_harness_plan' => $stand_in,
 	'bacs'                => $stand_in,
 );
 
@@ -239,7 +239,7 @@ $wp->query_vars['order-pay'] = $order7->get_id();
 $filtered = apply_filters( 'woocommerce_available_payment_gateways', $offered );
 $check( 'only the gateway that renews the subscription is offered', array( Test_Gateway::ID ) === array_keys( (array) $filtered ), array_keys( (array) $filtered ) );
 
-$s8 = $make( 'paylink-8@example.test', 'subly_harness_plan' );
+$s8 = $make( 'paylink-8@example.test', 'submex_harness_plan' );
 $s8->transition_to( Subscription_Status::OnHold, 'Held by the harness.' );
 $s8->save();
 $claimed = $slots->claim_next( $s8->get_id(), new DateTimeImmutable(), new DateTimeImmutable(), new DateTimeImmutable( '+1 month' ) );
@@ -265,11 +265,11 @@ $processor->process( $bacs->get_id() );
 $bacs_slot             = $slots->latest_unsettled( $bacs->get_id() );
 $bacs_order            = $bacs_slot ? wc_get_order( (int) $bacs_slot->renewal_order_id ) : null;
 if ( ! $bacs_order instanceof WC_Order || 'on-hold' !== $bacs_order->get_status() ) {
-	subly_test_abort( 'the manual fallback did not leave an on-hold renewal order' );
+	submex_test_abort( 'the manual fallback did not leave an on-hold renewal order' );
 }
 $check( 'an invoice renewal held for the customer can be paid', $bacs_order->needs_payment() );
 $wp->query_vars['order-pay'] = $bacs_order->get_id();
-$check( 'with the subscription\'s own method', array( 'bacs' ) === array_keys( (array) apply_filters( 'woocommerce_available_payment_gateways', array( 'bacs' => $stand_in, 'subly_paypal' => $stand_in ) ) ) );
+$check( 'with the subscription\'s own method', array( 'bacs' ) === array_keys( (array) apply_filters( 'woocommerce_available_payment_gateways', array( 'bacs' => $stand_in, 'submex_paypal' => $stand_in ) ) ) );
 $wp->query_vars = $query_vars;
 wc_get_order( $bacs_order->get_id() )->update_status( 'processing', 'Bank transfer received.' );
 wc_get_order( $bacs_order->get_id() )->update_status( 'completed' );
@@ -287,20 +287,20 @@ $processor->process( $sca->get_id() );
 $sca_slot  = $slots->latest_unsettled( $sca->get_id() );
 $sca_order = $sca_slot ? wc_get_order( (int) $sca_slot->renewal_order_id ) : null;
 if ( ! $sca_order instanceof WC_Order ) {
-	subly_test_abort( 'the 3-D Secure renewal left no order' );
+	submex_test_abort( 'the 3-D Secure renewal left no order' );
 }
-$action = (string) $sca_order->get_meta( '_subly_action_url' );
+$action = (string) $sca_order->get_meta( '_submex_action_url' );
 $check( 'a bank challenge sends the customer to the renewal\'s pay page', $sca_order->get_checkout_payment_url() === $action, $action );
-$check( 'the confirmation email and My Account both use it', 1 === count( $confirmations ) && str_contains( html_entity_decode( $confirmations[0] ), $action ) && $action === ( \Subly\Frontend\MyAccount\Status_Presenter::primary_action( wc_get_order( $sca->get_id() ) )['url'] ?? '' ) );
+$check( 'the confirmation email and My Account both use it', 1 === count( $confirmations ) && str_contains( html_entity_decode( $confirmations[0] ), $action ) && $action === ( \Submex\Frontend\MyAccount\Status_Presenter::primary_action( wc_get_order( $sca->get_id() ) )['url'] ?? '' ) );
 $check( 'and it can be paid there', $sca_order->needs_payment() );
 wc_get_order( $sca_order->get_id() )->payment_complete( 'pi_checkout_3ds' );
 wc_get_order( $sca_order->get_id() )->update_status( 'completed' );
 $check( 'paying it settles once', Subscription_Status::Active === wc_get_order( $sca->get_id() )->get_status_enum() && 1 === ( $succeeded[ $sca->get_id() ] ?? 0 ), $succeeded[ $sca->get_id() ] ?? 0 );
 
 echo "\n7. Money that arrives the wrong way\n";
-$paypal = WC()->payment_gateways()->payment_gateways()['subly_paypal'] ?? null;
+$paypal = WC()->payment_gateways()->payment_gateways()['submex_paypal'] ?? null;
 if ( ! $paypal instanceof WC_Payment_Gateway ) {
-	subly_test_abort( 'PayPal checkout is not registered' );
+	submex_test_abort( 'PayPal checkout is not registered' );
 }
 $refused_pp = $paypal->process_payment( $order7->get_id() );
 $pp_notes   = implode( ' | ', wp_list_pluck( wc_get_order_notes( array( 'order_id' => $order7->get_id() ) ), 'content' ) );
@@ -323,7 +323,7 @@ $shop->delete( true );
 
 global $wpdb;
 foreach ( $made as $id ) {
-	$renewals = $wpdb->get_col( $wpdb->prepare( 'SELECT renewal_order_id FROM %i WHERE subscription_id = %d AND renewal_order_id IS NOT NULL', $wpdb->prefix . 'subly_charge_slot', $id ) );
+	$renewals = $wpdb->get_col( $wpdb->prepare( 'SELECT renewal_order_id FROM %i WHERE subscription_id = %d AND renewal_order_id IS NOT NULL', $wpdb->prefix . 'submex_charge_slot', $id ) );
 	foreach ( $renewals as $renewal_id ) {
 		$r = wc_get_order( (int) $renewal_id );
 		$r && $r->delete( true );
@@ -333,4 +333,4 @@ foreach ( $made as $id ) {
 	$s && $s->delete( true );
 }
 
-subly_test_done( $fail );
+submex_test_done( $fail );

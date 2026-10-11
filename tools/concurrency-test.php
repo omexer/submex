@@ -12,16 +12,16 @@
  * which is the question that matters: does exactly one charge reach the gateway.
  *
  * Usage, from the wp-docker directory:
- *   docker compose exec -T wordpress php /var/www/html/wp-content/plugins/subly/tools/concurrency-test.php
+ *   docker compose exec -T wordpress php /var/www/html/wp-content/plugins/submex/tools/concurrency-test.php
  */
 
-define( 'SUBLY_ENABLE_TEST_GATEWAY', true );
+define( 'SUBMEX_ENABLE_TEST_GATEWAY', true );
 require_once '/var/www/html/wp-load.php';
 
-use Subly\Data\Charge_Slot_Repository;
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
-use Subly\Gateways\Test_Gateway;
+use Submex\Data\Charge_Slot_Repository;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
+use Submex\Gateways\Test_Gateway;
 
 $options = getopt( '', array( 'worker::', 'mode::', 'subscription::', 'at::', 'out::' ) );
 
@@ -61,8 +61,8 @@ function run_worker( array $options ): void {
 			// been sanctioned. Without this the race is a race to fail, which proves less.
 			Test_Gateway::sanction();
 
-			Subly\Plugin::instance()->get( 'gateways' )->add( new Test_Gateway() );
-			Subly\Plugin::instance()->get( 'processor' )->process( $id );
+			Submex\Plugin::instance()->get( 'gateways' )->add( new Test_Gateway() );
+			Submex\Plugin::instance()->get( 'processor' )->process( $id );
 			$result['outcome'] = 'ran';
 		}
 	} catch ( Throwable $e ) {
@@ -120,7 +120,7 @@ function run_suite(): void {
 	$context = array(
 		'workers'  => $results,
 		'expected' => $workers,
-		'slots'    => (array) $wpdb->get_results( $wpdb->prepare( "SELECT period_index, state, attempt_group, renewal_order_id FROM {$wpdb->prefix}subly_charge_slot WHERE subscription_id = %d", $id ) ),
+		'slots'    => (array) $wpdb->get_results( $wpdb->prepare( "SELECT period_index, state, attempt_group, renewal_order_id FROM {$wpdb->prefix}submex_charge_slot WHERE subscription_id = %d", $id ) ),
 	);
 
 	$check( 'workers that reported back', count( $results ), $workers );
@@ -132,7 +132,7 @@ function run_suite(): void {
 		printf( "        %s\n", $t['error'] );
 	}
 
-	$rows = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->prefix}subly_charge_slot WHERE subscription_id = %d", $id ) );
+	$rows = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->prefix}submex_charge_slot WHERE subscription_id = %d", $id ) );
 	$check( 'exactly one slot row in the ledger', $rows, 1 );
 
 	cleanup( $id );
@@ -149,7 +149,7 @@ function run_suite(): void {
 	$context = array(
 		'workers'  => $results,
 		'expected' => $workers,
-		'slots'    => (array) $wpdb->get_results( $wpdb->prepare( "SELECT period_index, state, attempt_group, renewal_order_id FROM {$wpdb->prefix}subly_charge_slot WHERE subscription_id = %d", $id ) ),
+		'slots'    => (array) $wpdb->get_results( $wpdb->prepare( "SELECT period_index, state, attempt_group, renewal_order_id FROM {$wpdb->prefix}submex_charge_slot WHERE subscription_id = %d", $id ) ),
 	);
 
 	$check( 'workers that reported back', count( $results ), $workers );
@@ -159,8 +159,8 @@ function run_suite(): void {
 		printf( "        %s\n", $t['error'] );
 	}
 
-	$slots = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->prefix}subly_charge_slot WHERE subscription_id = %d", $id ) );
-	$paid  = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->prefix}subly_charge_slot WHERE subscription_id = %d AND state = 'paid'", $id ) );
+	$slots = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->prefix}submex_charge_slot WHERE subscription_id = %d", $id ) );
+	$paid  = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->prefix}submex_charge_slot WHERE subscription_id = %d AND state = 'paid'", $id ) );
 
 	$check( 'exactly one charge slot', $slots, 1 );
 	$check( 'exactly one of them paid', $paid, 1 );
@@ -170,7 +170,7 @@ function run_suite(): void {
 			'limit'      => -1,
 			'type'       => 'shop_order',
 			'status'     => 'any',
-			'meta_key'   => '_subly_subscription_id',
+			'meta_key'   => '_submex_subscription_id',
 			'meta_value' => $id,
 		)
 	);
@@ -179,7 +179,7 @@ function run_suite(): void {
 
 	$charges = (int) $wpdb->get_var(
 		$wpdb->prepare(
-			"SELECT COUNT(*) FROM {$wpdb->prefix}subly_activity WHERE subscription_id = %d AND message LIKE %s",
+			"SELECT COUNT(*) FROM {$wpdb->prefix}submex_activity WHERE subscription_id = %d AND message LIKE %s",
 			$id,
 			'%Charge attempt%'
 		)
@@ -189,7 +189,7 @@ function run_suite(): void {
 	$check( 'exactly one charge attempt reached the gateway', $charges, 1 );
 
 	$fresh = wc_get_order( $id );
-	$check( 'subscription is active', (string) $fresh->get_status(), 'subly-active' );
+	$check( 'subscription is active', (string) $fresh->get_status(), 'submex-active' );
 	$check( 'next payment moved forward exactly once', $fresh->get_period_index(), 0 );
 
 	cleanup( $id );
@@ -203,7 +203,7 @@ function run_suite(): void {
  * Start the workers, release them together, collect what they say.
  */
 function race( int $workers, string $mode, int $subscription_id ): array {
-	$dir = sys_get_temp_dir() . '/subly-race-' . wp_generate_password( 8, false );
+	$dir = sys_get_temp_dir() . '/submex-race-' . wp_generate_password( 8, false );
 	mkdir( $dir, 0700, true );
 
 	// Far enough ahead that every process is spinning on the barrier before it lifts.
@@ -281,10 +281,10 @@ function make_subscription( bool $scripted = false ): Subscription {
 function cleanup( int $id ): void {
 	global $wpdb;
 
-	$wpdb->delete( $wpdb->prefix . 'subly_charge_slot', array( 'subscription_id' => $id ) );
-	$wpdb->delete( $wpdb->prefix . 'subly_activity', array( 'subscription_id' => $id ) );
+	$wpdb->delete( $wpdb->prefix . 'submex_charge_slot', array( 'subscription_id' => $id ) );
+	$wpdb->delete( $wpdb->prefix . 'submex_activity', array( 'subscription_id' => $id ) );
 
-	foreach ( wc_get_orders( array( 'limit' => -1, 'type' => 'shop_order', 'status' => 'any', 'meta_key' => '_subly_subscription_id', 'meta_value' => $id ) ) as $order ) {
+	foreach ( wc_get_orders( array( 'limit' => -1, 'type' => 'shop_order', 'status' => 'any', 'meta_key' => '_submex_subscription_id', 'meta_value' => $id ) ) as $order ) {
 		$order->delete( true );
 	}
 

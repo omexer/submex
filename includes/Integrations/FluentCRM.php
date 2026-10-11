@@ -1,37 +1,37 @@
 <?php
 
-namespace Subly\Integrations;
+namespace Submex\Integrations;
 
-use Subly\Data\Subscription_Query;
-use Subly\Domain\Subscription;
+use Submex\Data\Subscription_Query;
+use Submex\Domain\Subscription;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
- * Applies FluentCRM tags and lists to the customer while the subscription is live; only what Subly added is ever removed.
+ * Applies FluentCRM tags and lists to the customer while the subscription is live; only what Submex added is ever removed.
  */
 class FluentCRM implements Integration {
 
-	public const PRODUCT_TAGS  = '_subly_fluentcrm_tags';
-	public const PRODUCT_LISTS = '_subly_fluentcrm_lists';
+	public const PRODUCT_TAGS  = '_submex_fluentcrm_tags';
+	public const PRODUCT_LISTS = '_submex_fluentcrm_lists';
 
-	public const USER_TAGS  = '_subly_fluentcrm_added_tags';
-	public const USER_LISTS = '_subly_fluentcrm_added_lists';
+	public const USER_TAGS  = '_submex_fluentcrm_added_tags';
+	public const USER_LISTS = '_submex_fluentcrm_added_lists';
 
-	/** When Subly started recording what it added; subscriptions created before it are treated as having added everything. */
-	public const OPTION_SINCE = 'subly_fluentcrm_tracked_since';
+	/** When Submex started recording what it added; subscriptions created before it are treated as having added everything. */
+	public const OPTION_SINCE = 'submex_fluentcrm_tracked_since';
 
-	/** Subly Pro 0.48 and older register their own copy. */
-	private const PRO_COPY = 'SublyPro\Integrations\FluentCRM';
+	/** Submex Pro 0.48 and older register their own copy. */
+	private const PRO_COPY = 'SubmexPro\Integrations\FluentCRM';
 
 	public function slug(): string {
 		return 'fluentcrm';
 	}
 
 	public function title(): string {
-		return __( 'FluentCRM', 'subly' );
+		return __( 'FluentCRM', 'submex' );
 	}
 
 	public function is_available(): bool {
@@ -63,10 +63,10 @@ class FluentCRM implements Integration {
 			'slug'        => 'fluent-crm',
 			'url'         => '',
 			'active'      => $integration->is_available(),
-			'category'    => __( 'Email and CRM', 'subly' ),
-			'description' => __( 'Gives the contact your chosen lists and tags while the subscription is live.', 'subly' ),
+			'category'    => __( 'Email and CRM', 'submex' ),
+			'description' => __( 'Gives the contact your chosen lists and tags while the subscription is live.', 'submex' ),
 			'icon'        => '',
-			'hint'        => __( 'Set per product in the subscription product\'s settings.', 'subly' ),
+			'hint'        => __( 'Set per product in the subscription product\'s settings.', 'submex' ),
 		);
 
 		return $integrations;
@@ -97,7 +97,7 @@ class FluentCRM implements Integration {
 		}
 
 		do_action(
-			'subly_integration_granted',
+			'submex_integration_granted',
 			$this->slug(),
 			$subscription,
 			array(
@@ -142,7 +142,7 @@ class FluentCRM implements Integration {
 		}
 
 		do_action(
-			'subly_integration_revoked',
+			'submex_integration_revoked',
 			$this->slug(),
 			$subscription,
 			array(
@@ -160,21 +160,21 @@ class FluentCRM implements Integration {
 		Integrations::render_multiselect(
 			array(
 				'id'          => self::PRODUCT_TAGS,
-				'label'       => __( 'FluentCRM tags', 'subly' ),
+				'label'       => __( 'FluentCRM tags', 'submex' ),
 				'options'     => $this->options( 'tags' ),
 				'value'       => $product ? (array) $product->get_meta( self::PRODUCT_TAGS ) : array(),
-				'empty'       => __( 'No FluentCRM tags found.', 'subly' ),
-				'description' => __( 'Applied while the subscription is active or trialling, and removed when it is not. Tags and lists the contact already had are left alone.', 'subly' ),
+				'empty'       => __( 'No FluentCRM tags found.', 'submex' ),
+				'description' => __( 'Applied while the subscription is active or trialling, and removed when it is not. Tags and lists the contact already had are left alone.', 'submex' ),
 			)
 		);
 
 		Integrations::render_multiselect(
 			array(
 				'id'      => self::PRODUCT_LISTS,
-				'label'   => __( 'FluentCRM lists', 'subly' ),
+				'label'   => __( 'FluentCRM lists', 'submex' ),
 				'options' => $this->options( 'lists' ),
 				'value'   => $product ? (array) $product->get_meta( self::PRODUCT_LISTS ) : array(),
-				'empty'   => __( 'No FluentCRM lists found.', 'subly' ),
+				'empty'   => __( 'No FluentCRM lists found.', 'submex' ),
 			)
 		);
 	}
@@ -200,7 +200,7 @@ class FluentCRM implements Integration {
 
 		// FluentCRM's FCApi wrapper only has __call, so method_exists() is always false on it.
 		if ( ! is_object( $api ) || ! is_callable( array( $api, 'createOrUpdate' ) ) ) {
-			do_action( 'subly_integration_unsupported', $this->slug(), 'createOrUpdate' );
+			do_action( 'submex_integration_unsupported', $this->slug(), 'createOrUpdate' );
 			return null;
 		}
 
@@ -248,7 +248,7 @@ class FluentCRM implements Integration {
 		}
 
 		if ( ! method_exists( $contact, $method ) ) {
-			do_action( 'subly_integration_unsupported', $this->slug(), $method );
+			do_action( 'submex_integration_unsupported', $this->slug(), $method );
 			return false;
 		}
 
@@ -279,7 +279,7 @@ class FluentCRM implements Integration {
 	}
 
 	/**
-	 * What this subscription may take back: what it releases, narrowed to what Subly added.
+	 * What this subscription may take back: what it releases, narrowed to what Submex added.
 	 *
 	 * @return int[]
 	 */
@@ -308,7 +308,7 @@ class FluentCRM implements Integration {
 		return array_values( array_intersect( $ids, $added ) );
 	}
 
-	/** Created before Subly recorded what it added, so whatever its products configure counts as added. */
+	/** Created before Submex recorded what it added, so whatever its products configure counts as added. */
 	private function untracked( Subscription $subscription ): bool {
 		$created = $subscription->get_date_created();
 

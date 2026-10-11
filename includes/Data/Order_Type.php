@@ -1,16 +1,16 @@
 <?php
 
-namespace Subly\Data;
+namespace Submex\Data;
 
-use Subly\Domain\Subscription;
-use Subly\Domain\Subscription_Status;
+use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
- * Registers the subly_sub order type, its statuses, and the data store that backs it.
+ * Registers the submex_sub order type, its statuses, and the data store that backs it.
  */
 class Order_Type {
 
@@ -40,7 +40,7 @@ class Order_Type {
 					'label_count'               => _n_noop(
 						'Subscriptions <span class="count">(%s)</span>',
 						'Subscriptions <span class="count">(%s)</span>',
-						'subly'
+						'submex'
 					),
 				)
 			);
@@ -52,8 +52,8 @@ class Order_Type {
 			Subscription::TYPE,
 			array(
 				'labels'                           => array(
-					'name'          => __( 'Subscriptions', 'subly' ),
-					'singular_name' => __( 'Subscription', 'subly' ),
+					'name'          => __( 'Subscriptions', 'submex' ),
+					'singular_name' => __( 'Subscription', 'submex' ),
 				),
 				'public'                           => false,
 				'show_ui'                          => false,
@@ -78,10 +78,10 @@ class Order_Type {
 	}
 
 	/**
-	 * Point the subly_sub data store at whichever order storage the site is using.
+	 * Point the submex_sub data store at whichever order storage the site is using.
 	 *
 	 * WooCommerce does not wire custom order types to the HPOS data store automatically,
-	 * so without this WC_Data_Store::load( 'subly_sub' ) throws.
+	 * so without this WC_Data_Store::load( 'submex_sub' ) throws.
 	 *
 	 * The HPOS store MUST be handed over as an object resolved from WooCommerce's
 	 * container. WC_Data_Store::__construct() does a bare `new $store()` when given a
