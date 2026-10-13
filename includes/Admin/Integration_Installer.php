@@ -39,9 +39,7 @@ class Integration_Installer {
 			wp_send_json_error( array( 'message' => __( 'That is not an integration Submex offers.', 'submex' ) ), 400 );
 		}
 
-		require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		require_once ABSPATH . 'wp-admin/includes/file.php';
-		require_once ABSPATH . 'wp-admin/includes/misc.php';
+		// admin-ajax.php already loads plugin.php, file.php and misc.php; these two it does not.
 		require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
 		require_once ABSPATH . 'wp-admin/includes/plugin-install.php';
 

@@ -51,9 +51,6 @@ if ( function_exists( 'as_unschedule_all_actions' ) ) {
 }
 
 // Pro and the add-ons read this when they are deleted, so it goes only with the last of them.
-if ( ! function_exists( 'get_plugins' ) ) {
-	require_once ABSPATH . 'wp-admin/includes/plugin.php';
-}
 $submex_extensions = array_filter(
 	array_keys( get_plugins() ),
 	static fn( string $file ): bool => in_array( basename( $file ), array( 'submex-pro.php', 'submex-content-restriction.php' ), true )

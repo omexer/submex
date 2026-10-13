@@ -6,6 +6,8 @@
  */
 
 require __DIR__ . '/bootstrap.php';
+// uninstall_plugin() is defined here, so a real uninstall always has it loaded.
+require_once ABSPATH . 'wp-admin/includes/plugin.php';
 
 global $wpdb;
 
