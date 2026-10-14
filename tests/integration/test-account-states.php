@@ -329,6 +329,21 @@ foreach ( $users as $user ) {
 	require_once ABSPATH . 'wp-admin/includes/user.php';
 	wp_delete_user( $user );
 }
+echo "\nAn extension names a state the free plugin does not know\n";
+$plain  = Status_Presenter::for( $s1 );
+$paused = static fn( $state ) => array(
+	'label' => 'Paused',
+	'tone'  => 'neutral',
+);
+add_filter( 'submex_status_presentation', $paused );
+$named = Status_Presenter::for( $s1 );
+remove_filter( 'submex_status_presentation', $paused );
+$check( 'its label and tone are shown, and the detail it left out stays', 'Paused' === $named['label'] && 'neutral' === $named['tone'] && $plain['detail'] === $named['detail'], $named );
+$broken = static fn() => 'not a state';
+add_filter( 'submex_status_presentation', $broken );
+$check( 'a filter that returns nonsense leaves the state as it was', $plain === Status_Presenter::for( $s1 ) );
+remove_filter( 'submex_status_presentation', $broken );
+
 foreach ( $was as $name => $value ) {
 	null === $value ? delete_option( $name ) : update_option( $name, $value );
 }

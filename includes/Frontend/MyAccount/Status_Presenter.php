@@ -24,6 +24,31 @@ class Status_Presenter {
 	 * @return array{label: string, tone: string, detail: string}
 	 */
 	public static function for( Subscription $subscription ): array {
+		$state = self::presented( $subscription );
+
+		/**
+		 * Filter how a subscription's state reads to its customer, for a state only an extension knows, such as paused.
+		 *
+		 * @param array{label: string, tone: string, detail: string} $state
+		 * @param Subscription                                       $subscription
+		 */
+		$filtered = apply_filters( 'submex_status_presentation', $state, $subscription );
+
+		if ( ! is_array( $filtered ) ) {
+			return $state;
+		}
+
+		return array(
+			'label'  => (string) ( $filtered['label'] ?? $state['label'] ),
+			'tone'   => (string) ( $filtered['tone'] ?? $state['tone'] ),
+			'detail' => (string) ( $filtered['detail'] ?? $state['detail'] ),
+		);
+	}
+
+	/**
+	 * @return array{label: string, tone: string, detail: string}
+	 */
+	private static function presented( Subscription $subscription ): array {
 		$status = $subscription->get_status_enum();
 		$state  = self::for_status( $subscription );
 

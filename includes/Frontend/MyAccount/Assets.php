@@ -61,6 +61,8 @@ class Assets {
 		.submex-flow--right{text-align:right;margin-left:auto}
 		.submex-flow--right .submex-cancel__actions{justify-content:flex-end}
 		.submex-flow__title{margin:0}
+		/* An aligned offer would shrink to its button, leaving it narrower than the decline beside it. */
+		.submex-flow--offer>*{width:100%}
 		.submex-flow__reasons{border:0;margin:0;padding:0;display:grid;gap:.5rem;text-align:left}
 		.submex-flow__reason{border:1px solid rgba(0,0,0,.12);border-radius:8px;padding:.6rem .8rem}
 		/* Shown for "other" by CSS alone, so the screen needs no JavaScript. */
