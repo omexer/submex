@@ -26,7 +26,8 @@ print_entries() {
 		if newer_than_previous "$v" && not_after_version "$v"; then
 			versions+=( "$v" )
 		fi
-	done < <(sed -n "s/$pattern/\1/p" "$file")
+	# The Upgrade Notice repeats each version heading.
+	done < <(sed -n "s/$pattern/\1/p" "$file" | awk '!seen[$0]++')
 
 	[ "${#versions[@]}" -gt 0 ] || return 1
 
