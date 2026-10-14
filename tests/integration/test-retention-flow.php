@@ -178,6 +178,16 @@ $check( 'cancelling cancels, with no question asked', $is( $s, Subscription_Stat
 $check( '  says so in the one-line notice it always has', 'Your subscription has been cancelled.' === $notices() );
 $check( '  goes back to the subscription with no message panel', ! isset( $query_of( $to )[ Cancel_Flow::MESSAGE ] ) && '1' === ( $query_of( $to )['cancelled'] ?? '' ), $to );
 $check( '  and logs nothing', array() === $logged( $s ), $logged( $s ) );
+$announced = did_action( 'submex_subscription_cancelled' );
+$post(
+	array(
+		'submex_action'       => 'cancel',
+		'submex_subscription' => (string) $s->get_id(),
+		'_wpnonce'            => wp_create_nonce( 'submex_cancel_' . $s->get_id() ),
+	)
+);
+$check( 'resubmitting the cancel announces nothing a second time, so no second emails', $announced === did_action( 'submex_subscription_cancelled' ) );
+$check( '  and says it is already cancelled', 'This subscription has already been cancelled.' === $notices() );
 
 // ---------------------------------------------------------------- on: the reasons screen
 

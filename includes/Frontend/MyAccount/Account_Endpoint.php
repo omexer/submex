@@ -208,6 +208,13 @@ class Account_Endpoint {
 	 * @param array{reason: string, detail: string}|null $flow What the customer said on the way, when they came through "Ask before cancelling".
 	 */
 	private function cancel( Subscription $subscription, bool $immediately, ?array $flow = null ): void {
+		// A resubmitted form would otherwise announce the cancellation, and send its emails, again.
+		if ( Cancel_Flow::is_over( $subscription ) ) {
+			wc_add_notice( __( 'This subscription has already been cancelled.', 'submex' ), 'notice' );
+			wp_safe_redirect( Cancel_Flow::details_url( $subscription ) );
+			exit;
+		}
+
 		if ( ! Cancellation_Policy::allows( $subscription ) ) {
 			wc_add_notice( self::cancel_refused_message( $subscription ), 'error' );
 			return;
