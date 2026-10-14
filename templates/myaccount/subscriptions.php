@@ -30,7 +30,7 @@ if ( empty( $subscriptions ) ) : ?>
 		<li class="submex-card submex-card--<?php echo esc_attr( $submex_state['tone'] ); ?>">
 			<div class="submex-card__head">
 				<h3 class="submex-card__title">
-					<a href="<?php echo esc_url( wc_get_account_endpoint_url( $endpoint . '/' . $submex_subscription->get_id() ) ); ?>">
+					<a href="<?php echo esc_url( \Submex\Frontend\MyAccount\Account_Endpoint::url( $submex_subscription->get_id() ) ); ?>">
 						<?php echo esc_html( Status_Presenter::title( $submex_subscription ) ); ?>
 					</a>
 				</h3>
@@ -52,7 +52,7 @@ if ( empty( $subscriptions ) ) : ?>
 						<?php echo esc_html( $submex_action['label'] ); ?>
 					</a>
 				<?php endif; ?>
-				<a class="submex-card__link" href="<?php echo esc_url( wc_get_account_endpoint_url( $endpoint . '/' . $submex_subscription->get_id() ) ); ?>">
+				<a class="submex-card__link" href="<?php echo esc_url( \Submex\Frontend\MyAccount\Account_Endpoint::url( $submex_subscription->get_id() ) ); ?>">
 					<?php esc_html_e( 'View details', 'submex' ); ?>
 				</a>
 			</div>

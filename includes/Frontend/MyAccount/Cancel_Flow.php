@@ -46,7 +46,7 @@ class Cancel_Flow {
 	}
 
 	public static function details_url( Subscription $subscription ): string {
-		return wc_get_account_endpoint_url( Account_Endpoint::ENDPOINT . '/' . $subscription->get_id() );
+		return Account_Endpoint::url( $subscription->get_id() );
 	}
 
 	public static function view_url( Subscription $subscription, string $view = self::VIEW_REASONS ): string {

@@ -21,6 +21,13 @@ class Account_Endpoint {
 
 	public const ENDPOINT = 'subscriptions';
 
+	/**
+	 * A subscription's page in My Account, built so it also resolves without pretty permalinks.
+	 */
+	public static function url( int $subscription_id ): string {
+		return wc_get_endpoint_url( self::ENDPOINT, (string) $subscription_id, wc_get_page_permalink( 'myaccount' ) );
+	}
+
 	public function __construct(
 		private readonly Activity_Repository $activity,
 		private readonly Cancel_Flow $flow
@@ -138,7 +145,7 @@ class Account_Endpoint {
 			$result = \Submex\Lifecycle\Early_Renewal::charge( $subscription );
 
 			wc_add_notice( $result['message'], $result['ok'] ? 'success' : 'error' );
-			wp_safe_redirect( wc_get_account_endpoint_url( self::ENDPOINT . '/' . $subscription->get_id() ) );
+			wp_safe_redirect( self::url( $subscription->get_id() ) );
 			exit;
 		}
 
@@ -183,7 +190,7 @@ class Account_Endpoint {
 			);
 		}
 
-		wp_safe_redirect( wc_get_account_endpoint_url( self::ENDPOINT . '/' . $subscription->get_id() ) );
+		wp_safe_redirect( self::url( $subscription->get_id() ) );
 		exit;
 	}
 
@@ -264,7 +271,7 @@ class Account_Endpoint {
 
 		if ( null === $flow ) {
 			wc_add_notice( $notice );
-			$to = wc_get_account_endpoint_url( self::ENDPOINT . '/' . $subscription->get_id() );
+			$to = self::url( $subscription->get_id() );
 		} else {
 			$to = Cancel_Flow::confirm( $subscription, Retention_Flow::MESSAGE_CANCEL, $notice );
 		}
