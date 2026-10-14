@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.1.0
+
+* **Ask before cancelling.** A new switch under **Submex → Retention Flow**, off by default. When it is on, a customer who presses Cancel in My Account first sees a short screen asking for their main reason, with **Keep Subscription** and **Continue canceling** buttons. Picking a reason is optional, and Continue canceling cancels in one click on every screen. The screen is a plain form, so it works without JavaScript. When the switch is off, cancelling works exactly as before.
+* **Editable reasons.** Add, rename, reorder (drag, or the up and down buttons), switch off and delete the reasons customers can pick. A subscription keeps the reason it gave even after that reason is renamed or deleted, so its history and your cancellation email still show it. The free-text box appears only for "Something else".
+* **Display settings for the reasons screen:** title, description (bold, italic, underline and lists), text sizes, alignment and button labels, with a live preview.
+* **Confirmation messages.** After a customer cancels through the reasons screen they see your message (title, text and a Close button) instead of the one-line notice. Switch it off to keep the notice.
+* The **Home** menu item is now **Overview**. Without Submex Pro, the menu has an **Upgrade to Pro** link.
+* Database: a new table, `submex_retention_events`, records each step of the reasons screen (created automatically). Deleting the plugin with "delete data" on removes it.
+
+### For developers: the retention flow
+
+* **`submex_retention_offer_for( null $offer, Subscription $subscription, string $reason_id )`**: return an offer to show before the cancel, or null. `$reason_id` is empty when no reason was picked.
+* **`submex_retention_render_offer( mixed $offer, Subscription $subscription, string $reason_id )`**: draw the offer and its own accept form; Submex prints the "No thanks, continue cancelling" form under it.
+* **`submex_retention_decline_text( string $text, mixed $offer, Subscription $subscription )`**: the label of that "No thanks" button.
+* **`submex_retention_reason_deleted( string $reason_id )`**: fires after a reason is deleted.
+* **`submex_retention_reason_usage( int $count, string $reason_id )`**: how many offers use a reason, shown before it is deleted.
+* **`submex_retention_message_types( string[] $types )`**: the confirmation messages the store can edit; `cancel` by default, add `pause` and `offer_accept`.
+* `Cancel_Flow::confirm( Subscription $subscription, string $type, string $notice, array $placeholders = array() ): string` shows the store's `cancel`, `pause` or `offer_accept` message once (or `$notice` when it is off) and returns the URL to redirect to. `{resume_date}` is the only placeholder.
+* `Retention_Event_Repository` (service `retention_events`): `log()`, `last()`, `for_subscription()`, `between()`, `count()` and `count_by_reason()`. Events: `started` (once per subscription per 30 minutes), `reason`, `kept`, `offer_shown`, `offer_accepted`, `cancelled`.
+* From `@submex/shell`: `retentionHooks` names the screen's `@wordpress/hooks` filters, and `addFilter`, `applyFilters` and `removeFilter` are re-exported.
+  * **`submex.retention.offersTab`**: the Offers tab component, given `{ reasons }`; the default is the "Offers are part of Submex Pro" card.
+  * **`submex.retention.reasonStats`**: `null`, or `{ Header, Row }` components given `{ reasons }` and `{ reason }`; also passed the reasons.
+  * **`submex.retention.messageTypes`**: the Confirmation Message rows, `[ { id, label } ]`, also passed the messages by type.
+* REST, `manage_woocommerce` only: `GET`/`POST /submex/v1/retention`, `POST /retention/messages/<type>`, `GET`/`POST`/`PUT /retention/reasons` (`PUT` reorders) and `POST`/`DELETE /retention/reasons/<id>`.
+* The `cancel_survey` form handler is gone; no template ever drew its form. `Cancellation_Survey::reasons()`, `reason_for()` and `tally()` keep working, and the `submex_cancellation_reasons` filter still applies.
+
 ## 1.0.1
 
 * Renamed to Submex Subscription Billing for WooCommerce (slug `submex`). Options, tables, hooks, order statuses and the text domain use the `submex` prefix, so a store that ran an earlier build under the old name starts fresh.

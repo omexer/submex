@@ -82,7 +82,7 @@ Verification key:
 | Pay a failed renewal, or one waiting on bank transfer or 3-D Secure | Run (suite) | The pay page offers only the subscription's own method, never PayPal |
 | Pay the next period early ("Let customers pay early") | Run (suite) | Off by default. A pending early payment is reported as on its way |
 | Extension point for Pro actions | Run | Pause / Resume / Renew now render here |
-| Cancellation survey | Wired | |
+| Ask before cancelling: optional reason, editable reasons, confirmation message | Run (suite) | Off by default. Plain forms; Continue canceling is one submit on every screen. Offers come from Pro |
 
 ## Admin — Free
 
@@ -91,10 +91,10 @@ Verification key:
 | Subscriptions list and detail screen | Run | |
 | List search, sorting, bulk and row actions | Run | Bulk changes respect the status rules; illegal ones are skipped and reported |
 | Install an integration's plugin in place | Run | Allow list built from the screen; arbitrary slugs refused |
-| MRR and live count on Home | Run | Yearly, weekly, every-2-months all normalise correctly. Net of tax since 0.19.4 |
+| MRR and live count on Overview | Run | Yearly, weekly, every-2-months all normalise correctly. Net of tax since 0.19.4 |
 | Daily MRR snapshot, capped at 400 days | Run | History cannot be recomputed, so it is recorded |
 | Setup checklist | Run | |
-| One top-level Submex menu | Run | Seven screens, verified through WordPress's own menu globals |
+| One top-level Submex menu | Run | Overview, All subscriptions, Retention Flow, Integrations, Help, Settings, and Upgrade to Pro without Pro |
 | Integrations screen | Run | Lists all thirteen Pro integrations and whether each host plugin is active |
 | Help screen with a system report | Run | Proven to exclude Stripe, PayPal and licence credentials |
 | Self-test renewal (creates, renews, deletes) | Run | |
@@ -117,7 +117,7 @@ Verification key:
 | **REST API**: list, read, update, act on, and read the history of a subscription | Run | Proven with Pro on and off; 401 / 404 / 409 / 400 paths all covered |
 | Overview endpoint | Run | Recurring revenue, live count and status breakdown |
 | Dashboard endpoint | Run | Setup steps, numbers, what needs attention, recent subscriptions |
-| React Home screen | Run | Setup until done, then numbers, attention and recent subscriptions; a failed request leaves the server-rendered Home showing |
+| React Overview screen | Run | Setup until done, then numbers, attention and recent subscriptions; a failed request leaves the server-rendered Overview showing |
 | One frame for every Submex screen | Run | Header with breadcrumbs, page heading, footer; checked by screenshot, not only by test |
 | React subscriptions list | Run | Tabs, search, server-side sorting, bulk actions, paging; 6 tests, bulk-ids assertion mutation-checked |
 | React subscription detail | Run | Facts, actions, date editing, activity; a panel added by another plugin stays visible |

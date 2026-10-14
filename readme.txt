@@ -4,7 +4,7 @@ Tags: woocommerce, subscriptions, recurring payments, billing, memberships
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.0.1
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -39,13 +39,14 @@ Submex turns WooCommerce products into subscriptions and runs the renewal billin
 
 * My Account lists their subscriptions, what they pay and when the next payment is.
 * They can cancel at the end of the period they paid for, or straight away. You cannot switch cancelling off. A subscription cancelled at the end of the period ends when that period runs out: access stops and nothing more is charged.
+* If you turn on **Ask before cancelling**, they are asked for their main reason first. The reason is optional, and Continue canceling is always one click.
 * They can turn off automatic renewal and keep what they paid for until the period ends.
 * They can pay a renewal that failed, or one waiting on them, from its payment link.
 * If you allow it, they can pay the next period early without moving their renewal date.
 
 = Running your store =
 
-* **Home** walks you through setting up — connect a payment method, create a product, run a test renewal that charges nobody — then shows recurring revenue (net of tax), what needs your attention and your latest subscriptions.
+* **Overview** walks you through setting up — connect a payment method, create a product, run a test renewal that charges nobody — then shows recurring revenue (net of tax), what needs your attention and your latest subscriptions.
 * **All subscriptions** lets you search, filter, sort and change subscriptions in bulk, and open any one to see its history, charge it now or move its dates.
 * **Health** checks, under Settings: whether the renewal queue is running, charges whose outcome is still unknown, renewals waiting more than 10 days for their payment provider to confirm them, whether the double-charge safeguard is in place, and subscriptions whose renewals add tax twice — listed with a Repair action, since subscriptions sold before 0.19.4 in tax-inclusive stores are never changed silently.
 * Ten emails for the moments that matter — seven to the customer (including a reminder before each renewal) and three to you — each with a preview under Email Notifications on WooCommerce 9.6 and later.
@@ -71,7 +72,7 @@ A separate plugin adds:
 1. Install and activate WooCommerce 8.0 or newer.
 2. Upload the `submex` folder to `/wp-content/plugins/`, or upload the ZIP from **Plugins → Add New → Upload Plugin**.
 3. Activate Submex.
-4. Open **Submex → Home** and follow the setup checklist: connect a payment method, create a subscription product, and run a test renewal.
+4. Open **Submex → Overview** and follow the setup checklist: connect a payment method, create a subscription product, and run a test renewal.
 
 To turn a product into a subscription yourself, edit it and choose **Subscription** in the **Product data** dropdown.
 
@@ -150,6 +151,12 @@ included in the plugin.
 
 == Changelog ==
 
+= 1.1.0 =
+* Ask before cancelling: an optional reasons screen before a customer cancels, off by default. Continue canceling is always one click.
+* Edit, reorder, switch off and delete the cancellation reasons, and set the reasons screen's text, with a live preview.
+* Confirmation messages: your own message after a customer cancels, or the plain notice.
+* The Home menu item is now Overview.
+
 = 1.0.1 =
 * Renamed to Submex Subscription Billing for WooCommerce (slug `submex`). Options, tables, hooks, order statuses and the text domain use the `submex` prefix, so a store that ran an earlier build under the old name starts fresh.
 * Integrations: installing an integration plugin no longer reloads core admin files WordPress has already loaded, and uninstalling no longer loads `wp-admin/includes/plugin.php` itself.
@@ -216,6 +223,9 @@ included in the plugin.
 The full history is in CHANGELOG.md, inside the plugin.
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Adds Ask before cancelling (off by default), editable cancellation reasons and confirmation messages.
 
 = 1.0.1 =
 The plugin is now Submex Subscription Billing for WooCommerce. Install it fresh: settings and subscriptions from the old name are not carried over.

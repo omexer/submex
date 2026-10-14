@@ -3,7 +3,7 @@
  * Plugin Name: Submex Subscription Billing for WooCommerce
  * Plugin URI:  https://github.com/omexer/submex
  * Description: Turn any WooCommerce product into a subscription and let it bill itself.
- * Version:     1.0.1
+ * Version:     1.1.0
  * Author:      Omexer
  * Author URI:  https://omexer.com
  * Text Domain: submex
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SUBMEX_VERSION', '1.0.1' );
+define( 'SUBMEX_VERSION', '1.1.0' );
 define( 'SUBMEX_FILE', __FILE__ );
 define( 'SUBMEX_PATH', plugin_dir_path( __FILE__ ) );
 define( 'SUBMEX_URL', plugin_dir_url( __FILE__ ) );

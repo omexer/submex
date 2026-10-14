@@ -1,6 +1,6 @@
 # Submex — User Guide
 
-**Submex 1.0.1 · Submex Pro 0.52.0**
+**Submex 1.1.0 · Submex Pro 0.52.0**
 
 This guide explains everything Submex does and every setting it has, in plain language. You
 do not need to be technical to follow it.
@@ -67,7 +67,7 @@ Then go to **Submex** in the admin menu, just below WooCommerce.
 
 ## Your first subscription in five minutes
 
-On **Submex → Home** there is a checklist. It walks you through four things, and
+On **Submex → Overview** there is a checklist. It walks you through four things, and
 the fourth is the one that matters.
 
 **1. Connect a payment method.** Stripe or PayPal — both are included free, and the checklist
@@ -515,6 +515,8 @@ Under **My account → Subscriptions** they get a list and a detail page, where 
 - See the status, next payment date and what they are paying
 - **Cancel** — either at the end of the period they have paid for, or immediately. You cannot
   switch this off; being unable to cancel is what causes chargebacks.
+- With **Ask before cancelling** on, Cancel first opens a short screen asking for their main
+  reason. Picking one is optional, and **Continue canceling** cancels in one click.
 - **Turn off automatic renewal**, if you enabled it
 - **Pay** a renewal that failed, or one waiting on them, from its payment link
 - **Pay early**, if you enabled it
@@ -553,7 +555,7 @@ subscriptions), and the health digest to you.
 
 ## Running the shop day to day
 
-### Submex → Home
+### Submex → Overview
 
 Where Submex opens. Until setup is finished, the checklist comes first. After that:
 
@@ -564,6 +566,22 @@ Where Submex opens. Until setup is finished, the checklist comes first. After th
   empty box.
 - **Recent subscriptions** — the latest six, each opening its own screen.
 - **Shortcuts** to Integrations, Settings and Help.
+
+### Submex → Retention Flow
+
+**Ask before cancelling** (off by default) puts a reasons screen in front of the cancel in My
+Account: your question, the reasons you offer, **Keep Subscription** and **Continue canceling**.
+A reason is optional, and Continue canceling always cancels in one click, so the cancel never
+depends on the customer answering. The screen is a plain form and works without JavaScript.
+
+- **Reasons** — add, rename, drag (or use the arrows) to reorder, switch off and delete them.
+  A subscription keeps the reason it gave even after you rename or delete it, so its history
+  and the cancellation email you get still show it. Only "Something else" asks for more detail.
+  **Display Settings** set the title, description, text sizes, alignment and button labels,
+  with a live preview beside them.
+- **Offers** — part of Submex Pro.
+- **Confirmation Message** — what the customer sees after cancelling through the reasons
+  screen. Switched off, they see the usual one-line notice.
 
 ### Submex → All subscriptions
 
@@ -692,7 +710,11 @@ All of it lives under `/wp-json/submex/v1/`.
 | `/subscriptions/<id>/actions` | POST | `cancel`, `expire`, `reactivate`, `change_status` — and `pause` / `resume` with Pro. |
 | `/subscriptions/<id>/activity` | GET | What has happened to it, newest first. |
 | `/subscriptions/statuses` | GET | The statuses and what they are called, so you do not hard-code either. |
-| `/dashboard` | GET | Everything the Submex Home screen shows: setup steps, the numbers, what needs attention, recent subscriptions. |
+| `/dashboard` | GET | Everything the Submex Overview screen shows: setup steps, the numbers, what needs attention, recent subscriptions. |
+| `/retention` | GET, POST | *(store managers only)* The Retention Flow screen: `enabled`, the reasons, the display settings and the confirmation messages. POST `enabled` and/or `display`. |
+| `/retention/reasons` | GET, POST, PUT | *(store managers only)* List, add (`label`, 1–80 characters) or reorder (`order`, every id once) the reasons. |
+| `/retention/reasons/<id>` | POST, DELETE | *(store managers only)* Rename (`label`), switch on or off (`enabled`), or delete one. |
+| `/retention/messages/<type>` | POST | *(store managers only)* `enabled`, `title`, `description`, `button_text` of a confirmation message. |
 | `/overview` | GET | Recurring revenue, live count and the status breakdown, on their own. |
 | `/reports` | GET | *(Pro)* Every figure on the Reports screen. `days` sets the range. |
 | `/health` | GET | *(Pro)* Subscriptions at risk, why, and what would fix them. |
