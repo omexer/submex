@@ -42,6 +42,7 @@ final class App_Host {
 			array(
 				Menu::SLUG,
 				Menu::LIST_SLUG,
+				Retention_Page::SLUG,
 				Integrations_Page::SLUG,
 				Help_Page::SLUG,
 				Settings_Page::SLUG,

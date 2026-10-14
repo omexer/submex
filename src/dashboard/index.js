@@ -1,5 +1,5 @@
 /**
- * The Submex home screen.
+ * The Submex overview screen.
  *
  * What a merchant needs on arrival, in the order they need it: finish setting up, see
  * how the business is doing, see what needs them, and get to everything else.
@@ -506,6 +506,6 @@ export function Dashboard( { onFail } ) {
 
 registerRoute( {
 	page: 'submex',
-	title: __( 'Home', 'submex' ),
+	title: __( 'Overview', 'submex' ),
 	render: ( ctx ) => <Dashboard onFail={ ctx.fail } />,
 } );

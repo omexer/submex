@@ -22,6 +22,7 @@ use Submex\Rest\Dashboard_Controller;
 use Submex\Rest\Help_Controller;
 use Submex\Rest\Integrations_Controller;
 use Submex\Rest\Overview_Controller;
+use Submex\Rest\Retention_Controller;
 use Submex\Rest\Settings_Controller;
 use Submex\Rest\Subscriptions_Controller;
 use Submex\Checkout\Cart_Validation;
@@ -53,6 +54,7 @@ use Submex\Blocks\Gateway_Support;
 use Submex\Admin\Menu;
 use Submex\Admin\Notice_Dismissals;
 use Submex\Admin\Notices;
+use Submex\Admin\Retention_Page;
 use Submex\Admin\Settings;
 use Submex\Admin\Settings_Page;
 use Submex\Admin\Setup_Guide;
@@ -278,6 +280,12 @@ final class Plugin {
 			$this->services['setup']
 		);
 		$this->services['admin_menu']->register();
+
+		$this->services['retention_page'] = new Retention_Page();
+		$this->services['retention_page']->register();
+
+		$this->services['retention_api'] = new Retention_Controller();
+		$this->services['retention_api']->register();
 
 		$this->services['integrations_page'] = new Integrations_Page();
 		$this->services['integrations_page']->register();

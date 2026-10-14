@@ -13,6 +13,7 @@ use Submex\Admin\Integration_Installer;
 use Submex\Admin\Integrations_Page;
 use Submex\Admin\Menu;
 use Submex\Admin\Page_Shell;
+use Submex\Admin\Retention_Page;
 use Submex\Admin\Settings_Page;
 use Submex\Domain\Subscription;
 use Submex\Domain\Subscription_Status;
@@ -46,7 +47,7 @@ $sub->transition_to( Subscription_Status::Pending );
 $sub->save();
 $id = $sub->get_id();
 
-$free_pages = array( Menu::SLUG, Menu::LIST_SLUG, Integrations_Page::SLUG, Help_Page::SLUG, Settings_Page::SLUG );
+$free_pages = array( Menu::SLUG, Menu::LIST_SLUG, Retention_Page::SLUG, Integrations_Page::SLUG, Help_Page::SLUG, Settings_Page::SLUG );
 
 // ---------------------------------------------------------------- the pages the app owns
 
@@ -78,9 +79,10 @@ $hosted = static function ( callable $render, array $get = array() ): string {
 };
 
 $screens = array(
-	'Home'             => array( Menu::SLUG, array( $plugin->get( 'admin_menu' ), 'render' ), array(), '>Home</h1>' ),
+	'Overview'         => array( Menu::SLUG, array( $plugin->get( 'admin_menu' ), 'render' ), array(), '>Overview</h1>' ),
 	'All subscriptions' => array( Menu::LIST_SLUG, array( $plugin->get( 'admin_menu' ), 'render_list' ), array(), 'All subscriptions' ),
 	'one subscription' => array( Menu::LIST_SLUG, array( $plugin->get( 'admin_menu' ), 'render_list' ), array( 'subscription' => (string) $id ), 'Subscription #' . $id ),
+	'Retention Flow'   => array( Retention_Page::SLUG, array( $plugin->get( 'retention_page' ), 'render' ), array(), 'Ask before cancelling' ),
 	'Integrations'     => array( Integrations_Page::SLUG, array( $plugin->get( 'integrations_page' ), 'render' ), array(), 'Integrations' ),
 	'Help'             => array( Help_Page::SLUG, array( $plugin->get( 'help_page' ), 'render' ), array(), 'Check these first' ),
 	'Settings'         => array( Settings_Page::SLUG, array( $plugin->get( 'settings_page' ), 'render' ), array(), 'Settings' ),
@@ -128,7 +130,7 @@ foreach ( $free_pages as $slug ) {
 	$check( '  the shell is enqueued', wp_script_is( App_Host::HANDLE, 'enqueued' ) );
 
 	$routes_ok = true;
-	foreach ( array( 'dashboard', 'subscriptions', 'integrations', 'help' ) as $bundle ) {
+	foreach ( array( 'dashboard', 'subscriptions', 'integrations', 'help', 'retention' ) as $bundle ) {
 		$registered = $scripts->registered[ 'submex-' . $bundle ] ?? null;
 		$routes_ok  = $routes_ok && wp_script_is( 'submex-' . $bundle, 'enqueued' ) && $registered && in_array( App_Host::HANDLE, $registered->deps, true );
 	}

@@ -21,6 +21,7 @@ module.exports = {
 		dashboard: './src/dashboard/index.js',
 		subscriptions: './src/subscriptions/index.js',
 		integrations: './src/integrations/index.js',
+		retention: './src/retention/index.js',
 		help: './src/help/index.js',
 		settings: {
 			import: './src/settings/index.js',

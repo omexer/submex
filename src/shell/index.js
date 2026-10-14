@@ -6,5 +6,6 @@ import { boot } from './app';
 import './shell.css';
 
 export { registerRoute, navigate, current };
+export { retentionHooks, addFilter, applyFilters, removeFilter } from './hooks';
 
 document.addEventListener( 'DOMContentLoaded', boot );

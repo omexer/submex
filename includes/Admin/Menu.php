@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * The Submex menu: Home, and the subscriptions list with its detail screen.
+ * The Submex menu: Overview, and the subscriptions list with its detail screen.
  */
 class Menu {
 
@@ -28,6 +28,7 @@ class Menu {
 
 	public function register(): void {
 		add_action( 'admin_menu', array( $this, 'add_menu' ), 20 );
+		add_action( 'admin_menu', array( $this, 'add_upgrade' ), 89 );
 		add_action( 'admin_post_submex_process_renewal', array( $this, 'process_renewal_now' ) );
 	}
 
@@ -61,8 +62,8 @@ class Menu {
 		// Without this the top-level entry repeats itself as its own first child.
 		add_submenu_page(
 			self::SLUG,
-			__( 'Submex home', 'submex' ),
-			__( 'Home', 'submex' ),
+			__( 'Submex overview', 'submex' ),
+			__( 'Overview', 'submex' ),
 			self::CAPABILITY,
 			self::SLUG,
 			array( $this, 'render' )
@@ -78,6 +79,18 @@ class Menu {
 		);
 
 		add_action( 'load-toplevel_page_' . self::SLUG, array( $this, 'redirect_legacy_links' ) );
+	}
+
+	/**
+	 * A plain link out, never a screen of locked features. Gone once Pro is active.
+	 */
+	public function add_upgrade(): void {
+		if ( did_action( 'submex_pro_loaded' ) ) {
+			return;
+		}
+
+		// No callback: WordPress then prints the slug itself as the link.
+		add_submenu_page( self::SLUG, __( 'Upgrade to Pro', 'submex' ), __( 'Upgrade to Pro', 'submex' ), self::CAPABILITY, Page_Shell::UPGRADE_URL );
 	}
 
 	/**
@@ -104,7 +117,7 @@ class Menu {
 	}
 
 	/**
-	 * Home: setup until it is done, then how the business is doing.
+	 * Overview: setup until it is done, then how the business is doing.
 	 */
 	public function render(): void {
 		if ( ! current_user_can( self::CAPABILITY ) ) {
@@ -113,7 +126,7 @@ class Menu {
 
 		App_Host::start( self::SLUG );
 
-		Page_Shell::open( __( 'Home', 'submex' ), '', array(), '', false );
+		Page_Shell::open( __( 'Overview', 'submex' ), '', array(), '', false );
 
 		$this->render_test_result();
 		$this->render_product_notice();

@@ -33,6 +33,7 @@ $bodies = array(
 	'#/subscriptions/\d+$#'          => array( 'status' => 'submex-cancelled' ),
 	'#/settings/\d+$#'               => array( 'values' => array( 'submex_allow_cancellation' => 'no' ) ),
 	'#/settings/emails/\d+$#'        => array( 'values' => array( 'subject' => 'Hijacked' ) ),
+	'#/retention/reasons$#'          => array( 'label' => 'Hijacked', 'order' => array( 'too_expensive' ) ),
 );
 
 $routes = array();
