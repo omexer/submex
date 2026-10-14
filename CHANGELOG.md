@@ -1,9 +1,13 @@
 # Changelog
 
+## 1.0.1
+
+* Renamed to Submex Subscription Billing for WooCommerce (slug `submex`). Options, tables, hooks, order statuses and the text domain use the `submex` prefix, so a store that ran an earlier build under the old name starts fresh.
+* Integrations: installing an integration plugin no longer reloads core admin files WordPress has already loaded, and uninstalling no longer loads `wp-admin/includes/plugin.php` itself.
+
 ## 1.0.0
 
 * First stable release. Submex is no longer a development release: everything from 0.32.0, with the readme and user guide updated to match.
-* Renamed to Submex Subscription Billing for WooCommerce (slug `submex`). Options, tables, hooks, order statuses and the text domain use the `submex` prefix, so a store that ran an earlier build under the old name starts fresh.
 
 ## 0.32.0
 

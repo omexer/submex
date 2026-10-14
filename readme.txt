@@ -4,7 +4,7 @@ Tags: woocommerce, subscriptions, recurring payments, billing, memberships
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -150,9 +150,12 @@ included in the plugin.
 
 == Changelog ==
 
+= 1.0.1 =
+* Renamed to Submex Subscription Billing for WooCommerce (slug `submex`). Options, tables, hooks, order statuses and the text domain use the `submex` prefix, so a store that ran an earlier build under the old name starts fresh.
+* Integrations: installing an integration plugin no longer reloads core admin files WordPress has already loaded, and uninstalling no longer loads `wp-admin/includes/plugin.php` itself.
+
 = 1.0.0 =
 * First stable release. Submex is no longer a development release: everything from 0.32.0, with the readme and user guide updated to match.
-* Renamed to Submex Subscription Billing for WooCommerce (slug `submex`). Options, tables, hooks, order statuses and the text domain use the `submex` prefix, so a store that ran an earlier build under the old name starts fresh.
 
 = 0.32.0 =
 * Submex's setup notices (PayPal not configured, guest checkout unreachable, tax added twice) appear only on Submex's screens and WooCommerce → Settings (the tax notice also on the orders screens), and Dismiss keeps them away until the problem changes.
@@ -213,6 +216,9 @@ included in the plugin.
 The full history is in CHANGELOG.md, inside the plugin.
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+The plugin is now Submex Subscription Billing for WooCommerce. Install it fresh: settings and subscriptions from the old name are not carried over.
 
 = 1.0.0 =
 First stable release.

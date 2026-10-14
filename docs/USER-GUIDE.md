@@ -1,6 +1,6 @@
 # Submex — User Guide
 
-**Submex 1.0.0 · Submex Pro 0.51.0**
+**Submex 1.0.1 · Submex Pro 0.52.0**
 
 This guide explains everything Submex does and every setting it has, in plain language. You
 do not need to be technical to follow it.
