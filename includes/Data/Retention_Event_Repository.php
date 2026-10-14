@@ -102,17 +102,22 @@ class Retention_Event_Repository {
 	public function between( int $from, int $to, array $events = array() ): array {
 		global $wpdb;
 
-		$events = array_values( array_intersect( $events, self::EVENTS ) );
-		$sql    = 'SELECT * FROM %i WHERE created_at >= %s AND created_at < %s';
-		$args   = array( self::table(), gmdate( 'Y-m-d H:i:s', $from ), gmdate( 'Y-m-d H:i:s', $to ) );
+		$wanted = array_values( array_intersect( $events, self::EVENTS ) );
 
-		if ( $events ) {
-			$sql .= ' AND event IN (' . implode( ', ', array_fill( 0, count( $events ), '%s' ) ) . ')';
-			$args = array_merge( $args, $events );
+		if ( $events && ! $wanted ) {
+			return array();
 		}
 
-		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- placeholders only, built above.
-		return (array) $wpdb->get_results( $wpdb->prepare( $sql . ' ORDER BY created_at ASC, id ASC', $args ) );
+		return (array) $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM %i WHERE created_at >= %s AND created_at < %s AND ( %s = '' OR FIND_IN_SET( event, %s ) ) ORDER BY created_at ASC, id ASC",
+				self::table(),
+				gmdate( 'Y-m-d H:i:s', $from ),
+				gmdate( 'Y-m-d H:i:s', $to ),
+				implode( ',', $wanted ),
+				implode( ',', $wanted )
+			)
+		);
 	}
 
 	/**

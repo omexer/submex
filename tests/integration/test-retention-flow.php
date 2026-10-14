@@ -446,6 +446,10 @@ $to_t = time() + MINUTE_IN_SECONDS;
 $rows = array_values( array_filter( $events->between( $from, $to_t, array( Retention_Event_Repository::OFFER_SHOWN ) ), static fn( $r ) => (int) $r->subscription_id === $s->get_id() ) );
 $check( 'a range read returns the rows with their reason, offer and customer', 1 === count( $rows ) && 42 === (int) $rows[0]->offer_id && 'quality' === $rows[0]->reason_id && $alice === (int) $rows[0]->customer_id, $rows );
 $check( '  and counts them, in total and by reason', $events->count( Retention_Event_Repository::REASON, $from, $to_t ) >= 2 && ( $events->count_by_reason( Retention_Event_Repository::REASON, $from, $to_t )['quality'] ?? 0 ) >= 2 );
+$mine = static fn( array $rows ): array => array_values( array_map( static fn( $r ) => $r->event, array_filter( $rows, static fn( $r ) => (int) $r->subscription_id === $s->get_id() ) ) );
+$check( '  of several events at once, oldest first', array( 'started', 'offer_shown' ) === $mine( $events->between( $from, $to_t, array( Retention_Event_Repository::STARTED, Retention_Event_Repository::OFFER_SHOWN ) ) ), $mine( $events->between( $from, $to_t, array( 'started', 'offer_shown' ) ) ) );
+$check( '  every event when none is named', array( 'started', 'reason', 'reason', 'offer_shown' ) === $mine( $events->between( $from, $to_t ) ) );
+$check( '  and none for an event that does not exist', array() === $events->between( $from, $to_t, array( 'bogus' ) ) );
 $check( '  but not outside the range', 0 === count( array_filter( $events->between( time() + HOUR_IN_SECONDS, time() + 2 * HOUR_IN_SECONDS ), static fn( $r ) => (int) $r->subscription_id === $s->get_id() ) ) );
 
 // ---------------------------------------------------------------- clean up
