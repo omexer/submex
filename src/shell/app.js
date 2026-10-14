@@ -379,7 +379,7 @@ export function Shell( { fallback, links } ) {
 							<img
 								className="submex-logo"
 								src={ links.logo }
-								width="92"
+								width="112"
 								height="28"
 								alt={ __( 'Submex', 'submex' ) }
 							/>

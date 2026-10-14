@@ -36,7 +36,7 @@ class Page_Shell {
 
 		echo '<nav class="submex-crumbs" aria-label="' . esc_attr__( 'Breadcrumb', 'submex' ) . '">';
 		printf(
-			'<a class="submex-crumbs__home" href="%s"><img class="submex-logo" src="%s" width="92" height="28" alt="%s"></a>',
+			'<a class="submex-crumbs__home" href="%s"><img class="submex-logo" src="%s" width="112" height="28" alt="%s"></a>',
 			esc_url( $links['home'] ),
 			esc_url( $links['logo'] ),
 			esc_attr__( 'Submex', 'submex' )
@@ -123,7 +123,7 @@ class Page_Shell {
 	 */
 	public static function header_links(): array {
 		return array(
-			'logo'     => SUBMEX_URL . 'assets/images/logo.svg',
+			'logo'     => add_query_arg( 'ver', SUBMEX_VERSION, SUBMEX_URL . 'assets/images/logo.svg' ),
 			'home'     => admin_url( 'admin.php?page=' . Menu::SLUG ),
 			'help'     => admin_url( 'admin.php?page=' . Help_Page::SLUG ),
 			'settings' => admin_url( 'admin.php?page=' . Settings_Page::SLUG ),
