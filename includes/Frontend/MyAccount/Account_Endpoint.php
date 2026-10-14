@@ -7,6 +7,8 @@ use Submex\Data\Subscription_Query;
 use Submex\Domain\Subscription;
 use Submex\Domain\Subscription_Status;
 use Submex\Lifecycle\Cancellation_Policy;
+use Submex\Lifecycle\Cancellation_Survey;
+use Submex\Lifecycle\Retention_Flow;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -19,7 +21,10 @@ class Account_Endpoint {
 
 	public const ENDPOINT = 'subscriptions';
 
-	public function __construct( private readonly Activity_Repository $activity ) {}
+	public function __construct(
+		private readonly Activity_Repository $activity,
+		private readonly Cancel_Flow $flow
+	) {}
 
 	public function register(): void {
 		add_action( 'init', array( $this, 'add_endpoint' ) );
@@ -67,6 +72,12 @@ class Account_Endpoint {
 				wc_print_notice( __( 'That subscription could not be found.', 'submex' ), 'error' );
 				return;
 			}
+
+			if ( $this->flow->render( $subscription ) ) {
+				return;
+			}
+
+			$this->flow->render_message( $subscription );
 
 			wc_get_template(
 				'myaccount/subscription-details.php',
@@ -134,6 +145,15 @@ class Account_Endpoint {
 		if ( 'cancel' === $action ) {
 			$this->cancel( $subscription, Cancellation_Policy::is_immediate() );
 		}
+
+		if ( Cancel_Flow::ACTION === $action ) {
+			$this->flow->handle(
+				$subscription,
+				function ( string $reason, string $detail ) use ( $subscription ): void {
+					$this->cancel( $subscription, Cancellation_Policy::is_immediate(), compact( 'reason', 'detail' ) );
+				}
+			);
+		}
 	}
 
 	private function set_auto_renew( Subscription $subscription, bool $on ): void {
@@ -184,13 +204,32 @@ class Account_Endpoint {
 		);
 	}
 
-	private function cancel( Subscription $subscription, bool $immediately ): void {
+	/**
+	 * @param array{reason: string, detail: string}|null $flow What the customer said on the way, when they came through "Ask before cancelling".
+	 */
+	private function cancel( Subscription $subscription, bool $immediately, ?array $flow = null ): void {
 		if ( ! Cancellation_Policy::allows( $subscription ) ) {
 			wc_add_notice( self::cancel_refused_message( $subscription ), 'error' );
 			return;
 		}
 
 		$target = $immediately ? Subscription_Status::Cancelled : Subscription_Status::PendingCancel;
+
+		// Saved with the cancel itself, so the merchant's email already has the reason.
+		if ( null !== $flow ) {
+			$said = array(
+				Cancellation_Survey::META_REASON => $flow['reason'],
+				Cancellation_Survey::META_DETAIL => $flow['detail'],
+			);
+
+			foreach ( $said as $key => $value ) {
+				if ( '' === $value ) {
+					$subscription->delete_meta_data( $key );
+				} else {
+					$subscription->update_meta_data( $key, $value );
+				}
+			}
+		}
 
 		try {
 			$subscription->transition_to( $target, __( 'Cancelled by the customer.', 'submex' ) );
@@ -206,15 +245,24 @@ class Account_Endpoint {
 			$immediately ? 'Cancelled immediately by the customer.' : 'Cancellation scheduled for the end of the period.'
 		);
 
+		if ( null !== $flow ) {
+			$this->flow->cancelled( $subscription, $flow['reason'], $flow['detail'] );
+		}
+
 		do_action( 'submex_subscription_cancelled', $subscription, 'customer' );
 
-		wc_add_notice(
-			$immediately
-				? __( 'Your subscription has been cancelled.', 'submex' )
-				: __( 'Your subscription will end when the current period finishes. You will not be charged again.', 'submex' )
-		);
+		$notice = $immediately
+			? __( 'Your subscription has been cancelled.', 'submex' )
+			: __( 'Your subscription will end when the current period finishes. You will not be charged again.', 'submex' );
 
-		wp_safe_redirect( add_query_arg( 'cancelled', '1', wc_get_account_endpoint_url( self::ENDPOINT . '/' . $subscription->get_id() ) ) );
+		if ( null === $flow ) {
+			wc_add_notice( $notice );
+			$to = wc_get_account_endpoint_url( self::ENDPOINT . '/' . $subscription->get_id() );
+		} else {
+			$to = Cancel_Flow::confirm( $subscription, Retention_Flow::MESSAGE_CANCEL, $notice );
+		}
+
+		wp_safe_redirect( add_query_arg( 'cancelled', '1', $to ) );
 		exit;
 	}
 

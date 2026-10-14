@@ -16,6 +16,7 @@ use Submex\Data\Charge_Slot_Repository;
 use Submex\Data\Cleanup;
 use Submex\Data\Migrator;
 use Submex\Data\Order_Type;
+use Submex\Data\Retention_Event_Repository;
 use Submex\Data\Stats;
 use Submex\Rest\Dashboard_Controller;
 use Submex\Rest\Help_Controller;
@@ -64,6 +65,7 @@ use Submex\Lifecycle\Role_Management;
 use Submex\Frontend\Downloadable_Access;
 use Submex\Frontend\MyAccount\Account_Endpoint;
 use Submex\Frontend\MyAccount\Assets as Account_Assets;
+use Submex\Frontend\MyAccount\Cancel_Flow;
 
 /**
  * Service registration. Deliberately a plain registry rather than a DI container —
@@ -172,7 +174,12 @@ final class Plugin {
 		$this->services['renewal_order_pay'] = new Renewal_Order_Pay( $this->services['gateways'] );
 		$this->services['renewal_order_pay']->register();
 
-		$this->services['account'] = new Account_Endpoint( $this->services['activity'] );
+		$this->services['retention_events'] = new Retention_Event_Repository();
+		$this->services['survey']           = new Cancellation_Survey();
+
+		$this->services['cancel_flow'] = new Cancel_Flow( $this->services['retention_events'], $this->services['survey'], $this->services['activity'] );
+
+		$this->services['account'] = new Account_Endpoint( $this->services['activity'], $this->services['cancel_flow'] );
 		$this->services['account']->register();
 
 		$this->services['account_assets'] = new Account_Assets();
@@ -219,9 +226,6 @@ final class Plugin {
 
 		$this->services['downloads'] = new Downloadable_Access();
 		$this->services['downloads']->register();
-
-		$this->services['survey'] = new Cancellation_Survey( $this->services['activity'] );
-		$this->services['survey']->register();
 
 		$this->services['privacy'] = new Personal_Data( $this->services['activity'] );
 		$this->services['privacy']->register();

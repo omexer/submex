@@ -55,6 +55,22 @@ class Assets {
 			.submex-detail__action{margin:0 0 1.25rem}
 			.submex-btn{flex:1 1 12rem;text-align:center}
 		.submex-empty{padding:1rem 0}
+		.submex-flow{display:grid;gap:1rem;max-width:36rem}
+		.submex-flow--center{text-align:center;margin:0 auto}
+		.submex-flow--center .submex-cancel__actions{justify-content:center}
+		.submex-flow--right{text-align:right;margin-left:auto}
+		.submex-flow--right .submex-cancel__actions{justify-content:flex-end}
+		.submex-flow__title{margin:0}
+		.submex-flow__reasons{border:0;margin:0;padding:0;display:grid;gap:.5rem;text-align:left}
+		.submex-flow__reason{border:1px solid rgba(0,0,0,.12);border-radius:8px;padding:.6rem .8rem}
+		/* Shown for "other" by CSS alone, so the screen needs no JavaScript. */
+		.submex-flow__detail{display:none;margin-top:.5rem}
+		.submex-flow__reason input:checked~.submex-flow__detail{display:block}
+		.submex-flow__detail label{display:block}
+		.submex-flow__detail textarea{width:100%}
+		.submex-message{border:1px solid rgba(0,0,0,.12);border-radius:8px;padding:1.25rem;margin:0 0 1.5rem;text-align:center}
+		.submex-message__icon{display:inline-grid;place-items:center;width:2.5rem;height:2.5rem;border-radius:50%;background:#2e7d32;color:#fff;font-size:1.25rem}
+		.submex-message__title{margin:.5rem 0}
 		@media(min-width:768px){.submex{gap:.75rem}}
 		';
 	}

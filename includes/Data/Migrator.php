@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Migrator {
 
-	public const DB_VERSION = 2;
+	public const DB_VERSION = 3;
 
 	private const OPTION = 'submex_db_version';
 
@@ -99,6 +99,22 @@ class Migrator {
 				PRIMARY KEY (id),
 				UNIQUE KEY uq_slot (subscription_id, period_index),
 				KEY idx_state (state, scheduled_for_gmt)
+			) {$collate};"
+		);
+
+		// Append-only, like the activity log: retention stats are counted from it.
+		dbDelta(
+			"CREATE TABLE {$prefix}submex_retention_events (
+				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+				subscription_id BIGINT UNSIGNED NOT NULL,
+				customer_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				event VARCHAR(20) NOT NULL,
+				reason_id VARCHAR(40) NULL DEFAULT NULL,
+				offer_id BIGINT UNSIGNED NULL DEFAULT NULL,
+				created_at DATETIME NOT NULL,
+				PRIMARY KEY (id),
+				KEY idx_event_time (event, created_at),
+				KEY idx_sub (subscription_id)
 			) {$collate};"
 		);
 	}

@@ -71,7 +71,9 @@ $attempt = static function ( callable $handler, array $post ): void {
 };
 
 $account = \Submex\Plugin::instance()->get( 'account' );
-$survey  = \Submex\Plugin::instance()->get( 'survey' );
+$events  = \Submex\Plugin::instance()->get( 'retention_events' );
+$flow_on = get_option( 'submex_retention_flow', null );
+update_option( 'submex_retention_flow', 'yes' );
 
 update_option( 'submex_allow_early_renewal', 'yes' );
 update_option( 'submex_allow_auto_renew_toggle', 'yes' );
@@ -95,9 +97,12 @@ foreach ( array( 'another customer' => $bob, 'a logged-out visitor' => 0 ) as $w
 		$check( "{$who} cannot {$what} somebody else's subscription", $before === $state( $id ), array( $before, $state( $id ) ) );
 	}
 
-	$before = $state( $id );
-	$attempt( array( $survey, 'handle_submission' ), array( 'submex_action' => 'cancel_survey', 'submex_reason' => 'too_expensive', 'submex_subscription' => $id, '_wpnonce' => wp_create_nonce( "submex_survey_{$id}" ) ) );
-	$check( "{$who} cannot write somebody else's cancellation reason", $before === $state( $id ), array( $before, $state( $id ) ) );
+	foreach ( array( 'keep', 'continue', 'decline' ) as $choice ) {
+		$before = $state( $id );
+		$attempt( array( $account, 'handle_actions' ), array( 'submex_action' => 'cancel_flow', 'submex_choice' => $choice, 'submex_reason' => 'too_expensive', 'submex_subscription' => $id, '_wpnonce' => wp_create_nonce( "submex_cancel_flow_{$id}" ) ) );
+		$check( "{$who} cannot {$choice} through somebody else's cancellation flow, or write its reason", $before === $state( $id ), array( $before, $state( $id ) ) );
+	}
+	$check( '  and nothing is logged for it', array() === $events->for_subscription( $id ), $events->for_subscription( $id ) );
 
 	$target->delete( true );
 }
@@ -112,6 +117,7 @@ $check( 'the owner can cancel their own subscription', str_contains( wc_get_orde
 $own->delete( true );
 null === $when ? delete_option( 'submex_cancellation_effective' ) : update_option( 'submex_cancellation_effective', $when );
 
+null === $flow_on ? delete_option( 'submex_retention_flow' ) : update_option( 'submex_retention_flow', $flow_on );
 delete_option( 'submex_allow_early_renewal' );
 delete_option( 'submex_allow_auto_renew_toggle' );
 wp_delete_user( $alice );

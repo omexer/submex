@@ -11,7 +11,7 @@ require_once ABSPATH . 'wp-admin/includes/plugin.php';
 
 global $wpdb;
 
-$tables = array( 'submex_schedule', 'submex_activity', 'submex_charge_slot' );
+$tables = array( 'submex_schedule', 'submex_activity', 'submex_charge_slot', 'submex_retention_events' );
 $exists = function ( string $t ) use ( $wpdb ): bool {
 	return (bool) $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->prefix . $t ) );
 };
@@ -52,7 +52,7 @@ $still_queued = static fn(): array => array_values( array_filter( $queued_action
 // --- 1. the guard --------------------------------------------------------------------
 update_option( 'submex_delete_data_on_uninstall', 'no' );
 $run();
-$check( 'leaves everything alone when the store did not ask', $exists( 'submex_schedule' ) && $exists( 'submex_activity' ) && $exists( 'submex_charge_slot' ) );
+$check( 'leaves everything alone when the store did not ask', $exists( 'submex_schedule' ) && $exists( 'submex_activity' ) && $exists( 'submex_charge_slot' ) && $exists( 'submex_retention_events' ) );
 $check( 'and keeps the settings', (bool) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE 'submex\_%'" ) );
 $check( 'and the queued work', $queued_actions === $still_queued(), $still_queued() );
 

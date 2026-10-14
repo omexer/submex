@@ -181,36 +181,43 @@ $submex_cancel_refused = $submex_live && ! $submex_can_cancel ? \Submex\Frontend
 	<?php endif; ?>
 
 	<?php if ( $submex_can_cancel ) : ?>
+		<?php
+		if ( Cancellation_Policy::is_immediate() ) {
+			$submex_effect = __( 'Your subscription ends now, and access ends with it. There is no refund for the time left.', 'submex' );
+		} elseif ( $subscription->get_next_payment() && ! $submex_pending ) {
+			$submex_effect = sprintf(
+				/* translators: %s: date the current period ends */
+				__( 'Your subscription stays active until %s. You will not be charged again.', 'submex' ),
+				date_i18n( (string) get_option( 'date_format' ), strtotime( $subscription->get_next_payment() . ' UTC' ) )
+			);
+		} else {
+			$submex_effect = __( 'Your subscription stays active until the end of the current period. You will not be charged again.', 'submex' );
+		}
+		?>
 		<h3><?php esc_html_e( 'Cancel this subscription', 'submex' ); ?></h3>
 
-		<form method="post" class="submex-cancel">
-			<?php wp_nonce_field( 'submex_cancel_' . $subscription->get_id() ); ?>
-			<input type="hidden" name="submex_action" value="cancel" />
-			<input type="hidden" name="submex_subscription" value="<?php echo esc_attr( (string) $subscription->get_id() ); ?>" />
-
-			<p class="submex-cancel__effect">
-				<?php
-				if ( Cancellation_Policy::is_immediate() ) {
-					esc_html_e( 'Your subscription ends now, and access ends with it. There is no refund for the time left.', 'submex' );
-				} elseif ( $subscription->get_next_payment() && ! $submex_pending ) {
-					printf(
-						/* translators: %s: date the current period ends */
-						esc_html__( 'Your subscription stays active until %s. You will not be charged again.', 'submex' ),
-						esc_html( date_i18n( (string) get_option( 'date_format' ), strtotime( $subscription->get_next_payment() . ' UTC' ) ) )
-					);
-				} else {
-					esc_html_e( 'Your subscription stays active until the end of the current period. You will not be charged again.', 'submex' );
-				}
-				?>
-			</p>
+		<?php if ( \Submex\Lifecycle\Retention_Flow::is_on() ) : ?>
+			<p class="submex-cancel__effect"><?php echo esc_html( $submex_effect ); ?></p>
 
 			<div class="submex-cancel__actions">
-				<button type="submit" class="button submex-btn"><?php esc_html_e( 'Cancel subscription', 'submex' ); ?></button>
-				<a class="button submex-btn" href="<?php echo esc_url( wc_get_account_endpoint_url( $endpoint ) ); ?>">
-					<?php esc_html_e( 'Keep subscription', 'submex' ); ?>
-				</a>
+				<a class="button submex-btn" href="<?php echo esc_url( \Submex\Frontend\MyAccount\Cancel_Flow::view_url( $subscription ) ); ?>"><?php esc_html_e( 'Cancel subscription', 'submex' ); ?></a>
 			</div>
-		</form>
+		<?php else : ?>
+			<form method="post" class="submex-cancel">
+				<?php wp_nonce_field( 'submex_cancel_' . $subscription->get_id() ); ?>
+				<input type="hidden" name="submex_action" value="cancel" />
+				<input type="hidden" name="submex_subscription" value="<?php echo esc_attr( (string) $subscription->get_id() ); ?>" />
+
+				<p class="submex-cancel__effect"><?php echo esc_html( $submex_effect ); ?></p>
+
+				<div class="submex-cancel__actions">
+					<button type="submit" class="button submex-btn"><?php esc_html_e( 'Cancel subscription', 'submex' ); ?></button>
+					<a class="button submex-btn" href="<?php echo esc_url( wc_get_account_endpoint_url( $endpoint ) ); ?>">
+						<?php esc_html_e( 'Keep subscription', 'submex' ); ?>
+					</a>
+				</div>
+			</form>
+		<?php endif; ?>
 	<?php elseif ( $submex_cancel_refused ) : ?>
 		<p class="submex-cancel__refused"><?php echo esc_html( $submex_cancel_refused ); ?></p>
 	<?php endif; ?>

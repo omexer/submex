@@ -63,4 +63,17 @@ final class Allowed_Html {
 
 		return $tags + self::svg();
 	}
+
+	/**
+	 * The rich text a merchant can write into retention screens and messages, and nothing more.
+	 *
+	 * @return array<string, array<string, bool>>
+	 */
+	public static function rich_text(): array {
+		$tags = array_fill_keys( array( 'p', 'br', 'strong', 'em', 'u', 'ul', 'ol', 'li' ), array() );
+
+		$tags['a'] = array_fill_keys( array( 'href', 'target', 'rel' ), true );
+
+		return $tags;
+	}
 }

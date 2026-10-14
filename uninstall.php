@@ -18,7 +18,7 @@ if ( 'yes' !== get_option( 'submex_delete_data_on_uninstall', 'no' ) ) {
 
 global $wpdb;
 
-foreach ( array( 'submex_schedule', 'submex_activity', 'submex_charge_slot' ) as $submex_table ) {
+foreach ( array( 'submex_schedule', 'submex_activity', 'submex_charge_slot', 'submex_retention_events' ) as $submex_table ) {
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- removing our own tables is what uninstall is for.
 	$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $wpdb->prefix . $submex_table ) );
 }
