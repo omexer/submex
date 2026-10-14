@@ -3,7 +3,7 @@
  * Single subscription. Ordered by what customers actually ask first:
  * when am I charged next, what is in it, how do I stop it.
  *
- * Override: yourtheme/submex/myaccount/subscription-details.php
+ * Override: yourtheme/woocommerce/myaccount/subscription-details.php
  *
  * @var \Submex\Domain\Subscription $subscription
  * @var string                      $endpoint

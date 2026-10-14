@@ -2,7 +2,7 @@
 /**
  * Customer subscription list. Cards on mobile, table on wide screens.
  *
- * Override: yourtheme/submex/myaccount/subscriptions.php
+ * Override: yourtheme/woocommerce/myaccount/subscriptions.php
  *
  * @var \Submex\Domain\Subscription[] $subscriptions
  * @var string                        $endpoint

@@ -2,7 +2,7 @@
 /**
  * Submex email body (HTML).
  *
- * Override at yourtheme/submex/emails/subscription-email.php
+ * Override at yourtheme/woocommerce/emails/subscription-email.php
  *
  * @var string      $email_heading
  * @var string      $intro

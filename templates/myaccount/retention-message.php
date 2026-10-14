@@ -2,7 +2,7 @@
 /**
  * The store's confirmation after a cancel, pause or accepted offer, shown once above the subscription.
  *
- * Override: yourtheme/submex/myaccount/retention-message.php
+ * Override: yourtheme/woocommerce/myaccount/retention-message.php
  *
  * @var \Submex\Domain\Subscription $subscription
  * @var string                      $title

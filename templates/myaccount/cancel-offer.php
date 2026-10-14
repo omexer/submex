@@ -4,7 +4,7 @@
  *
  * The offer itself is drawn by whatever made it, through submex_retention_render_offer.
  *
- * Override: yourtheme/submex/myaccount/cancel-offer.php
+ * Override: yourtheme/woocommerce/myaccount/cancel-offer.php
  *
  * @var \Submex\Domain\Subscription $subscription
  * @var mixed                       $offer

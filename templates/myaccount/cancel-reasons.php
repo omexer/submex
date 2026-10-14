@@ -2,7 +2,7 @@
 /**
  * "Ask before cancelling": why, with Continue canceling one submit away and no reason required.
  *
- * Override: yourtheme/submex/myaccount/cancel-reasons.php
+ * Override: yourtheme/woocommerce/myaccount/cancel-reasons.php
  *
  * @var \Submex\Domain\Subscription $subscription
  * @var array<string, string>       $reasons
