@@ -8,6 +8,10 @@
 * **Confirmation messages.** After a customer cancels through the reasons screen they see your message (title, text and a Close button) instead of the one-line notice. Switch it off to keep the notice.
 * The **Home** menu item is now **Overview**. Without Submex Pro, the menu has an **Upgrade to Pro** link.
 * Database: a new table, `submex_retention_events`, records each step of the reasons screen (created automatically). Deleting the plugin with "delete data" on removes it.
+* Fixed: on sites without pretty permalinks, the links from the subscriptions list and the return to a subscription after an action in My Account landed on the account dashboard. They now open the subscription.
+* Fixed: sending the cancel form again (back button and resubmit) announced the cancellation a second time, sending the cancellation emails again. It now says the subscription is already cancelled.
+* Fixed: the Submex logo in the admin header was cut off.
+* Template headers name the folder WooCommerce reads theme overrides from: `yourtheme/woocommerce/myaccount/…` and `yourtheme/woocommerce/emails/…`.
 
 ### For developers: the retention flow
 
@@ -19,6 +23,7 @@
 * **`submex_retention_message_types( string[] $types )`**: the confirmation messages the store can edit; `cancel` by default, add `pause` and `offer_accept`.
 * `Cancel_Flow::confirm( Subscription $subscription, string $type, string $notice, array $placeholders = array() ): string` shows the store's `cancel`, `pause` or `offer_accept` message once (or `$notice` when it is off) and returns the URL to redirect to. `{resume_date}` is the only placeholder.
 * `Retention_Event_Repository` (service `retention_events`): `log()`, `last()`, `for_subscription()`, `between()`, `count()` and `count_by_reason()`. Events: `started` (once per subscription per 30 minutes), `reason`, `kept`, `offer_shown`, `offer_accepted`, `cancelled`.
+* **`submex_status_presentation( array $state, Subscription $subscription )`**: how a subscription's state reads to its customer (`label`, `tone`, `detail`), for a state only an extension knows, such as paused.
 * From `@submex/shell`: `retentionHooks` names the screen's `@wordpress/hooks` filters, and `addFilter`, `applyFilters` and `removeFilter` are re-exported.
   * **`submex.retention.offersTab`**: the Offers tab component, given `{ reasons }`; the default is the "Offers are part of Submex Pro" card.
   * **`submex.retention.reasonStats`**: `null`, or `{ Header, Row }` components given `{ reasons }` and `{ reason }`; also passed the reasons.

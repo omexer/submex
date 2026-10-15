@@ -156,6 +156,9 @@ included in the plugin.
 * Edit, reorder, switch off and delete the cancellation reasons, and set the reasons screen's text, with a live preview.
 * Confirmation messages: your own message after a customer cancels, or the plain notice.
 * The Home menu item is now Overview.
+* Fixed: on sites without pretty permalinks, subscription links in My Account landed on the account dashboard.
+* Fixed: resubmitting the cancel form sent the cancellation emails again.
+* Fixed: the Submex logo in the admin header was cut off.
 
 = 1.0.1 =
 * Renamed to Submex Subscription Billing for WooCommerce (slug `submex`). Options, tables, hooks, order statuses and the text domain use the `submex` prefix, so a store that ran an earlier build under the old name starts fresh.
