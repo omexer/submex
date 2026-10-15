@@ -184,11 +184,11 @@ $submex_cancel_refused = $submex_live && ! $submex_can_cancel ? \Submex\Frontend
 		<?php
 		if ( Cancellation_Policy::is_immediate() ) {
 			$submex_effect = __( 'Your subscription ends now, and access ends with it. There is no refund for the time left.', 'submex' );
-		} elseif ( $subscription->get_next_payment() && ! $submex_pending ) {
+		} elseif ( Cancellation_Policy::access_until( $subscription ) && ! $submex_pending ) {
 			$submex_effect = sprintf(
 				/* translators: %s: date the current period ends */
 				__( 'Your subscription stays active until %s. You will not be charged again.', 'submex' ),
-				date_i18n( (string) get_option( 'date_format' ), strtotime( $subscription->get_next_payment() . ' UTC' ) )
+				date_i18n( (string) get_option( 'date_format' ), strtotime( Cancellation_Policy::access_until( $subscription ) . ' UTC' ) )
 			);
 		} else {
 			$submex_effect = __( 'Your subscription stays active until the end of the current period. You will not be charged again.', 'submex' );
