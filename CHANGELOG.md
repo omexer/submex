@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1
+
+* The cancel form in My Account names the right end date when an extension moves it. With Submex Pro 0.53.1, a paused subscription shows the date its banked time runs out, not the renewal date from before the pause.
+* For developers: **`submex_cancel_access_until( ?string $until, Subscription $subscription )`** filters when a cancel at the end of the period would end access (a UTC `Y-m-d H:i:s` date); `Cancellation_Policy::access_until()` reads it.
+
 ## 1.1.0
 
 * **Ask before cancelling.** A new switch under **Submex → Retention Flow**, off by default. When it is on, a customer who presses Cancel in My Account first sees a short screen asking for their main reason, with **Keep Subscription** and **Continue canceling** buttons. Picking a reason is optional, and Continue canceling cancels in one click on every screen. The screen is a plain form, so it works without JavaScript. When the switch is off, cancelling works exactly as before.

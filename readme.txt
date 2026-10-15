@@ -4,7 +4,7 @@ Tags: woocommerce, subscriptions, recurring payments, billing, memberships
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -151,6 +151,9 @@ included in the plugin.
 
 == Changelog ==
 
+= 1.1.1 =
+* The cancel form in My Account names the right end date when an extension, such as Submex Pro's pause, moves it.
+
 = 1.1.0 =
 * Ask before cancelling: an optional reasons screen before a customer cancels, off by default. Continue canceling is always one click.
 * Edit, reorder, switch off and delete the cancellation reasons, and set the reasons screen's text, with a live preview.
@@ -226,6 +229,9 @@ included in the plugin.
 The full history is in CHANGELOG.md, inside the plugin.
 
 == Upgrade Notice ==
+
+= 1.1.1 =
+The cancel form names the right end date for a paused subscription (with Submex Pro 0.53.1).
 
 = 1.1.0 =
 Adds Ask before cancelling (off by default), editable cancellation reasons and confirmation messages.
