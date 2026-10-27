@@ -119,6 +119,19 @@ Every push to `main` and every pull request also builds the zip in CI, as the **
 
 ---
 
+## WordPress.org
+
+Every release the Release workflow publishes is deployed to wordpress.org by **Deploy to WordPress.org** (`.github/workflows/wporg-deploy.yml`), straight after it:
+
+- It downloads that release's `submex-X.Y.Z.zip`, checks its `.sha256`, and commits the zip's contents to SVN `trunk` and `tags/X.Y.Z`, so wordpress.org ships exactly the file on GitHub.
+- The directory listing's icon, banner and screenshots come from `.wordpress-org/` (kept out of the zip by `.distignore`).
+- A version already in SVN `tags/` is skipped, so a re-run never commits twice.
+- It needs two repository secrets, **`SVN_USERNAME`** and **`SVN_PASSWORD`**: the wordpress.org account that owns the plugin, and its SVN password from that account's profile. Without them it does nothing and says so.
+
+To deploy a version that is already released, or to see what would change first: **Actions → Deploy to WordPress.org → Run workflow**, with the version and, to change nothing, **dry run** ticked.
+
+---
+
 ## Differences for Submex Pro
 
 - **Release notes** come from `CHANGELOG.md`, since Pro is not on wordpress.org and has no `readme.txt`. Without an entry for the version, they fall back to the commits since the previous tag.

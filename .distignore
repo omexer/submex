@@ -4,6 +4,7 @@
 /.eslintrc.js
 /.github
 /.gitignore
+/.wordpress-org
 /babel.config.js
 /composer.json
 /composer.lock
