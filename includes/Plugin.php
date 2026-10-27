@@ -35,6 +35,7 @@ use Submex\Checkout\Trial_Payment;
 use Submex\Frontend\Disclosure;
 use Submex\Frontend\Product_Display;
 use Submex\Gateways\Gateway_Registry;
+use Submex\Gateways\Gateway_Switch;
 use Submex\Gateways\PayPal\PayPal_Checkout_Gateway;
 use Submex\Gateways\PayPal\PayPal_Client;
 use Submex\Gateways\PayPal\PayPal_Plans;
@@ -186,6 +187,8 @@ final class Plugin {
 
 		$this->services['account_assets'] = new Account_Assets();
 		$this->services['account_assets']->register();
+
+		Gateway_Switch::link( PayPal_Checkout_Gateway::ID, 'submex_paypal_enabled' );
 
 		$this->services['paypal_client'] = PayPal_Client::from_settings();
 		$this->services['paypal_plans']  = new PayPal_Plans( $this->services['paypal_client'] );
