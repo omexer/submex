@@ -2,8 +2,8 @@
 
 ## 1.1.2
 
-* **Fixed: PayPal missing at checkout.** "Enable PayPal" under Submex's settings and PayPal's switch under WooCommerce → Settings → Payments were two separate switches, and the checkout read only WooCommerce's. A store that turned PayPal on in Submex and added its keys showed no PayPal to customers, and no notice said why. The two now move together: turning either on or off changes the other. On update, a PayPal that was on in either place is turned on in both, so a store whose customers could already pay by PayPal also has it set up for renewals.
-* For developers: `Gateway_Switch::link( string $gateway_id, string $option )` ties a WooCommerce gateway's `enabled` setting to a Submex option in both directions, and reconciles the two once.
+* **Fixed: PayPal missing at checkout.** "Enable PayPal" under Submex's settings and PayPal's switch under WooCommerce → Settings → Payments were two separate switches, and the checkout read only WooCommerce's. A store that turned PayPal on in Submex and added its keys showed no PayPal to customers, and no notice said why. Now turning either one on turns on the other, and turning Submex's off turns checkout off too. Turning PayPal off under WooCommerce → Payments alone still stops only new sign-ups, so existing subscribers keep renewing. On update: PayPal on under Payments also gets renewals on; PayPal on in Submex with the Payments switch never set gets checkout on; a Payments switch turned off by hand is left off.
+* For developers: `Gateway_Switch::link( string $gateway_id, string $option )` ties a WooCommerce gateway's `enabled` setting to a Submex option (on carries both ways, off only from the Submex option), and reconciles the two once.
 
 ## 1.1.1
 

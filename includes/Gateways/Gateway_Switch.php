@@ -7,8 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * One on/off switch for a gateway that has two: WooCommerce's, under Payments, which the
- * checkout reads, and Submex's own, which renewals read. Turning either one changes the other.
+ * Keeps a gateway's checkout switch and its Submex renewal switch from disagreeing; checkout off alone leaves renewals running.
  */
 final class Gateway_Switch {
 
@@ -38,14 +37,17 @@ final class Gateway_Switch {
 	}
 
 	/**
-	 * Before the switches were joined they could disagree; a gateway on in either place stays on.
+	 * Switches that disagreed before they were joined: checkout turned off by hand is the only state left as it was.
 	 */
 	public static function reconcile( string $gateway_id, string $option ): void {
-		$settings = (array) get_option( self::settings_name( $gateway_id ), array() );
+		$name     = self::settings_name( $gateway_id );
+		$settings = get_option( $name, null );
+		$checkout = is_array( $settings ) ? ( $settings['enabled'] ?? null ) : null;
 
-		if ( 'yes' === ( $settings['enabled'] ?? 'no' ) || 'yes' === get_option( $option, 'no' ) ) {
-			self::to_option( $option, array( 'enabled' => 'yes' ) );
-			self::to_settings( self::settings_name( $gateway_id ), 'yes' );
+		if ( 'yes' === $checkout ) {
+			self::to_option( $option, $settings );
+		} elseif ( null === $checkout && 'yes' === get_option( $option, 'no' ) ) {
+			self::to_settings( $name, 'yes' );
 		}
 	}
 
@@ -70,14 +72,13 @@ final class Gateway_Switch {
 	 * @param mixed $settings The gateway's WooCommerce settings.
 	 */
 	private static function to_option( string $option, $settings ): void {
-		$on = is_array( $settings ) && 'yes' === ( $settings['enabled'] ?? 'no' ) ? 'yes' : 'no';
-
-		if ( self::$syncing || get_option( $option, 'no' ) === $on ) {
+		// Only on carries over: checkout off must not stop the renewals of existing subscribers.
+		if ( self::$syncing || ! is_array( $settings ) || 'yes' !== ( $settings['enabled'] ?? 'no' ) || 'yes' === get_option( $option, 'no' ) ) {
 			return;
 		}
 
 		self::$syncing = true;
-		update_option( $option, $on );
+		update_option( $option, 'yes' );
 		self::$syncing = false;
 	}
 

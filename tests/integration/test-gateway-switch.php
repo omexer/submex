@@ -1,7 +1,6 @@
 <?php
 /**
- * PayPal has one switch: Submex's "Enable PayPal" and WooCommerce's Payments toggle move
- * together, so turning it on in either place puts it at checkout.
+ * PayPal on in either Submex or WooCommerce → Payments is PayPal at checkout and at renewal.
  *
  * @package Submex
  */
@@ -32,28 +31,37 @@ $raw = static function ( string $name, $value ) use ( $wpdb ): void {
 	wp_cache_delete( 'notoptions', 'options' );
 };
 
-echo "\n1. Either switch moves the other\n";
+echo "\n1. Turning on either turns on both; checkout off keeps renewals\n";
 delete_option( $option );
 delete_option( $settings );
 update_option( $option, 'yes' );
 $check( 'turning on Enable PayPal in Submex turns on the WooCommerce Payments toggle', 'yes' === $wc_on(), get_option( $settings ) );
 update_option( $settings, array_merge( (array) get_option( $settings, array() ), array( 'enabled' => 'no', 'title' => 'Pay with PayPal' ) ) );
-$check( 'turning the toggle off turns Submex\'s switch off', 'no' === get_option( $option ) );
+$check( 'turning the toggle off stops new sign-ups but leaves renewals on', 'yes' === get_option( $option ) && 'no' === $wc_on() );
 $check( '  and leaves the gateway\'s other settings as they were', 'Pay with PayPal' === ( (array) get_option( $settings ) )['title'] );
-update_option( $settings, array_merge( (array) get_option( $settings, array() ), array( 'enabled' => 'yes' ) ) );
-$check( 'turning the toggle on turns Submex\'s switch on', 'yes' === get_option( $option ) );
 update_option( $option, 'no' );
-$check( 'turning Submex\'s switch off turns the toggle off, keeping the title', 'no' === $wc_on() && 'Pay with PayPal' === ( (array) get_option( $settings ) )['title'] );
+$check( 'turning Submex\'s switch off keeps checkout off, so nobody signs up to a subscription that cannot renew', 'no' === $wc_on() );
+update_option( $settings, array_merge( (array) get_option( $settings, array() ), array( 'enabled' => 'yes' ) ) );
+$check( 'turning the toggle on turns renewals on', 'yes' === get_option( $option ) );
+update_option( $option, 'no' );
+$check( 'turning Submex\'s switch off turns checkout off, keeping the title', 'no' === $wc_on() && 'Pay with PayPal' === ( (array) get_option( $settings ) )['title'] );
 
 echo "\n2. Switches that disagreed before this release\n";
 $raw( $option, 'yes' );
+$wpdb->delete( $wpdb->options, array( 'option_name' => $settings ) );
+wp_cache_delete( $settings, 'options' );
+wp_cache_delete( 'alloptions', 'options' );
+wp_cache_delete( 'notoptions', 'options' );
+Gateway_Switch::reconcile( PayPal_Checkout_Gateway::ID, $option );
+$check( 'Submex on, WooCommerce never set: checkout is turned on', 'yes' === $wc_on() );
+$raw( $option, 'yes' );
 $raw( $settings, array( 'enabled' => 'no' ) );
 Gateway_Switch::reconcile( PayPal_Checkout_Gateway::ID, $option );
-$check( 'Submex on and WooCommerce off: both end up on', 'yes' === get_option( $option ) && 'yes' === $wc_on() );
+$check( 'Submex on, WooCommerce turned off by hand: left as it was', 'yes' === get_option( $option ) && 'no' === $wc_on() );
 $raw( $option, 'no' );
 $raw( $settings, array( 'enabled' => 'yes' ) );
 Gateway_Switch::reconcile( PayPal_Checkout_Gateway::ID, $option );
-$check( 'WooCommerce on and Submex off: both end up on, so renewals are registered too', 'yes' === get_option( $option ) && 'yes' === $wc_on() );
+$check( 'WooCommerce on, Submex off: renewals are turned on, since customers already pay this way', 'yes' === get_option( $option ) && 'yes' === $wc_on() );
 $raw( $option, 'no' );
 $raw( $settings, array( 'enabled' => 'no' ) );
 Gateway_Switch::reconcile( PayPal_Checkout_Gateway::ID, $option );

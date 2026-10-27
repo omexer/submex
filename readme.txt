@@ -152,7 +152,7 @@ included in the plugin.
 == Changelog ==
 
 = 1.1.2 =
-* Fixed: PayPal turned on under Submex's settings was not offered at checkout until it was also turned on under WooCommerce → Settings → Payments. The two switches now move together, and on update a PayPal that was on in either place is on in both.
+* Fixed: PayPal turned on under Submex's settings was not offered at checkout until it was also turned on under WooCommerce → Settings → Payments. Turning either one on now turns on the other; turning PayPal off under Payments alone still keeps existing subscribers renewing.
 
 = 1.1.1 =
 * The cancel form in My Account names the right end date when an extension, such as Submex Pro's pause, moves it.
