@@ -4,7 +4,7 @@ Tags: woocommerce, subscriptions, recurring payments, billing, memberships
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -151,6 +151,9 @@ included in the plugin.
 
 == Changelog ==
 
+= 1.1.2 =
+* Fixed: PayPal turned on under Submex's settings was not offered at checkout until it was also turned on under WooCommerce → Settings → Payments. The two switches now move together, and on update a PayPal that was on in either place is on in both.
+
 = 1.1.1 =
 * The cancel form in My Account names the right end date when an extension, such as Submex Pro's pause, moves it.
 
@@ -229,6 +232,9 @@ included in the plugin.
 The full history is in CHANGELOG.md, inside the plugin.
 
 == Upgrade Notice ==
+
+= 1.1.2 =
+PayPal turned on in Submex's settings now shows at checkout without a second switch under WooCommerce → Payments.
 
 = 1.1.1 =
 The cancel form names the right end date for a paused subscription (with Submex Pro 0.53.1).

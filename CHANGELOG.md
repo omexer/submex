@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.2
+
+* **Fixed: PayPal missing at checkout.** "Enable PayPal" under Submex's settings and PayPal's switch under WooCommerce → Settings → Payments were two separate switches, and the checkout read only WooCommerce's. A store that turned PayPal on in Submex and added its keys showed no PayPal to customers, and no notice said why. The two now move together: turning either on or off changes the other. On update, a PayPal that was on in either place is turned on in both, so a store whose customers could already pay by PayPal also has it set up for renewals.
+* For developers: `Gateway_Switch::link( string $gateway_id, string $option )` ties a WooCommerce gateway's `enabled` setting to a Submex option in both directions, and reconciles the two once.
+
 ## 1.1.1
 
 * The cancel form in My Account names the right end date when an extension moves it. With Submex Pro 0.53.1, a paused subscription shows the date its banked time runs out, not the renewal date from before the pause.

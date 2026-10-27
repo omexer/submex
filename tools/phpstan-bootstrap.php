@@ -3,7 +3,7 @@
  * Constants the plugin defines at runtime, so analysis does not read them as undefined.
  */
 
-define( 'SUBMEX_VERSION', '1.1.1' );
+define( 'SUBMEX_VERSION', '1.1.2' );
 define( 'SUBMEX_FILE', __DIR__ . '/../submex.php' );
 define( 'SUBMEX_PATH', __DIR__ . '/../' );
 define( 'SUBMEX_MIN_WC', '8.0' );
