@@ -4,7 +4,7 @@ Tags: woocommerce, subscriptions, recurring payments, billing, memberships
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.1.2
+Stable tag: 1.1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -151,6 +151,11 @@ included in the plugin.
 
 == Changelog ==
 
+= 1.1.3 =
+* Fixed: opening a saved subscription product hid its General tab, so the price, the billing fields and WooCommerce's Virtual box were missing and the product could not be made shipping-free. They now show on every subscription product.
+* Submex's settings live only under Submex → Settings. The duplicate Subscriptions tab under WooCommerce → Settings is gone, and old links to it open Submex → Settings.
+* Manage on PayPal under WooCommerce → Payments opens Submex's PayPal settings, with the credentials, instead of a title-only form.
+
 = 1.1.2 =
 * Fixed: PayPal turned on under Submex's settings was not offered at checkout until it was also turned on under WooCommerce → Settings → Payments. Turning either one on now turns on the other; turning PayPal off under Payments alone still keeps existing subscribers renewing.
 
@@ -232,6 +237,9 @@ included in the plugin.
 The full history is in CHANGELOG.md, inside the plugin.
 
 == Upgrade Notice ==
+
+= 1.1.3 =
+Subscription products show their price and Virtual box again when edited, so a digital subscription no longer needs shipping. Settings are now only under Submex → Settings.
 
 = 1.1.2 =
 PayPal turned on in Submex's settings now shows at checkout without a second switch under WooCommerce → Payments.

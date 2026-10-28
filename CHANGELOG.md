@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.3
+
+* **Fixed: subscription settings hidden on a saved product.** Opening an existing Subscription or Variable subscription product hid its General tab, so the price, the billing fields and WooCommerce's Virtual box were all missing, and a membership or other digital subscription could not be marked Virtual and so always required shipping at checkout. WooCommerce's first show/hide pass ran before Submex had tagged those fields for its product types; Submex now reruns WooCommerce's own handler after tagging them.
+* **One place for settings.** The Subscriptions tab under WooCommerce → Settings was a second copy of Submex → Settings and is removed. Old links to it redirect to Submex → Settings, keeping the section they pointed at.
+* **Manage under WooCommerce → Payments** opens Submex → Settings → PayPal, where the credentials are, instead of WooCommerce's form with only a title and description.
+* For developers: `Product_Meta_Fields::PRIORITY_SHIPS` (10) places a field at the top of the Shipping section, above the delivery fields. Submex Pro 0.53.3 uses it for its Enable shipping switch.
+
 ## 1.1.2
 
 * **Fixed: PayPal missing at checkout.** "Enable PayPal" under Submex's settings and PayPal's switch under WooCommerce → Settings → Payments were two separate switches, and the checkout read only WooCommerce's. A store that turned PayPal on in Submex and added its keys showed no PayPal to customers, and no notice said why. Now turning either one on turns on the other, and turning Submex's off turns checkout off too. Turning PayPal off under WooCommerce → Payments alone still stops only new sign-ups, so existing subscribers keep renewing. On update: PayPal on under Payments also gets renewals on; PayPal on in Submex with the Payments switch never set gets checkout on; a Payments switch turned off by hand is left off.
