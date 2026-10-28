@@ -4,7 +4,7 @@ Tags: woocommerce, subscriptions, recurring payments, billing, memberships
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.1.3
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,6 +25,7 @@ Submex turns WooCommerce products into subscriptions and runs the renewal billin
 
 = Taking payment =
 
+* **Stripe** collects the card on Stripe's own checkout page, and Submex charges it again whenever a renewal falls due, with a free trial saving the card without charging it.
 * **PayPal** runs the schedule itself, and Submex keeps in step through PayPal's webhooks.
 * With no gateway at all, renewals become invoices the customer pays by hand.
 * Payments that are confirmed days later — Direct Debit and bank payments — wait as pending: the customer keeps access, the renewal order waits on hold so it cannot be paid twice, and Submex never retries or re-charges it. The gateway settles it once the money is confirmed or refused.
@@ -62,7 +63,7 @@ A separate plugin adds:
 * **Plans and pricing:** variable subscriptions, several plans per product, instalment and split payment plans, introductory renewal prices, fixed expiry dates, minimum terms, payment caps, purchase limits, shipping on renewals and delivery schedules.
 * **Keeping customers:** pause and resume, plan switching, upgrade suggestions and "switch instead of cancelling", a retention offer on cancellation, a win-back email campaign, anniversary thank-yous with an optional gift, and members-only content.
 * **Getting paid:** configurable payment retries and a grace period, with a recovery report, card updates from My Account with expiring-card and "update your payment details" emails, recurring coupons and sign-up fee coupons, subscription webhooks, and WhatsApp notifications.
-* **More gateways:** Stripe, Square, Braintree, Authorize.net, Mollie, Xendit, Razorpay (UPI Autopay), GoCardless Direct Debit, Adyen, WooPayments, Paddle, and bKash and SSLCommerz by payment link.
+* **More gateways:** Square, Braintree, Authorize.net, Mollie, Xendit, Razorpay (UPI Autopay), GoCardless Direct Debit, Adyen, WooPayments, Paddle, and bKash and SSLCommerz by payment link.
 * **Checkout and emails:** one-click checkout, your own Subscribe button text, trial ending and expiring soon reminders, and editing each email's subject, heading and content inside Submex.
 * **Integrations:** LearnDash, Tutor LMS, LearnPress, MailPoet, WP Fusion, AutomatorWP, AutomateWoo, AffiliateWP recurring referrals, BuddyBoss and BuddyPress groups, License Manager for WooCommerce and WP Software License.
 * Reports, subscription health with a digest email, a live QR status page, and WooCommerce API keys on the subscription API.
@@ -80,11 +81,11 @@ To turn a product into a subscription yourself, edit it and choose **Subscriptio
 
 = Is this ready for a live store? =
 
-Not yet. The renewal engine is built and tested against a running WordPress, and PayPal is included. What has not happened yet is a payment through a real PayPal account, and a renewal watched firing on its own over days. Until both have, use it on a staging site.
+Not yet. The renewal engine is built and tested against a running WordPress, and Stripe and PayPal are included. What has not happened yet is a payment through a real PayPal account, and a renewal watched firing on its own over days. Until both have, use it on a staging site.
 
 = Which payment methods can renew automatically? =
 
-PayPal, included. Submex Pro adds Stripe, which saves the card at checkout and charges each renewal itself, and Square, Braintree, Authorize.net, Mollie, Xendit and WooPayments renewals against the payment method those plugins saved at checkout, and its own checkouts for Razorpay (UPI Autopay), GoCardless Direct Debit and Adyen; Paddle bills its own schedule, as PayPal does. bKash and SSLCommerz cannot charge a customer again automatically, so Pro emails each renewal as a payment link. Without any of them, each renewal is an invoice the customer pays.
+Stripe and PayPal, both included. Stripe saves the card at checkout and Submex charges each renewal itself; PayPal bills its own schedule. Submex Pro adds Square, Braintree, Authorize.net, Mollie, Xendit and WooPayments renewals against the payment method those plugins saved at checkout, and its own checkouts for Razorpay (UPI Autopay), GoCardless Direct Debit and Adyen; Paddle bills its own schedule, as PayPal does. bKash and SSLCommerz cannot charge a customer again automatically, so Pro emails each renewal as a payment link. Without any of them, each renewal is an invoice the customer pays.
 
 = What happens to a Direct Debit renewal while it clears? =
 
@@ -125,6 +126,24 @@ headers that came with it.
 PayPal's terms: https://www.paypal.com/legalhub/useragreement-full — PayPal's privacy
 statement: https://www.paypal.com/legalhub/privacy-full
 
+= Stripe =
+
+Used to take the card payment and charge each renewal, when Stripe is enabled under
+**Submex → Settings → Stripe**.
+
+Requests go to `https://api.stripe.com`, with the test or live secret key depending on the
+environment chosen. They are made when a customer pays by card at checkout, when they come
+back from Stripe's payment page so Submex can confirm the payment, whenever a renewal is
+charged, and when Submex checks whether a renewal whose result never arrived was charged.
+What is sent: the customer's billing email, and their name if a card has to be linked to a
+Stripe customer; the order number and amount, the currency, and the addresses Stripe returns
+the customer to; and for a renewal, the amount, the currency, the subscription and order
+numbers and the Stripe customer and card saved at checkout. The card itself is entered on
+Stripe's page and never reaches this site.
+
+Stripe's terms: https://stripe.com/legal/ssa — Stripe's privacy policy:
+https://stripe.com/privacy
+
 = WordPress.org =
 
 The Integrations screen can install a companion plugin for you. Doing so asks
@@ -150,6 +169,12 @@ included in the plugin.
 4. The subscription terms as a customer sees them on the product page.
 
 == Changelog ==
+
+= 1.2.0 =
+* **Stripe is included.** Customers pay by card on Stripe's own checkout page, and Submex charges the saved card again whenever a renewal falls due. A free trial saves the card without charging it. Set it up under Submex → Settings → Stripe.
+* A store that already used Stripe through Submex Pro keeps its keys, its settings and its subscriptions' saved cards, with nothing to set up again. Until Submex Pro is updated to 0.54.0, Pro's own Stripe keeps running.
+* Submex now says when Stripe is switched on but has no secret key for the chosen mode.
+* Deleting Submex with "delete data" on also removes the PayPal and Stripe checkout settings WooCommerce kept for it.
 
 = 1.1.3 =
 * Fixed: opening a saved subscription product hid its General tab, so the price, the billing fields and WooCommerce's Virtual box were missing and the product could not be made shipping-free. They now show on every subscription product.
@@ -237,6 +262,9 @@ included in the plugin.
 The full history is in CHANGELOG.md, inside the plugin.
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+Stripe card payments and automatic renewals are now part of the free plugin. With Submex Pro, update Pro to 0.54.0 too.
 
 = 1.1.3 =
 Subscription products show their price and Virtual box again when edited, so a digital subscription no longer needs shipping. Settings are now only under Submex → Settings.

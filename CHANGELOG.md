@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0
+
+* **Stripe is included.** The Stripe gateway moves from Submex Pro into the free plugin, whole: the card checkout on Stripe's hosted page, automatic renewals charged off-session against the saved card, the block checkout, the Submex → Settings → Stripe section and the notice when the key for the chosen mode is missing. A free trial saves the card in setup mode without charging it.
+* **Nothing to migrate.** The gateway ID (`submex_stripe`), option names, card meta keys and return URL are the ones Pro used, so a store's keys, titles and every subscription's saved card carry straight over.
+* **Older Pro keeps its Stripe.** With Submex Pro before 0.54.0 active, Pro's Stripe stays in charge and free registers none of its own, so a store never sees two. Pro 0.54.0 drops its copy.
+* Deleting Submex with "delete data" on also removes `woocommerce_submex_paypal_settings` and `woocommerce_submex_stripe_settings`.
+* readme: Stripe is listed under External services, with what is sent and when.
+* For developers: `Plugin::owns_stripe()` says whether free is the one offering Stripe.
+
 ## 1.1.3
 
 * **Fixed: subscription settings hidden on a saved product.** Opening an existing Subscription or Variable subscription product hid its General tab, so the price, the billing fields and WooCommerce's Virtual box were all missing, and a membership or other digital subscription could not be marked Virtual and so always required shipping at checkout. WooCommerce's first show/hide pass ran before Submex had tagged those fields for its product types; Submex now reruns WooCommerce's own handler after tagging them.
