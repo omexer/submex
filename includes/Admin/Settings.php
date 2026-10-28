@@ -14,10 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * WooCommerce → Settings → Subscriptions.
- *
- * A tab inside WooCommerce settings rather than a screen of our own, so it inherits
- * Woo's markup, save handling and nonce checks. UX Spec 3.
+ * The settings Submex → Settings draws, defined as a WooCommerce settings page so they keep Woo's fields and save handling.
  */
 class Settings extends \WC_Settings_Page {
 
@@ -26,6 +23,9 @@ class Settings extends \WC_Settings_Page {
 		$this->label = __( 'Subscriptions', 'submex' );
 
 		parent::__construct();
+
+		// No tab under WooCommerce → Settings: a second copy of Submex → Settings.
+		remove_filter( 'woocommerce_settings_tabs_array', array( $this, 'add_settings_page' ), 20 );
 
 		add_action( 'woocommerce_admin_field_submex_status', array( $this, 'render_status' ) );
 		add_action( 'woocommerce_admin_field_submex_tax_repair', array( $this, 'render_tax_repair' ) );
@@ -472,8 +472,8 @@ class Settings extends \WC_Settings_Page {
 				'bad'   => sprintf(
 					/* translators: %d: number of subscriptions */
 					_n(
-						'%d subscription renews with tax added twice. Repair it under WooCommerce → Settings → Subscriptions.',
-						'%d subscriptions renew with tax added twice. Repair them under WooCommerce → Settings → Subscriptions.',
+						'%d subscription renews with tax added twice. Repair it under Submex → Settings.',
+						'%d subscriptions renew with tax added twice. Repair them under Submex → Settings.',
 						$twice,
 						'submex'
 					),

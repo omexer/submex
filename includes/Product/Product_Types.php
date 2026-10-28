@@ -207,7 +207,8 @@ jQuery( function ( $ ) {
 	$( '.pricing' ).addClass( 'show_if_' + simple );
 	$( '.show_if_simple' ).not( '.submex-product-options' ).addClass( 'show_if_' + simple );
 	$( '.show_if_variable' ).addClass( 'show_if_' + variable );
-	$( 'body' ).trigger( 'woocommerce-product-type-change', $( '#product-type' ).val() );
+	// WooCommerce's own handler, not just its event: its first pass ran before these classes and hid the General tab.
+	$( 'select#product-type' ).trigger( 'change' );
 } );
 JS;
 

@@ -111,7 +111,7 @@ author or to any analytics service.
 = PayPal =
 
 Used to create and run the billing plan, when PayPal is enabled under
-**WooCommerce → Settings → Subscriptions → PayPal**.
+**Submex → Settings → PayPal**.
 
 Requests go to `https://api-m.paypal.com`, or to `https://api-m.sandbox.paypal.com` when the
 environment is set to Sandbox. They are made when a subscription product is bought, and

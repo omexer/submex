@@ -3,6 +3,7 @@
 namespace Submex\Rest;
 
 use Submex\Admin\Menu;
+use Submex\Admin\Settings_Page;
 use Submex\Admin\Setup_Guide;
 use Submex\Data\Stats;
 use Submex\Data\Subscription_Query;
@@ -65,7 +66,7 @@ class Dashboard_Controller {
 				'new_product'  => admin_url( 'post-new.php?post_type=product' ),
 				'list'         => admin_url( 'admin.php?page=' . Menu::LIST_SLUG ),
 				'integrations' => admin_url( 'admin.php?page=' . Menu::SLUG . '-integrations' ),
-				'settings'     => admin_url( 'admin.php?page=wc-settings&tab=submex' ),
+				'settings'     => Settings_Page::section_url(),
 				'help'         => admin_url( 'admin.php?page=' . Menu::SLUG . '-help' ),
 			),
 			'create'    => array(

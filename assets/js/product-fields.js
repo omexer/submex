@@ -105,8 +105,13 @@ jQuery( function ( $ ) {
 	} );
 
 	$( '#_virtual' ).on( 'change', function () {
+		$( '#submex_ships' ).prop( 'checked', ! $( this ).is( ':checked' ) );
 		syncRows();
 		syncSections();
+	} );
+
+	$panel.on( 'change', '#submex_ships', function () {
+		$( '#_virtual' ).prop( 'checked', ! $( this ).is( ':checked' ) ).trigger( 'change' );
 	} );
 
 	// After WooCommerce's own show/hide for the new type, whichever handler ran first.

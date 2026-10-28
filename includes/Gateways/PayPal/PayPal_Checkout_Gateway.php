@@ -2,6 +2,7 @@
 
 namespace Submex\Gateways\PayPal;
 
+use Submex\Admin\Settings_Page;
 use Submex\Product\Line_Terms;
 use Submex\Product\Subscription_Product;
 
@@ -27,7 +28,7 @@ class PayPal_Checkout_Gateway extends \WC_Payment_Gateway {
 	) {
 		$this->id                 = self::ID;
 		$this->method_title       = __( 'PayPal Subscriptions (Submex)', 'submex' );
-		$this->method_description = __( 'Lets customers start a subscription with PayPal. Configure the credentials under WooCommerce → Settings → Subscriptions → PayPal.', 'submex' );
+		$this->method_description = __( 'Lets customers start a subscription with PayPal. Configure the credentials under Submex → Settings → PayPal.', 'submex' );
 		$this->has_fields         = false;
 		$this->supports           = array( 'products' );
 
@@ -39,6 +40,13 @@ class PayPal_Checkout_Gateway extends \WC_Payment_Gateway {
 
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
 		add_action( 'woocommerce_api_' . self::ID . '_return', array( $this, 'handle_return' ) );
+	}
+
+	/**
+	 * Where WooCommerce → Payments → Manage goes: the credentials, not just the title.
+	 */
+	public function get_settings_url(): string {
+		return Settings_Page::section_url( 'paypal' );
 	}
 
 	public function init_form_fields(): void {

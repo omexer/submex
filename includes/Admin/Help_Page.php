@@ -120,7 +120,7 @@ class Help_Page {
 				'title' => __( 'Check renewal health', 'submex' ),
 				'body'  => __( 'Settings shows whether the renewal queue is running, any charge whose outcome is unknown, and the double-charge safeguard.', 'submex' ),
 				'label' => __( 'Open settings', 'submex' ),
-				'url'   => admin_url( 'admin.php?page=wc-settings&tab=submex' ),
+				'url'   => Settings_Page::section_url(),
 			),
 		);
 	}

@@ -32,6 +32,7 @@ class Product_Meta_Fields {
 	public const PRIORITY_LIMIT        = 60;
 	public const PRIORITY_ACCESS       = 70;
 
+	public const PRIORITY_SHIPS           = 10;
 	public const PRIORITY_DELIVERY        = 20;
 	public const PRIORITY_SHIPPING_CHARGE = 40;
 

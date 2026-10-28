@@ -648,8 +648,7 @@ with the reason. When a customer asks "why was I charged?", the answer is here.
 | **Thirteen integrations** | See [INTEGRATIONS.md](INTEGRATIONS.md), and [BUSINESS-EXAMPLES.md](BUSINESS-EXAMPLES.md) for which to connect for what |
 | **More gateways** | See [Taking payment](#taking-payment) |
 
-Pro's settings are sections of **Submex → Settings** (the same sections appear under
-**WooCommerce → Settings → Subscriptions**):
+Pro's settings are sections of **Submex → Settings**:
 
 | Section | What is in it |
 |---|---|

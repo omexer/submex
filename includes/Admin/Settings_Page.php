@@ -29,6 +29,24 @@ class Settings_Page {
 	public function register(): void {
 		add_action( 'admin_menu', array( $this, 'add_page' ), 95 );
 		add_action( 'submex_app_enqueue', array( $this, 'enqueue_route' ) );
+		add_action( 'load-woocommerce_page_wc-settings', array( $this, 'redirect_woo_tab' ) );
+	}
+
+	/**
+	 * Bookmarks and older links to the WooCommerce tab land here, keeping whatever else they carry.
+	 */
+	public function redirect_woo_tab(): void {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only screen routing.
+		if ( ! isset( $_GET['tab'] ) || 'submex' !== sanitize_key( wp_unslash( $_GET['tab'] ) ) ) {
+			return;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only screen routing.
+		$args = map_deep( wp_unslash( $_GET ), 'sanitize_text_field' );
+		unset( $args['page'], $args['tab'] );
+
+		wp_safe_redirect( add_query_arg( urlencode_deep( $args ), self::section_url() ) );
+		exit;
 	}
 
 	/**

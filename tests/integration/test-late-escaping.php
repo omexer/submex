@@ -121,7 +121,7 @@ echo "\n3. Icons and scripts\n";
 ob_start();
 \Submex\Admin\Page_Shell::open( 'Harness' );
 \Submex\Admin\Page_Shell::close();
-$shell = (string) ob_get_clean();
+$shell  = (string) ob_get_clean();
 $shapes = array_values( preg_grep( '/^(svg|rect|circle|path)\[/', $inventory( $shell ) ) );
 $check( 'the header icons keep their shapes', in_array( 'rect[height=17 rx=3 width=17 x=3.5 y=3.5]', $shapes, true ) && in_array( 'circle[cx=12 cy=12 r=3]', $shapes, true ) && (bool) preg_grep( '/^svg\[.*viewbox=0 0 24 24/', $shapes ), $shapes );
 
@@ -130,7 +130,8 @@ wp_enqueue_script( 'wc-admin-product-meta-boxes', WC()->plugin_url() . '/assets/
 // Ours only: other admin_enqueue_scripts callbacks need wp-admin functions WP-CLI does not load.
 \Submex\Plugin::instance()->get( 'product_types' )->show_standard_fields();
 $inline = implode( "\n", (array) wp_scripts()->get_data( 'wc-admin-product-meta-boxes', 'after' ) );
-$check( 'the product-type script is added after WooCommerce\'s product script, not printed', str_contains( $inline, "woocommerce-product-type-change" ) && str_contains( $inline, '"submex_subscription"' ), $inline );
+$check( 'the product-type script is added after WooCommerce\'s product script, not printed', str_contains( $inline, '"submex_subscription"' ), $inline );
+$check( '  and reruns WooCommerce\'s own type handler, so an existing subscription opens with its General tab', str_contains( $inline, "$( 'select#product-type' ).trigger( 'change' )" ), $inline );
 set_current_screen( 'dashboard' );
 
 
