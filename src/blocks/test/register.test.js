@@ -52,9 +52,24 @@ describe( 'registering Submex with the block checkout', () => {
 		);
 	} );
 
-	it( 'leaves a gateway another plugin adds to that plugin', () => {
+	it( 'registers Stripe when the server says it is available', () => {
 		getSetting.mockImplementation( ( key ) =>
 			'submex_stripe_data' === key
+				? { title: 'Card', description: '', supports: [ 'products' ] }
+				: null
+		);
+
+		load();
+
+		expect( registerPaymentMethod ).toHaveBeenCalledTimes( 1 );
+		expect( registerPaymentMethod.mock.calls[ 0 ][ 0 ].name ).toBe(
+			'submex_stripe'
+		);
+	} );
+
+	it( 'leaves a gateway another plugin adds to that plugin', () => {
+		getSetting.mockImplementation( ( key ) =>
+			'submex_adyen_data' === key
 				? { title: 'Card', description: '', supports: [ 'products' ] }
 				: null
 		);

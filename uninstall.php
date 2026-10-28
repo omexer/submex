@@ -39,6 +39,11 @@ foreach ( array( '', '_transient_', '_transient_timeout_' ) as $submex_prefix ) 
 }
 // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 
+// WooCommerce names its gateway settings after the gateway, outside the prefix above.
+foreach ( array( 'woocommerce_submex_paypal_settings', 'woocommerce_submex_stripe_settings' ) as $submex_gateway_settings ) {
+	delete_option( $submex_gateway_settings );
+}
+
 foreach ( array( 'submex_dismissed_notices', '_submex_fluentcrm_added_tags', '_submex_fluentcrm_added_lists' ) as $submex_user_meta ) {
 	delete_metadata( 'user', 0, $submex_user_meta, '', true );
 }

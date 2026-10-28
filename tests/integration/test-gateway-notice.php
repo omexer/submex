@@ -14,11 +14,13 @@ require __DIR__ . '/bootstrap.php';
 require_once ABSPATH . 'wp-admin/includes/class-wp-screen.php';
 require_once ABSPATH . 'wp-admin/includes/screen.php';
 
-$keys   = array( 'submex_paypal_enabled', 'submex_paypal_client_id', 'submex_paypal_secret', 'submex_paypal_webhook_id' );
+$keys   = array( 'submex_paypal_enabled', 'submex_paypal_client_id', 'submex_paypal_secret', 'submex_paypal_webhook_id', 'submex_stripe_enabled' );
 $before = array();
 foreach ( $keys as $key ) {
 	$before[ $key ] = get_option( $key, null );
 }
+// Stripe has its own notice, covered by test-stripe-in-free.
+update_option( 'submex_stripe_enabled', 'no' );
 
 $saved_screen   = $GLOBALS['current_screen'] ?? null;
 $dismissed_meta = get_user_meta( 1, 'submex_dismissed_notices', true );

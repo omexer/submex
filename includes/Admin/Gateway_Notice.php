@@ -34,6 +34,15 @@ class Gateway_Notice {
 			'paypal'
 		);
 
+		$this->notice(
+			'submex_stripe_credentials',
+			__( 'Submex is not offering a payment method at checkout.', 'submex' ),
+			$this->stripe_credentials(),
+			// The live and test keys are different fields, so fixing one and emptying the other is a new problem.
+			'yes' === get_option( 'submex_stripe_live', 'no' ) ? 'live' : 'test',
+			'stripe'
+		);
+
 		// Separate on purpose: this one does not stop a customer paying, so saying it
 		// alongside "not offered at checkout" would send the merchant looking for the
 		// wrong thing entirely.
@@ -67,6 +76,28 @@ class Gateway_Notice {
 			esc_html__( 'Finish setting it up', 'submex' ),
 			esc_url( Notice_Dismissals::problem_url( $id, $problem ) ),
 			esc_html__( 'Dismiss', 'submex' )
+		);
+	}
+
+	/**
+	 * @return string[]
+	 */
+	private function stripe_credentials(): array {
+		if ( ! \Submex\Plugin::owns_stripe() || 'yes' !== get_option( 'submex_stripe_enabled', 'no' ) ) {
+			return array();
+		}
+
+		$live = 'yes' === get_option( 'submex_stripe_live', 'no' );
+
+		if ( '' !== (string) get_option( $live ? 'submex_stripe_secret' : 'submex_stripe_test_secret', '' ) ) {
+			return array();
+		}
+
+		// Naming the environment matters: the usual cause is the key in one box and the environment set to the other.
+		return array(
+			$live
+				? __( 'Stripe is switched on and set to Live, but its live secret key is empty. Until it has one, Stripe is not offered at checkout.', 'submex' )
+				: __( 'Stripe is switched on and set to Test, but its test secret key is empty. Until it has one, Stripe is not offered at checkout.', 'submex' ),
 		);
 	}
 

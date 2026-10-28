@@ -81,7 +81,7 @@ class Setup_Guide {
 				'detail' => $connected
 					/* translators: %s: comma-separated list of connected gateways */
 					? sprintf( __( '%s can charge renewals automatically.', 'submex' ), implode( ', ', $connected ) )
-					: __( 'Subscriptions renew by themselves once a gateway such as PayPal is connected. Without one, renewals become invoices the customer pays by hand, which still works.', 'submex' ),
+					: __( 'Subscriptions renew by themselves once a gateway such as Stripe or PayPal is connected. Without one, renewals become invoices the customer pays by hand, which still works.', 'submex' ),
 				'action' => array(
 					'label' => $connected ? __( 'Change', 'submex' ) : __( 'Choose a gateway', 'submex' ),
 					'url'   => Settings_Page::section_url(),

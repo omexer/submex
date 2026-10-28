@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * decide when to charge, with GatewayManaged the gateway does and we mirror it.
  */
 enum Gateway_Model: string {
-	case Tokenized      = 'tokenized';       // Mollie, Square — we own the schedule.
+	case Tokenized      = 'tokenized';       // Stripe, Mollie — we own the schedule.
 	case GatewayManaged = 'gateway_managed'; // PayPal, Paddle — they own it, we mirror via webhook.
 	case Manual         = 'manual';          // Nobody charges; the customer pays an invoice.
 }

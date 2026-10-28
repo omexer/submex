@@ -41,6 +41,9 @@ use Submex\Gateways\PayPal\PayPal_Client;
 use Submex\Gateways\PayPal\PayPal_Plans;
 use Submex\Gateways\PayPal\PayPal_Gateway;
 use Submex\Gateways\PayPal\Webhook_Controller as PayPal_Webhooks;
+use Submex\Gateways\Stripe\Stripe_Checkout_Gateway;
+use Submex\Gateways\Stripe\Stripe_Client;
+use Submex\Gateways\Stripe\Stripe_Gateway;
 use Submex\Integrations\FluentCRM;
 use Submex\Integrations\Integrations;
 use Submex\Product\Product_Meta_Fields;
@@ -206,11 +209,30 @@ final class Plugin {
 			}
 		);
 
+		if ( self::owns_stripe() ) {
+			Gateway_Switch::link( Stripe_Checkout_Gateway::ID, 'submex_stripe_enabled' );
+
+			$this->services['stripe_client'] = Stripe_Client::from_settings();
+
+			add_filter(
+				'woocommerce_payment_gateways',
+				function ( array $gateways ): array {
+					$gateways[] = new Stripe_Checkout_Gateway( $this->services['stripe_client'] );
+
+					return $gateways;
+				}
+			);
+		}
+
 		add_action(
 			'submex_register_gateways',
 			function ( Gateway_Registry $registry ): void {
 				if ( $this->services['paypal_client']->is_enabled() ) {
 					$registry->add( new PayPal_Gateway( $this->services['paypal_client'] ) );
+				}
+
+				if ( isset( $this->services['stripe_client'] ) && $this->services['stripe_client']->is_enabled() ) {
+					$registry->add( new Stripe_Gateway( $this->services['stripe_client'] ) );
 				}
 			}
 		);
@@ -271,6 +293,10 @@ final class Plugin {
 			static function ( $registry ): void {
 				if ( ! class_exists( '\Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType' ) ) {
 					return;
+				}
+
+				if ( self::owns_stripe() ) {
+					$registry->register( new Gateway_Support( Stripe_Checkout_Gateway::ID ) );
 				}
 
 				$registry->register( new Gateway_Support( PayPal_Checkout_Gateway::ID ) );
@@ -338,5 +364,12 @@ final class Plugin {
 
 	public function get( string $id ): ?object {
 		return $this->services[ $id ] ?? null;
+	}
+
+	/**
+	 * Whether Stripe is this plugin's to offer: Pro before 0.54.0 still registers its own, under the same gateway ID.
+	 */
+	public static function owns_stripe(): bool {
+		return ! defined( 'SUBMEX_PRO_VERSION' ) || version_compare( SUBMEX_PRO_VERSION, '0.54.0', '>=' );
 	}
 }

@@ -39,6 +39,7 @@ class Settings extends \WC_Settings_Page {
 			'checkout'          => __( 'Cart & checkout', 'submex' ),
 			'notifications'     => __( 'Email notifications', 'submex' ),
 			'paypal'            => __( 'PayPal', 'submex' ),
+			'stripe'            => __( 'Stripe', 'submex' ),
 		);
 
 		// Core applies this in the method we are overriding; without it an extension can
@@ -276,6 +277,50 @@ class Settings extends \WC_Settings_Page {
 			array(
 				'type' => 'sectionend',
 				'id'   => 'submex_paypal_title',
+			),
+		);
+	}
+
+	public function get_settings_for_stripe_section(): array {
+		return array(
+			array(
+				'title' => __( 'Stripe', 'submex' ),
+				'type'  => 'title',
+				'desc'  => __( 'Cards are collected by Stripe and charged again automatically when a renewal falls due. Submex keeps the schedule; Stripe only stores the card.', 'submex' ),
+				'id'    => 'submex_stripe_title',
+			),
+			array(
+				'title'   => __( 'Enable Stripe', 'submex' ),
+				'desc'    => __( 'Offer card payments for subscription purchases', 'submex' ),
+				'id'      => 'submex_stripe_enabled',
+				'type'    => 'checkbox',
+				'default' => 'no',
+			),
+			array(
+				'title'   => __( 'Environment', 'submex' ),
+				'id'      => 'submex_stripe_live',
+				'type'    => 'select',
+				'default' => 'no',
+				'options' => array(
+					'no'  => __( 'Test mode', 'submex' ),
+					'yes' => __( 'Live', 'submex' ),
+				),
+			),
+			array(
+				'title' => __( 'Test secret key', 'submex' ),
+				'id'    => 'submex_stripe_test_secret',
+				'type'  => 'password',
+				'css'   => 'width:26rem',
+			),
+			array(
+				'title' => __( 'Live secret key', 'submex' ),
+				'id'    => 'submex_stripe_secret',
+				'type'  => 'password',
+				'css'   => 'width:26rem',
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'submex_stripe_title',
 			),
 		);
 	}

@@ -16,8 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * appears - so without this a merchant sees the gateway marked Active and the customer
  * sees "There are no payment methods available".
  *
- * PayPal redirects to the provider, so there are no card fields to render here: a label,
- * a description, and the same availability rule the classic checkout uses.
+ * Stripe and PayPal redirect to the provider, so there are no card fields to render here: a
+ * label, a description, and the same availability rule the classic checkout uses.
  */
 class Gateway_Support extends AbstractPaymentMethodType {
 

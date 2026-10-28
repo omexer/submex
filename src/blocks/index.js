@@ -1,7 +1,7 @@
 /**
  * Registers Submex's gateways with the block checkout.
  *
- * PayPal redirects to the provider, so it renders no field here: the block shows the
+ * Stripe and PayPal redirect to the provider, so neither renders a field here: the block shows the
  * title and description, and the redirect comes back from the server on submit.
  */
 import { registerPaymentMethod } from '@woocommerce/blocks-registry';
@@ -9,7 +9,7 @@ import { getSetting } from '@woocommerce/settings';
 import { decodeEntities } from '@wordpress/html-entities';
 import { createElement as el } from '@wordpress/element';
 
-const GATEWAYS = [ 'submex_paypal' ];
+const GATEWAYS = [ 'submex_stripe', 'submex_paypal' ];
 
 GATEWAYS.forEach( ( name ) => {
 	const settings = getSetting( `${ name }_data`, null );
