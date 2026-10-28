@@ -124,7 +124,7 @@ Every push to `main` and every pull request also builds the zip in CI, as the **
 Every release the Release workflow publishes is deployed to wordpress.org by **Deploy to WordPress.org** (`.github/workflows/wporg-deploy.yml`), straight after it:
 
 - It downloads that release's `submex-X.Y.Z.zip`, checks its `.sha256`, and commits the zip's contents to SVN `trunk` and `tags/X.Y.Z`, so wordpress.org ships exactly the file on GitHub.
-- The directory listing's icon, banner and screenshots come from `.wordpress-org/` (kept out of the zip by `.distignore`).
+- The directory listing's icon, banner and screenshots come from `.wordpress-org/` on `main`, not the tag (kept out of the zip by `.distignore`). The listing is made to match that folder exactly, so an image uploaded to SVN by hand is deleted unless it is committed there too.
 - A version already in SVN `tags/` is skipped, so a re-run never commits twice.
 - It needs two repository secrets, **`SVN_USERNAME`** and **`SVN_PASSWORD`**: the wordpress.org account that owns the plugin, and its SVN password from that account's profile. Without them it does nothing and says so.
 

@@ -54,10 +54,11 @@ jobs:
             echo "ready=yes" >> "$GITHUB_OUTPUT"
           fi
 
+      # Only the listing images come from this checkout, and they follow main rather than the tag.
       - uses: actions/checkout@v4
         if: steps.credentials.outputs.ready == 'yes'
         with:
-          ref: v${{ steps.version.outputs.version }}
+          ref: ${{ github.event.repository.default_branch }}
 
       - name: Unpack the released zip
         if: steps.credentials.outputs.ready == 'yes'
