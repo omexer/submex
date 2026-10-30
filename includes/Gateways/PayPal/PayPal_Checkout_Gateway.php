@@ -3,6 +3,7 @@
 namespace Submex\Gateways\PayPal;
 
 use Submex\Admin\Settings_Page;
+use Submex\Domain\Currency;
 use Submex\Product\Line_Terms;
 use Submex\Product\Subscription_Product;
 
@@ -83,6 +84,12 @@ class PayPal_Checkout_Gateway extends \WC_Payment_Gateway {
 		// API, where is_checkout() is false, and the answer there has to be the same one
 		// the classic checkout gets. No cart at all means the admin order screen, where
 		// the method must not be hidden.
+		$paying = $this->order_being_paid();
+
+		if ( $paying ) {
+			return 'submex_renewal' !== $paying->get_created_via() && $this->subscription_item_in( $paying ) && parent::is_available();
+		}
+
 		$cart = function_exists( 'WC' ) && WC() ? WC()->cart : null;
 
 		if ( ! $cart || $cart->is_empty() ) {
@@ -117,6 +124,11 @@ class PayPal_Checkout_Gateway extends \WC_Payment_Gateway {
 			return $this->abort( $order, __( 'This order does not contain a subscription.', 'submex' ) );
 		}
 
+		$pricing = $this->pricing_for( $order, $item, $terms );
+		if ( null === $pricing ) {
+			return $this->abort( $order, __( 'This order costs less than one renewal, which a PayPal subscription cannot bill. Use another payment method.', 'submex' ) );
+		}
+
 		$plan = $this->plans->plan_for( $product, $terms );
 		if ( ! $plan['ok'] ) {
 			return $this->abort( $order, $plan['error'] );
@@ -126,6 +138,7 @@ class PayPal_Checkout_Gateway extends \WC_Payment_Gateway {
 			'/v1/billing/subscriptions',
 			array(
 				'plan_id'             => $plan['plan_id'],
+				'plan'                => $pricing,
 				'custom_id'           => (string) $order->get_id(),
 				'subscriber'          => array(
 					'name'          => array(
@@ -248,6 +261,52 @@ class PayPal_Checkout_Gateway extends \WC_Payment_Gateway {
 		$subscription = wc_get_order( $id );
 
 		return $subscription instanceof \Submex\Domain\Subscription ? $subscription : null;
+	}
+
+	/**
+	 * The plan is cached per product, so this order's own amounts override it: each cycle
+	 * bills what a renewal will cost, and the setup fee takes the rest of today's total.
+	 *
+	 * @return array<string, mixed>|null Null when today's total is less than the first cycle PayPal would take.
+	 */
+	private function pricing_for( \WC_Order $order, \WC_Order_Item_Product $item, Line_Terms $terms ): ?array {
+		$currency     = $order->get_currency();
+		$subscription = $this->subscription_for( $order );
+		$recurring    = $subscription
+			? Currency::minor_units( $subscription->get_total(), $currency )
+			: Currency::minor_units( $terms->recurring_price()->decimal(), $currency ) * max( 1, (int) $item->get_quantity() );
+		$has_trial    = $terms->schedule()->has_trial();
+		$setup        = Currency::minor_units( $order->get_total(), $currency ) - ( $has_trial ? 0 : $recurring );
+
+		if ( $setup < 0 || $recurring <= 0 ) {
+			return null;
+		}
+
+		$money = static fn( int $minor ): array => array(
+			'value'         => wc_format_decimal( $minor / ( 10 ** Currency::decimals( $currency ) ), Currency::decimals( $currency ) ),
+			'currency_code' => $currency,
+		);
+
+		return array(
+			'billing_cycles'      => array(
+				array(
+					'sequence'       => $has_trial ? 2 : 1,
+					'pricing_scheme' => array( 'fixed_price' => $money( $recurring ) ),
+				),
+			),
+			'payment_preferences' => array( 'setup_fee' => $money( $setup ) ),
+		);
+	}
+
+	private function order_being_paid(): ?\WC_Order {
+		if ( ! is_wc_endpoint_url( 'order-pay' ) ) {
+			return null;
+		}
+
+		global $wp;
+		$order = wc_get_order( absint( $wp->query_vars['order-pay'] ?? 0 ) );
+
+		return $order instanceof \WC_Order ? $order : null;
 	}
 
 	private function subscription_item_in( \WC_Order $order ): ?\WC_Order_Item_Product {
