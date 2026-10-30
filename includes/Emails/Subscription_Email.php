@@ -34,6 +34,35 @@ abstract class Subscription_Email extends \WC_Email {
 		parent::__construct();
 	}
 
+	public function init_form_fields(): void {
+		parent::init_form_fields();
+
+		if ( $this->customer_email ) {
+			return;
+		}
+
+		$this->form_fields = array_slice( $this->form_fields, 0, 1, true ) + array(
+			'recipient' => array(
+				'title'       => __( 'Recipient(s)', 'submex' ),
+				'type'        => 'text',
+				/* translators: %s: default recipient address */
+				'description' => sprintf( __( 'Separate several addresses with commas. Defaults to %s, where WooCommerce sends new order emails.', 'submex' ), '<code>' . esc_html( self::store_recipient() ) . '</code>' ),
+				'placeholder' => '',
+				'default'     => '',
+				'desc_tip'    => false,
+			),
+		) + $this->form_fields;
+	}
+
+	/**
+	 * Where the store already gets its order emails, so subscription news goes to the same inbox.
+	 */
+	private static function store_recipient(): string {
+		$new_order = (array) get_option( 'woocommerce_new_order_settings', array() );
+
+		return (string) ( ( $new_order['recipient'] ?? '' ) ?: get_option( 'admin_email' ) );
+	}
+
 	/**
 	 * One-sentence statement of what happened. Rendered as the lead paragraph.
 	 */
@@ -75,7 +104,7 @@ abstract class Subscription_Email extends \WC_Email {
 
 		$this->recipient = $this->customer_email
 			? $subscription->get_billing_email()
-			: $this->get_option( 'recipient', get_option( 'admin_email' ) );
+			: ( $this->get_option( 'recipient' ) ?: self::store_recipient() );
 
 		return (bool) $this->recipient;
 	}
