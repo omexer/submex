@@ -279,10 +279,13 @@ $text = $cart_text();
 $check( 'the disclosure states the trial and what follows', in_array( '7 days free', $text['blocks']['lines'], true ) && in_array( 'Then $24.00 every month', $text['blocks']['lines'], true ), $text['blocks']['lines'] );
 $started = time();
 list( $order, $sub ) = $checkout();
-$equals( 'the subscription is trialling, monthly', array( $sub ? $sub->get_status_enum() : null, $sub ? $sub->get_billing_period() : null ), array( Subscription_Status::Trialling, 'month' ) );
+$equals( 'the subscription is monthly, pending until its checkout is paid', array( $sub ? $sub->get_status_enum() : null, $sub ? $sub->get_billing_period() : null ), array( Subscription_Status::Pending, 'month' ) );
 $near( 'the trial ends in 7 days', (string) ( $sub ? $sub->get_trial_end() : '' ), $started + 7 * DAY_IN_SECONDS );
 $near( 'and the first renewal is that day', (string) ( $sub ? $sub->get_next_payment() : '' ), $started + 7 * DAY_IN_SECONDS );
 $equals( 'the zero-total order still asks for payment', $order->needs_payment(), true );
+$order->payment_complete( 'harness-trial' );
+$sub = $sub ? wc_get_order( $sub->get_id() ) : null;
+$equals( 'paid, the trial starts', $sub ? $sub->get_status_enum() : null, Subscription_Status::Trialling );
 
 // ------------------------------------------------------------------ one subscription per order
 

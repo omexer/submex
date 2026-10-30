@@ -19,6 +19,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Subscription_Factory {
 
+	private const META_ACTIVATED = '_submex_activated';
+
 	public function __construct(
 		private readonly Charge_Slot_Repository $slots,
 		private readonly Activity_Repository $activity,
@@ -32,6 +34,7 @@ class Subscription_Factory {
 		add_action( 'woocommerce_store_api_checkout_order_processed', array( $this, 'from_store_api' ), 10, 1 );
 		add_action( 'woocommerce_order_status_processing', array( $this, 'activate_for_order' ), 20, 1 );
 		add_action( 'woocommerce_order_status_completed', array( $this, 'activate_for_order' ), 20, 1 );
+		add_action( 'woocommerce_order_status_cancelled', array( $this, 'cancel_for_order' ), 20, 1 );
 	}
 
 	/**
@@ -120,9 +123,8 @@ class Subscription_Factory {
 		);
 		$subscription->add_item( $copy );
 
-		$subscription->transition_to(
-			$schedule->has_trial() ? Subscription_Status::Trialling : Subscription_Status::Pending
-		);
+		// Pending until the order is paid, trial or not: a trial's access is granted by a completed checkout, not a started one.
+		$subscription->transition_to( Subscription_Status::Pending );
 		// WooCommerce's own flag, which calculate_taxes() reads; checkout set it for an exempt customer.
 		$subscription->update_meta_data( 'is_vat_exempt', 'yes' === $order->get_meta( 'is_vat_exempt' ) ? 'yes' : 'no' );
 
@@ -217,14 +219,38 @@ class Subscription_Factory {
 		$status = $subscription->get_status_enum();
 		$target = $subscription->get_trial_end() ? Subscription_Status::Trialling : Subscription_Status::Active;
 
-		if ( $status && $status->can_transition_to( $target ) ) {
-			$subscription->transition_to( $target );
-			$subscription->save();
+		// Processing then completed both land here; only the first is the start. A trial from before 1.2.1 was created already trialling.
+		if ( 'yes' === $subscription->get_meta( self::META_ACTIVATED ) || ! in_array( $status, array( Subscription_Status::Pending, Subscription_Status::Trialling ), true ) ) {
+			return;
 		}
+
+		if ( $status->can_transition_to( $target ) ) {
+			$subscription->transition_to( $target );
+		}
+
+		$subscription->update_meta_data( self::META_ACTIVATED, 'yes' );
+		$subscription->save();
 
 		$this->scheduler->schedule_next( $subscription );
 
 		do_action( 'submex_subscription_activated', $subscription );
+	}
+
+	/**
+	 * A checkout abandoned at the gateway, or cancelled unpaid, never started what it created.
+	 *
+	 * @param int $order_id
+	 */
+	public function cancel_for_order( $order_id ): void {
+		$order        = wc_get_order( (int) $order_id );
+		$subscription = $order instanceof \WC_Order ? $this->existing_for_order( $order ) : null;
+
+		if ( ! $subscription || $order->get_id() !== $subscription->get_parent_order_id() || Subscription_Status::Pending !== $subscription->get_status_enum() ) {
+			return;
+		}
+
+		$subscription->transition_to( Subscription_Status::Cancelled, sprintf( 'Its order #%s was cancelled before it was paid.', $order->get_order_number() ) );
+		$subscription->save();
 	}
 
 	private function existing_for_order( \WC_Order $order ): ?Subscription {

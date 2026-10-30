@@ -60,7 +60,6 @@ class Mailer {
 		}
 
 		add_action( 'submex_subscription_activated', array( $this, 'on_activated' ), 10, 1 );
-		add_action( 'submex_subscription_created', array( $this, 'on_created' ), 10, 2 );
 		add_action( 'submex_renewal_succeeded', array( $this, 'on_renewal_paid' ), 10, 2 );
 		add_action( 'submex_renewal_failed', array( $this, 'on_renewal_failed' ), 10, 3 );
 		add_action( 'submex_gateway_payment_failed', array( $this, 'on_gateway_payment_failed' ), 10, 1 );
@@ -95,9 +94,7 @@ class Mailer {
 
 	public function on_activated( Subscription $subscription ): void {
 		$this->dispatch( 'Subscription_Started', array( $subscription ) );
-	}
-
-	public function on_created( Subscription $subscription, \WC_Order $order ): void {
+		// Here, not at checkout: a declined or abandoned checkout has started nothing.
 		$this->dispatch( 'Merchant_New_Subscription', array( $subscription ) );
 	}
 

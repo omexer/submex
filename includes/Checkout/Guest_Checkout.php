@@ -30,6 +30,8 @@ class Guest_Checkout {
 
 	private const NOTICE_UNREACHABLE = 'submex_guest_checkout_unreachable';
 
+	private const SESSION_ACCOUNT = 'submex_checkout_account';
+
 	public function register(): void {
 		add_action( 'woocommerce_checkout_process', array( $this, 'validate_classic' ) );
 		add_action( 'woocommerce_store_api_cart_errors', array( $this, 'validate_store_api' ), 10, 1 );
@@ -128,7 +130,7 @@ class Guest_Checkout {
 
 		// Letting this through would create a subscription owned by nobody, which the
 		// customer could never see or cancel. Better to stop here than to sell that.
-		if ( '' !== $email && email_exists( $email ) ) {
+		if ( '' !== $email && email_exists( $email ) && ! $this->created_here( $email ) ) {
 			return __( 'You already have an account with this email address. Please log in to buy a subscription.', 'submex' );
 		}
 
@@ -157,7 +159,7 @@ class Guest_Checkout {
 	 */
 	private function create_account( string $email, \WC_Order $order ): int {
 		if ( email_exists( $email ) ) {
-			return 0;
+			return $this->created_here( $email );
 		}
 
 		$username = wc_create_new_customer_username(
@@ -184,6 +186,19 @@ class Guest_Checkout {
 
 		$order->add_order_note( __( 'An account was created for this customer so they can manage their subscription.', 'submex' ) );
 
+		if ( function_exists( 'WC' ) && WC()->session ) {
+			WC()->session->set( self::SESSION_ACCOUNT, (int) $user_id );
+		}
+
 		return (int) $user_id;
+	}
+
+	/**
+	 * The account this same checkout created on an attempt whose payment failed, which the buyer may use again.
+	 */
+	private function created_here( string $email ): int {
+		$user_id = function_exists( 'WC' ) && WC()->session ? (int) WC()->session->get( self::SESSION_ACCOUNT, 0 ) : 0;
+
+		return $user_id && email_exists( $email ) === $user_id ? $user_id : 0;
 	}
 }
