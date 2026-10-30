@@ -3,7 +3,6 @@
 namespace Submex\Gateways\Stripe;
 
 use Submex\Admin\Settings_Page;
-use Submex\Domain\Money;
 use Submex\Product\Subscription_Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -133,9 +132,9 @@ class Stripe_Checkout_Gateway extends \WC_Payment_Gateway {
 			'metadata'            => array( 'submex_order' => (string) $order->get_id() ),
 		);
 
-		$amount = Money::from_decimal( $order->get_total(), $order->get_currency() );
+		$amount = Stripe_Gateway::stripe_amount( $order->get_total(), $order->get_currency() );
 
-		if ( $amount->minor() <= 0 ) {
+		if ( $amount <= 0 ) {
 			return $common + array(
 				'mode'              => 'setup',
 				'currency'          => strtolower( $order->get_currency() ),
@@ -152,7 +151,7 @@ class Stripe_Checkout_Gateway extends \WC_Payment_Gateway {
 					'quantity'   => 1,
 					'price_data' => array(
 						'currency'     => strtolower( $order->get_currency() ),
-						'unit_amount'  => $amount->minor(),
+						'unit_amount'  => $amount,
 						'product_data' => array(
 							'name' => sprintf(
 								/* translators: %s: order number */

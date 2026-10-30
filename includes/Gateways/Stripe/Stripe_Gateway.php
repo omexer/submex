@@ -2,6 +2,7 @@
 
 namespace Submex\Gateways\Stripe;
 
+use Submex\Domain\Currency;
 use Submex\Domain\Money;
 use Submex\Domain\Subscription;
 use Submex\Gateways\Charge_Result;
@@ -26,6 +27,9 @@ class Stripe_Gateway implements Recurring_Gateway {
 
 	public const META_CUSTOMER = '_submex_stripe_customer';
 	public const META_METHOD   = '_submex_stripe_payment_method';
+
+	/** Stripe's own list, which differs from ISO 4217: it bills HUF and TWD in cents, for one. */
+	private const ZERO_DECIMAL = array( 'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF' );
 
 	/** Codes Stripe considers permanent; retrying these only annoys the customer. */
 	private const HARD_DECLINES = array(
@@ -99,12 +103,10 @@ class Stripe_Gateway implements Recurring_Gateway {
 			$method   = (string) $subscription->get_meta( self::META_METHOD );
 		}
 
-		$amount = Money::from_decimal( $renewal->get_total(), $renewal->get_currency() );
-
 		$response = $this->client->post(
 			'/v1/payment_intents',
 			array(
-				'amount'         => $this->stripe_amount( $amount, $renewal->get_currency() ),
+				'amount'         => self::stripe_amount( $renewal->get_total(), $renewal->get_currency() ),
 				'currency'       => strtolower( $renewal->get_currency() ),
 				'customer'       => $customer,
 				'payment_method' => $method,
@@ -265,16 +267,23 @@ class Stripe_Gateway implements Recurring_Gateway {
 	}
 
 	/**
-	 * Zero-decimal currencies (JPY, KRW) are sent as whole units, everything else in minor.
+	 * Stripe's units, not the store's display decimals: whole units for its zero-decimal list,
+	 * and three-decimal currencies rounded to a multiple of 10, which Stripe insists on.
+	 *
+	 * @param string|float|int $amount
 	 */
-	private function stripe_amount( Money $amount, string $currency ): int {
-		$zero_decimal = array( 'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF' );
+	public static function stripe_amount( $amount, string $currency ): int {
+		$currency = strtoupper( $currency );
 
-		if ( in_array( strtoupper( $currency ), $zero_decimal, true ) ) {
-			return (int) round( (float) $amount->decimal() );
+		if ( in_array( $currency, self::ZERO_DECIMAL, true ) ) {
+			return (int) round( (float) $amount );
 		}
 
-		return $amount->minor();
+		if ( 3 === Currency::decimals( $currency ) ) {
+			return (int) ( round( Currency::minor_units( $amount, $currency ) / 10 ) * 10 );
+		}
+
+		return Money::from_decimal( $amount, $currency, 2 )->minor();
 	}
 
 	private function is_recent( array $intent ): bool {
