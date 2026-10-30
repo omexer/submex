@@ -63,6 +63,7 @@ class Mailer {
 		add_action( 'submex_subscription_created', array( $this, 'on_created' ), 10, 2 );
 		add_action( 'submex_renewal_succeeded', array( $this, 'on_renewal_paid' ), 10, 2 );
 		add_action( 'submex_renewal_failed', array( $this, 'on_renewal_failed' ), 10, 3 );
+		add_action( 'submex_gateway_payment_failed', array( $this, 'on_gateway_payment_failed' ), 10, 1 );
 		add_action( 'submex_renewal_requires_action', array( $this, 'on_requires_action' ), 10, 3 );
 		add_action( 'submex_subscription_cancelled', array( $this, 'on_cancelled' ), 10, 1 );
 		add_action( 'submex_renewal_due_soon', array( $this, 'on_due_soon' ), 10, 1 );
@@ -106,6 +107,13 @@ class Mailer {
 
 	public function on_renewal_failed( Subscription $subscription, \WC_Order $order, Charge_Result $result ): void {
 		$this->dispatch( 'Payment_Failed', array( $subscription, $order ) );
+	}
+
+	/**
+	 * A gateway that bills on its own schedule failed to: there is no renewal order to pay.
+	 */
+	public function on_gateway_payment_failed( Subscription $subscription ): void {
+		$this->dispatch( 'Payment_Failed', array( $subscription, null ) );
 	}
 
 	public function on_requires_action( Subscription $subscription, \WC_Order $order, Charge_Result $result ): void {

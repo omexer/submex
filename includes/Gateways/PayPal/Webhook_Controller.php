@@ -142,8 +142,8 @@ class Webhook_Controller {
 			'PAYMENT.SALE.COMPLETED'              => $this->record_payment( $subscription, $event ),
 			'BILLING.SUBSCRIPTION.ACTIVATED'      => $this->set_status( $subscription, Subscription_Status::Active ),
 			'BILLING.SUBSCRIPTION.SUSPENDED',
-			'BILLING.SUBSCRIPTION.PAYMENT.FAILED' => $this->set_status( $subscription, Subscription_Status::OnHold ),
-			'BILLING.SUBSCRIPTION.CANCELLED'      => $this->set_status( $subscription, Subscription_Status::Cancelled ),
+			'BILLING.SUBSCRIPTION.PAYMENT.FAILED' => $this->suspend( $subscription ),
+			'BILLING.SUBSCRIPTION.CANCELLED'      => $this->cancel( $subscription ),
 			'BILLING.SUBSCRIPTION.EXPIRED'        => $this->set_status( $subscription, Subscription_Status::Expired ),
 			default                               => null,
 		};
@@ -167,8 +167,14 @@ class Webhook_Controller {
 			return;
 		}
 
+		$now = new \DateTimeImmutable( 'now', new \DateTimeZone( 'UTC' ) );
+
+		if ( $this->is_initial_payment( $subscription, $now ) ) {
+			$this->record_initial_payment( $subscription, $txn_id );
+			return;
+		}
+
 		$schedule    = Billing_Schedule::from_subscription( $subscription );
-		$now         = new \DateTimeImmutable( 'now', new \DateTimeZone( 'UTC' ) );
 		$covers_from = $now;
 		$covers_to   = $schedule->next_date_from( $covers_from );
 
@@ -215,6 +221,32 @@ class Webhook_Controller {
 	}
 
 	/**
+	 * PayPal reports the payment taken at approval like any other, but checkout's order already holds it.
+	 */
+	private function is_initial_payment( Subscription $subscription, \DateTimeImmutable $now ): bool {
+		$initial = $this->slots->find( $subscription->get_id(), 0 );
+
+		return $initial
+			&& 1 === $this->slots->next_index( $subscription->get_id() )
+			&& $now < new \DateTimeImmutable( (string) $initial->covers_to_gmt, new \DateTimeZone( 'UTC' ) );
+	}
+
+	private function record_initial_payment( Subscription $subscription, string $txn_id ): void {
+		$parent = $subscription->get_parent_order_id() ? wc_get_order( $subscription->get_parent_order_id() ) : null;
+
+		if ( $parent instanceof \WC_Order && '' !== $txn_id && '' === (string) $parent->get_meta( self::META_TXN_ID ) ) {
+			$parent->update_meta_data( self::META_TXN_ID, $txn_id );
+			$parent->save();
+		}
+
+		$this->activity->log(
+			$subscription->get_id(),
+			Activity_Repository::TYPE_CHARGE_ATTEMPT,
+			sprintf( 'PayPal payment %s is the first payment, already paid by the checkout order.', $txn_id )
+		);
+	}
+
+	/**
 	 * Has this PayPal transaction already produced a renewal order?
 	 */
 	private function already_recorded( Subscription $subscription, string $txn_id ): bool {
@@ -233,14 +265,32 @@ class Webhook_Controller {
 		return ! empty( $existing );
 	}
 
-	private function set_status( Subscription $subscription, Subscription_Status $to ): void {
-		$current = $subscription->get_status_enum();
+	private function suspend( Subscription $subscription ): void {
+		if ( $this->set_status( $subscription, Subscription_Status::OnHold ) ) {
+			do_action( 'submex_gateway_payment_failed', $subscription );
+		}
+	}
 
-		if ( $current && $current !== $to && $current->can_transition_to( $to ) ) {
+	private function cancel( Subscription $subscription ): void {
+		if ( $this->set_status( $subscription, Subscription_Status::Cancelled ) ) {
+			do_action( 'submex_subscription_cancelled', $subscription, 'paypal' );
+		}
+	}
+
+	/**
+	 * @return bool Whether the status changed.
+	 */
+	private function set_status( Subscription $subscription, Subscription_Status $to ): bool {
+		$current = $subscription->get_status_enum();
+		$changed = $current && $current !== $to && $current->can_transition_to( $to );
+
+		if ( $changed ) {
 			$subscription->transition_to( $to );
 		}
 
 		$subscription->save();
+
+		return $changed;
 	}
 
 	/**

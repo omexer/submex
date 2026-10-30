@@ -30,7 +30,7 @@ class Payment_Failed extends Subscription_Email {
 		return __( "We couldn't process your payment", 'submex' );
 	}
 
-	public function trigger( Subscription $subscription, \WC_Order $order ): void {
+	public function trigger( Subscription $subscription, ?\WC_Order $order = null ): void {
 		if ( $this->prepare( $subscription, $order ) ) {
 			$this->send_now();
 		}
@@ -39,6 +39,15 @@ class Payment_Failed extends Subscription_Email {
 	protected function intro(): string {
 		$amount = $this->amount( $this->related_order ? $this->related_order->get_total() : $this->subscription->get_total() );
 		$ends   = $this->subscription->in_grace() ? $this->subscription->grace_ends_at() : null;
+
+		if ( ! $this->related_order ) {
+			return sprintf(
+				/* translators: 1: amount, 2: payment method, such as PayPal */
+				__( "%2\$s couldn't collect %1\$s for your subscription, so it is on hold. Check the payment method in your %2\$s account; %2\$s will try again.", 'submex' ),
+				$amount,
+				$this->subscription->get_payment_method_title() ?: 'PayPal'
+			);
+		}
 
 		if ( null !== $ends ) {
 			return sprintf(
@@ -59,7 +68,7 @@ class Payment_Failed extends Subscription_Email {
 	protected function facts(): array {
 		return array(
 			__( 'Subscription', 'submex' ) => '#' . $this->subscription->get_id(),
-			__( 'Amount due', 'submex' )   => $this->amount( $this->related_order ? $this->related_order->get_total() : 0 ),
+			__( 'Amount due', 'submex' )   => $this->amount( $this->related_order ? $this->related_order->get_total() : $this->subscription->get_total() ),
 		);
 	}
 
