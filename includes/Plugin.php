@@ -214,6 +214,9 @@ final class Plugin {
 
 			$this->services['stripe_client'] = Stripe_Client::from_settings();
 
+			add_action( Stripe_Gateway::ACTION_CHECK_INTENT, fn( $order_id, $intent_id ) => ( new Stripe_Gateway( $this->services['stripe_client'] ) )->check_intent( $order_id, $intent_id ), 10, 2 );
+			add_action( Stripe_Checkout_Gateway::ACTION_CHECK_SESSION, fn( $order_id ) => ( new Stripe_Checkout_Gateway( $this->services['stripe_client'] ) )->check_session( $order_id ) );
+
 			add_filter(
 				'woocommerce_payment_gateways',
 				function ( array $gateways ): array {
@@ -231,7 +234,8 @@ final class Plugin {
 					$registry->add( new PayPal_Gateway( $this->services['paypal_client'] ) );
 				}
 
-				if ( isset( $this->services['stripe_client'] ) && $this->services['stripe_client']->is_enabled() ) {
+				// Configured, not switched on: the switch stops new sign-ups, while saved cards keep renewing.
+				if ( isset( $this->services['stripe_client'] ) && $this->services['stripe_client']->is_configured() ) {
 					$registry->add( new Stripe_Gateway( $this->services['stripe_client'] ) );
 				}
 			}

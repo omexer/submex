@@ -20,6 +20,8 @@ class Stripe_Checkout_Gateway extends \WC_Payment_Gateway {
 
 	public const ID = 'submex_stripe';
 
+	public const ACTION_CHECK_SESSION = 'submex_stripe_check_session';
+
 	public function __construct( private readonly Stripe_Client $client ) {
 		$this->id                 = self::ID;
 		$this->method_title       = __( 'Stripe Subscriptions (Submex)', 'submex' );
@@ -66,13 +68,18 @@ class Stripe_Checkout_Gateway extends \WC_Payment_Gateway {
 	}
 
 	public function is_available(): bool {
-		if ( 'yes' !== $this->enabled || ! $this->client->is_configured() ) {
+		if ( ! $this->client->is_configured() ) {
 			return false;
 		}
 
 		// Paying an existing order, such as a declined renewal, has nothing to do with what is in the cart.
 		if ( is_wc_endpoint_url( 'order-pay' ) ) {
-			return parent::is_available();
+			// Switched off for new sign-ups, a renewal the saved card could not pay still needs a way to be paid.
+			return ( 'yes' === $this->enabled || $this->paying_renewal() ) && $this->is_enabled_for_order_pay();
+		}
+
+		if ( 'yes' !== $this->enabled ) {
+			return false;
 		}
 
 		// Deliberately the cart, not is_checkout(): the block checkout asks over the Store
@@ -85,6 +92,25 @@ class Stripe_Checkout_Gateway extends \WC_Payment_Gateway {
 		}
 
 		return Subscription_Product::cart_has_subscription() && parent::is_available();
+	}
+
+	private function paying_renewal(): bool {
+		global $wp;
+		$order = wc_get_order( absint( $wp->query_vars['order-pay'] ?? 0 ) );
+
+		return $order instanceof \WC_Order && 'submex_renewal' === $order->get_created_via();
+	}
+
+	/**
+	 * parent::is_available() without the enabled flag, which paying_renewal() may override.
+	 */
+	private function is_enabled_for_order_pay(): bool {
+		$enabled       = $this->enabled;
+		$this->enabled = 'yes';
+		$available     = parent::is_available();
+		$this->enabled = $enabled;
+
+		return $available;
 	}
 
 	/**
@@ -108,6 +134,9 @@ class Stripe_Checkout_Gateway extends \WC_Payment_Gateway {
 
 		$order->update_meta_data( '_submex_stripe_session', $response['body']['id'] );
 		$order->save();
+
+		// A customer who pays and closes the tab never comes back to say so, and Stripe sends no webhook here.
+		self::schedule_session_check( $order->get_id(), 20 * MINUTE_IN_SECONDS );
 
 		return array(
 			'result'   => 'success',
@@ -145,7 +174,10 @@ class Stripe_Checkout_Gateway extends \WC_Payment_Gateway {
 		return $common + array(
 			'mode'                => 'payment',
 			// Keep the card on file so renewals can be charged off-session later.
-			'payment_intent_data' => array( 'setup_future_usage' => 'off_session' ),
+			'payment_intent_data' => array(
+				'setup_future_usage' => 'off_session',
+				'metadata'           => array( 'submex_order' => (string) $order->get_id() ),
+			),
 			'line_items'          => array(
 				array(
 					'quantity'   => 1,
@@ -237,6 +269,84 @@ class Stripe_Checkout_Gateway extends \WC_Payment_Gateway {
 		}
 
 		$order->payment_complete( $reference );
+	}
+
+	/**
+	 * Settle a Checkout payment the customer never returned from, until its session closes.
+	 *
+	 * @param int|string $order_id
+	 */
+	public function check_session( $order_id ): void {
+		$order      = wc_get_order( (int) $order_id );
+		$session_id = $order instanceof \WC_Order ? (string) $order->get_meta( '_submex_stripe_session' ) : '';
+
+		if ( '' === $session_id || $order->is_paid() ) {
+			return;
+		}
+
+		$session = $this->client->get( '/v1/checkout/sessions/' . rawurlencode( $session_id ) );
+		$body    = $session['ok'] ? (array) $session['body'] : array();
+
+		if ( $body && $this->session_is_settled( $body ) ) {
+			$this->complete_from_session( $order );
+			return;
+		}
+
+		// Stripe closes a session after a day; until then it may still be paid, and a failed lookup proves nothing.
+		$created = $order->get_date_created() ? $order->get_date_created()->getTimestamp() : 0;
+
+		if ( ( ! $body || 'open' === ( $body['status'] ?? '' ) || 'complete' === ( $body['status'] ?? '' ) ) && time() - $created < 2 * DAY_IN_SECONDS ) {
+			self::schedule_session_check( $order->get_id(), HOUR_IN_SECONDS );
+		}
+	}
+
+	private static function schedule_session_check( int $order_id, int $delay ): void {
+		if ( function_exists( 'as_schedule_single_action' ) ) {
+			as_schedule_single_action( time() + $delay, self::ACTION_CHECK_SESSION, array( 'order_id' => $order_id ), \Submex\Billing\Renewal_Scheduler::GROUP );
+		}
+	}
+
+	/**
+	 * @param int        $order_id
+	 * @param float|null $amount
+	 * @param string     $reason
+	 * @return bool|\WP_Error
+	 */
+	public function process_refund( $order_id, $amount = null, $reason = '' ) {
+		$order  = wc_get_order( $order_id );
+		$intent = $order instanceof \WC_Order ? (string) $order->get_transaction_id() : '';
+
+		if ( ! str_starts_with( $intent, 'pi_' ) ) {
+			return new \WP_Error( 'submex_stripe_refund', __( 'This order has no Stripe payment to refund.', 'submex' ) );
+		}
+
+		$params = array(
+			'payment_intent' => $intent,
+			'metadata'       => array( 'submex_order' => (string) $order->get_id() ),
+		);
+
+		if ( null !== $amount ) {
+			$params['amount'] = Stripe_Gateway::stripe_amount( $amount, $order->get_currency() );
+		}
+
+		// WooCommerce records the refund before asking the gateway, so the newest one is this one.
+		$refunds  = $order->get_refunds();
+		$response = $this->client->post( '/v1/refunds', $params, 'submex_refund_' . ( $refunds ? $refunds[0]->get_id() : $order->get_id() . '_' . time() ) );
+
+		if ( ! $response['ok'] ) {
+			return new \WP_Error( 'submex_stripe_refund', $response['error'] );
+		}
+
+		$order->add_order_note(
+			sprintf(
+				/* translators: 1: refund amount, 2: Stripe refund ID */
+				__( 'Refunded %1$s through Stripe (%2$s).', 'submex' ),
+				wc_price( (float) ( $amount ?? $order->get_total() ), array( 'currency' => $order->get_currency() ) ),
+				(string) ( $response['body']['id'] ?? '' )
+			)
+		);
+
+		return true;
 	}
 
 	private function flag_second_capture( \WC_Order $order, string $reference ): void {

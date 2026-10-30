@@ -290,11 +290,12 @@ class Settings extends \WC_Settings_Page {
 				'id'    => 'submex_stripe_title',
 			),
 			array(
-				'title'   => __( 'Enable Stripe', 'submex' ),
-				'desc'    => __( 'Offer card payments for subscription purchases', 'submex' ),
-				'id'      => 'submex_stripe_enabled',
-				'type'    => 'checkbox',
-				'default' => 'no',
+				'title'    => __( 'Enable Stripe', 'submex' ),
+				'desc'     => __( 'Offer card payments for subscription purchases', 'submex' ),
+				'desc_tip' => __( 'Turning this off stops new sign-ups with Stripe. Subscriptions already paying by card keep renewing while the keys below are saved.', 'submex' ),
+				'id'       => 'submex_stripe_enabled',
+				'type'     => 'checkbox',
+				'default'  => 'no',
 			),
 			array(
 				'title'   => __( 'Environment', 'submex' ),

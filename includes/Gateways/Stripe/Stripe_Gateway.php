@@ -2,6 +2,7 @@
 
 namespace Submex\Gateways\Stripe;
 
+use Submex\Billing\Renewal_Scheduler;
 use Submex\Domain\Currency;
 use Submex\Domain\Money;
 use Submex\Domain\Subscription;
@@ -27,6 +28,8 @@ class Stripe_Gateway implements Recurring_Gateway {
 
 	public const META_CUSTOMER = '_submex_stripe_customer';
 	public const META_METHOD   = '_submex_stripe_payment_method';
+
+	public const ACTION_CHECK_INTENT = 'submex_stripe_check_intent';
 
 	/** Stripe's own list, which differs from ISO 4217: it bills HUF and TWD in cents, for one. */
 	private const ZERO_DECIMAL = array( 'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF' );
@@ -89,6 +92,12 @@ class Stripe_Gateway implements Recurring_Gateway {
 	 * makes SCA exemptions apply. Without it European cards challenge on every renewal.
 	 */
 	public function charge_renewal( Subscription $subscription, \WC_Order $renewal, string $idempotency_key ): Charge_Result {
+		$paid = $this->paid_on_pay_page( $subscription, $renewal );
+
+		if ( $paid ) {
+			return $paid;
+		}
+
 		$customer = (string) $subscription->get_meta( self::META_CUSTOMER );
 		$method   = (string) $subscription->get_meta( self::META_METHOD );
 
@@ -116,6 +125,7 @@ class Stripe_Gateway implements Recurring_Gateway {
 				'metadata'       => array(
 					'submex_subscription' => (string) $subscription->get_id(),
 					'submex_order'        => (string) $renewal->get_id(),
+					'submex_key'          => $idempotency_key,
 				),
 			),
 			$idempotency_key
@@ -125,14 +135,12 @@ class Stripe_Gateway implements Recurring_Gateway {
 	}
 
 	/**
-	 * Ask Stripe what happened to a charge we never got an answer for.
-	 *
-	 * Looks the intent up by our idempotency key rather than assuming, so a timeout can
-	 * never become a second charge.
+	 * Ask Stripe what happened to a charge we never got an answer for, found by its own
+	 * idempotency key: any other payment for the subscription belongs to another period.
 	 */
 	public function reconcile( Subscription $subscription, string $idempotency_key ): ?Charge_Result {
 		$search = $this->client->get(
-			'/v1/payment_intents/search?query=' . rawurlencode( sprintf( 'metadata["submex_subscription"]:"%d"', $subscription->get_id() ) ) . '&limit=5'
+			'/v1/payment_intents/search?query=' . rawurlencode( sprintf( 'metadata["submex_key"]:"%s"', $idempotency_key ) ) . '&limit=5'
 		);
 
 		if ( ! $search['ok'] ) {
@@ -140,13 +148,91 @@ class Stripe_Gateway implements Recurring_Gateway {
 		}
 
 		foreach ( $search['body']['data'] ?? array() as $intent ) {
-			if ( 'succeeded' === ( $intent['status'] ?? '' ) && $this->is_recent( $intent ) ) {
+			if ( 'succeeded' === ( $intent['status'] ?? '' ) ) {
 				return Charge_Result::success( (string) $intent['id'] );
+			}
+
+			if ( 'processing' === ( $intent['status'] ?? '' ) ) {
+				self::schedule_intent_check( (int) ( $intent['metadata']['submex_order'] ?? 0 ), (string) $intent['id'] );
+
+				return Charge_Result::pending( (string) $intent['id'], 'Stripe is still processing the payment.' );
 			}
 		}
 
 		// No matching successful charge, so nothing landed and the slot is safe to retry.
 		return null;
+	}
+
+	/**
+	 * Paid by the customer through Stripe Checkout on its pay page, whether or not they came back to say so.
+	 */
+	private function paid_on_pay_page( Subscription $subscription, \WC_Order $renewal ): ?Charge_Result {
+		$session_id = (string) $renewal->get_meta( '_submex_stripe_session' );
+
+		if ( '' === $session_id ) {
+			return null;
+		}
+
+		$session = $this->client->get( '/v1/checkout/sessions/' . rawurlencode( $session_id ) . '?expand[]=payment_intent' );
+
+		if ( ! $session['ok'] || 'paid' !== ( $session['body']['payment_status'] ?? '' ) ) {
+			return null;
+		}
+
+		$intent = (array) ( $session['body']['payment_intent'] ?? array() );
+		$method = (string) ( $intent['payment_method'] ?? '' );
+
+		// The card they paid with is the one they chose; renewals follow it.
+		if ( '' !== $method && '' !== (string) ( $session['body']['customer'] ?? '' ) ) {
+			$subscription->update_meta_data( self::META_CUSTOMER, (string) $session['body']['customer'] );
+			$subscription->update_meta_data( self::META_METHOD, $method );
+			$subscription->save();
+		}
+
+		return Charge_Result::success( (string) ( $intent['id'] ?? $session_id ) );
+	}
+
+	/**
+	 * A debit Stripe accepted but has not settled: SEPA, ACH and Bacs take days, and there is no webhook to say when.
+	 *
+	 * @param int|string $order_id
+	 * @param string     $intent_id
+	 */
+	public function check_intent( $order_id, $intent_id ): void {
+		$order = wc_get_order( (int) $order_id );
+
+		if ( ! $order instanceof \WC_Order ) {
+			return;
+		}
+
+		$intent = $this->client->get( '/v1/payment_intents/' . rawurlencode( (string) $intent_id ) );
+		$status = $intent['ok'] ? (string) ( $intent['body']['status'] ?? '' ) : '';
+		$result = match ( $status ) {
+			'succeeded'                           => Charge_Result::success( (string) $intent_id ),
+			'requires_payment_method', 'canceled' => Charge_Result::soft_decline( (string) ( $intent['body']['last_payment_error']['code'] ?? $status ), 'Stripe could not collect the payment.' ),
+			default                               => null,
+		};
+
+		if ( $result ) {
+			\Submex\Plugin::instance()->get( 'processor' )->resolve_pending( $order, $result );
+			return;
+		}
+
+		self::schedule_intent_check( $order->get_id(), (string) $intent_id );
+	}
+
+	private static function schedule_intent_check( int $order_id, string $intent_id ): void {
+		if ( function_exists( 'as_schedule_single_action' ) ) {
+			as_schedule_single_action(
+				time() + DAY_IN_SECONDS,
+				self::ACTION_CHECK_INTENT,
+				array(
+					'order_id'  => $order_id,
+					'intent_id' => $intent_id,
+				),
+				Renewal_Scheduler::GROUP
+			);
+		}
 	}
 
 	/**
@@ -242,12 +328,13 @@ class Stripe_Gateway implements Recurring_Gateway {
 					$renewal->get_checkout_payment_url(),
 					(string) ( $intent['id'] ?? '' )
 				),
+				'processing'             => $this->processing( $renewal, (string) ( $intent['id'] ?? '' ) ),
 				default                  => Charge_Result::soft_decline( (string) ( $intent['status'] ?? 'unknown' ), 'Stripe did not complete the payment.' ),
 			};
 		}
 
-		// A network or 5xx failure is an unknown outcome, not a decline.
-		if ( 0 === $response['status'] || $response['status'] >= 500 ) {
+		// Unknown outcomes and the store's own problems (a revoked key, rate limits, a request still in flight), not the customer's card.
+		if ( 0 === $response['status'] || $response['status'] >= 500 || in_array( $response['status'], array( 401, 403, 409, 429 ), true ) || in_array( $response['code'], array( 'idempotency_error', 'lock_timeout', 'rate_limit' ), true ) ) {
 			return Charge_Result::error( $response['error'] );
 		}
 
@@ -264,6 +351,12 @@ class Stripe_Gateway implements Recurring_Gateway {
 		return in_array( $code, self::HARD_DECLINES, true )
 			? Charge_Result::hard_decline( $code, $response['error'] )
 			: Charge_Result::soft_decline( $code ?: 'card_declined', $response['error'] );
+	}
+
+	private function processing( \WC_Order $renewal, string $intent_id ): Charge_Result {
+		self::schedule_intent_check( $renewal->get_id(), $intent_id );
+
+		return Charge_Result::pending( $intent_id, 'Stripe is processing the payment, which can take a few days.' );
 	}
 
 	/**
@@ -284,9 +377,5 @@ class Stripe_Gateway implements Recurring_Gateway {
 		}
 
 		return Money::from_decimal( $amount, $currency, 2 )->minor();
-	}
-
-	private function is_recent( array $intent ): bool {
-		return isset( $intent['created'] ) && ( time() - (int) $intent['created'] ) < DAY_IN_SECONDS;
 	}
 }
