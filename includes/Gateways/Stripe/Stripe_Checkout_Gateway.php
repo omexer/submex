@@ -133,6 +133,7 @@ class Stripe_Checkout_Gateway extends \WC_Payment_Gateway {
 		}
 
 		$order->update_meta_data( '_submex_stripe_session', $response['body']['id'] );
+		$order->update_meta_data( '_submex_stripe_session_at', time() );
 		$order->save();
 
 		// A customer who pays and closes the tab never comes back to say so, and Stripe sends no webhook here.
@@ -292,10 +293,12 @@ class Stripe_Checkout_Gateway extends \WC_Payment_Gateway {
 			return;
 		}
 
-		// Stripe closes a session after a day; until then it may still be paid, and a failed lookup proves nothing.
-		$created = $order->get_date_created() ? $order->get_date_created()->getTimestamp() : 0;
+		// An open session can be paid until Stripe closes it a day on; a completed one may still be clearing, and a failed lookup proves nothing.
+		$age   = time() - (int) $order->get_meta( '_submex_stripe_session_at' );
+		$state = $body ? (string) ( $body['status'] ?? '' ) : 'unknown';
+		$until = 'open' === $state ? 2 * DAY_IN_SECONDS : 7 * DAY_IN_SECONDS;
 
-		if ( ( ! $body || 'open' === ( $body['status'] ?? '' ) || 'complete' === ( $body['status'] ?? '' ) ) && time() - $created < 2 * DAY_IN_SECONDS ) {
+		if ( 'expired' !== $state && $age < $until ) {
 			self::schedule_session_check( $order->get_id(), HOUR_IN_SECONDS );
 		}
 	}

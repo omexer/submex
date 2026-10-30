@@ -573,7 +573,11 @@ class Renewal_Processor {
 
 			if ( ! $early ) {
 				$this->hold( $subscription, __( 'Waiting for the customer to confirm payment.', 'submex' ) );
-				$this->schedule_lapse( $order );
+
+				// A manual renewal is an invoice that waits as long as it takes, not a charge the customer failed to confirm.
+				if ( Gateway_Model::Manual !== $this->gateways->for_subscription( $subscription )->model() ) {
+					$this->schedule_lapse( $order );
+				}
 			}
 
 			do_action( 'submex_renewal_requires_action', $subscription, $order, $result );

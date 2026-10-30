@@ -218,7 +218,12 @@ class Stripe_Gateway implements Recurring_Gateway {
 			return;
 		}
 
-		self::schedule_intent_check( $order->get_id(), (string) $intent_id );
+		// Past a fortnight, or unknown to Stripe, it is left pending for Site Health to report.
+		$created = (int) ( $intent['body']['created'] ?? time() );
+
+		if ( 404 !== $intent['status'] && time() - $created < 14 * DAY_IN_SECONDS ) {
+			self::schedule_intent_check( $order->get_id(), (string) $intent_id );
+		}
 	}
 
 	private static function schedule_intent_check( int $order_id, string $intent_id ): void {

@@ -131,6 +131,13 @@ remove_action( 'submex_renewal_failed', $count );
 $check( 'after which the renewal is a failed payment', 1 === $failed && wc_get_order( $order->get_id() )->has_status( 'failed' ), array( $failed, wc_get_order( $order->get_id() )->get_status() ) );
 as_unschedule_all_actions( Renewal_Processor::ACTION_LAPSE );
 
+$s = $make( 'month', -HOUR_IN_SECONDS );
+$s->set_payment_method( \Submex\Gateways\Manual_Gateway::ID );
+$s->save();
+$processor->process( $s->get_id() );
+$order = $renewal( $s );
+$check( 'a manual renewal waits as long as it takes', $order && ! as_next_scheduled_action( Renewal_Processor::ACTION_LAPSE, array( 'order_id' => $order->get_id() ) ) );
+
 echo "\n5. Reactivating while a renewal waits for the customer\n";
 $s = $make( 'month', -HOUR_IN_SECONDS );
 $processor->process( $s->get_id() );
