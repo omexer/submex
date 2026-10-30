@@ -36,6 +36,7 @@ class Product_Types {
 		add_action( 'admin_enqueue_scripts', array( $this, 'show_standard_fields' ), 20 );
 
 		add_filter( 'woocommerce_product_supports', array( $this, 'supports' ), 10, 3 );
+		add_filter( 'woocommerce_attribute_default_is_variation', array( $this, 'attribute_is_variation' ), 10, 2 );
 
 		// Without these there is no Add to cart button at all. WooCommerce renders one by
 		// firing woocommerce_{type}_add_to_cart, and it only registers listeners for the
@@ -209,10 +210,38 @@ jQuery( function ( $ ) {
 	$( '.show_if_variable' ).addClass( 'show_if_' + variable );
 	// WooCommerce's own handler, not just its event: its first pass ran before these classes and hid the General tab.
 	$( 'select#product-type' ).trigger( 'change' );
+
+	// WooCommerce clears these only for its own variable type; left ticked, they hide the Shipping tab.
+	$( 'select#product-type' ).on( 'change', function () {
+		if ( variable === $( this ).val() ) {
+			$( 'input#_virtual, input#_downloadable' ).prop( 'checked', false ).trigger( 'change' );
+		}
+	} );
+
+	// Attribute rows arrive later, from Add and from Save attributes, already hidden; their "Used for variations" box needs the same class.
+	var attributes = document.querySelector( '#product_attributes .product_attributes' );
+	if ( attributes && window.MutationObserver ) {
+		new MutationObserver( function () {
+			var rows = $( attributes ).find( '.show_if_variable' ).not( '.show_if_' + variable ).addClass( 'show_if_' + variable );
+			if ( variable === $( 'select#product-type' ).val() ) {
+				rows.show();
+			}
+		} ).observe( attributes, { childList: true, subtree: true } );
+	}
 } );
 JS;
 
 		wp_add_inline_script( 'wc-admin-product-meta-boxes', sprintf( $template, wp_json_encode( self::SIMPLE ), wp_json_encode( self::VARIABLE ) ) );
+	}
+
+	/**
+	 * WooCommerce ticks "Used for variations" on a new attribute only for its own variable type.
+	 *
+	 * @param int|bool $is_variation
+	 * @param string   $product_type
+	 */
+	public function attribute_is_variation( $is_variation, $product_type = '' ) {
+		return self::VARIABLE === $product_type ? 1 : $is_variation;
 	}
 
 	/**
