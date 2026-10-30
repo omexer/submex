@@ -41,6 +41,7 @@ use Submex\Gateways\PayPal\PayPal_Client;
 use Submex\Gateways\PayPal\PayPal_Plans;
 use Submex\Gateways\PayPal\PayPal_Gateway;
 use Submex\Gateways\PayPal\Webhook_Controller as PayPal_Webhooks;
+use Submex\Gateways\Stripe\Keys_Guard as Stripe_Keys_Guard;
 use Submex\Gateways\Stripe\Stripe_Checkout_Gateway;
 use Submex\Gateways\Stripe\Stripe_Client;
 use Submex\Gateways\Stripe\Stripe_Gateway;
@@ -208,6 +209,8 @@ final class Plugin {
 				return $gateways;
 			}
 		);
+
+		( new Stripe_Keys_Guard() )->register();
 
 		if ( self::owns_stripe() ) {
 			Gateway_Switch::link( Stripe_Checkout_Gateway::ID, 'submex_stripe_enabled' );

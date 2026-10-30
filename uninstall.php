@@ -25,15 +25,21 @@ foreach ( array( 'submex_schedule', 'submex_activity', 'submex_charge_slot', 'su
 
 // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- no API deletes options by prefix.
 foreach ( array( '', '_transient_', '_transient_timeout_' ) as $submex_prefix ) {
-	// Pro (submex_pro_, its gateways' submex_submex_) and add-ons (submex_cr_) share the prefix; their own uninstall removes what is theirs.
+	// Pro (submex_pro_, its gateways' submex_submex_, and the few settings older than that prefix) and add-ons (submex_cr_) share the prefix; their own uninstall removes what is theirs.
 	$wpdb->query(
 		$wpdb->prepare(
-			"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s AND option_name NOT LIKE %s AND option_name NOT LIKE %s AND option_name NOT LIKE %s AND option_name <> %s",
+			"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s AND option_name NOT LIKE %s AND option_name NOT LIKE %s AND option_name NOT LIKE %s AND option_name NOT IN ( %s, %s, %s, %s, %s, %s, %s )",
 			$wpdb->esc_like( $submex_prefix . 'submex_' ) . '%',
 			$wpdb->esc_like( $submex_prefix . 'submex_pro_' ) . '%',
 			$wpdb->esc_like( $submex_prefix . 'submex_cr_' ) . '%',
 			$wpdb->esc_like( $submex_prefix . 'submex_submex_' ) . '%',
-			'submex_delete_data_on_uninstall'
+			'submex_delete_data_on_uninstall',
+			'submex_one_click_checkout',
+			'submex_subscribe_button_text',
+			'submex_expiry_reminder_hours',
+			'submex_allow_api_keys',
+			'submex_grace_period_days',
+			'submex_health_digest_frequency'
 		)
 	);
 }

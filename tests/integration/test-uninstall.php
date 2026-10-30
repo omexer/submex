@@ -58,7 +58,8 @@ $check( 'and the queued work', $queued_actions === $still_queued(), $still_queue
 
 // --- 2. the real thing ---------------------------------------------------------------
 // Pro's and the add-on's settings share the prefix; free deleted first must leave them for their own uninstall.
-$theirs = array( 'submex_pro_sbt_probe', 'submex_cr_sbt_probe', 'submex_submex_sbt_probe' );
+$theirs = array( 'submex_pro_sbt_probe', 'submex_cr_sbt_probe', 'submex_submex_sbt_probe', 'submex_grace_period_days', 'submex_one_click_checkout' );
+$saved   = array( 'submex_grace_period_days' => get_option( 'submex_grace_period_days', null ), 'submex_one_click_checkout' => get_option( 'submex_one_click_checkout', null ) );
 foreach ( $theirs as $name ) {
 	update_option( $name, 'kept' );
 }
@@ -79,9 +80,9 @@ include SUBMEX_PATH . 'uninstall.php';
 foreach ( $tables as $t ) {
 	$check( "drops {$t}", ! $exists( $t ) );
 }
-$left = $wpdb->get_col( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'submex\_%' AND option_name NOT LIKE 'submex\_pro\_%' AND option_name NOT LIKE 'submex\_cr\_%' AND option_name NOT LIKE 'submex\_submex\_%'" );
+$left = $wpdb->get_col( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE 'submex\_%' AND option_name NOT LIKE 'submex\_pro\_%' AND option_name NOT LIKE 'submex\_cr\_%' AND option_name NOT LIKE 'submex\_submex\_%' AND option_name NOT IN ( 'submex_grace_period_days', 'submex_one_click_checkout', 'submex_subscribe_button_text', 'submex_expiry_reminder_hours', 'submex_allow_api_keys', 'submex_health_digest_frequency' )" );
 $check( 'removes every setting of its own, but the switch an extension still installed reads', array( 'submex_delete_data_on_uninstall' ) === $left, $left );
-$check( "leaves Pro's and the add-on's settings for their own uninstall", array( 'kept', 'kept', 'kept' ) === array_map( static fn( $n ) => get_option( $n ), $theirs ) );
+$check( "leaves Pro's and the add-on's settings for their own uninstall, the older Pro ones too", array( 'kept', 'kept', 'kept', 'kept', 'kept' ) === array_map( static fn( $n ) => get_option( $n ), $theirs ) );
 $check( 'and their transients', 'kept' === get_transient( 'submex_pro_sbt_probe' ) && 'kept' === get_transient( 'submex_cr_sbt_probe' ) && false === get_transient( 'submex_sbt_probe' ) );
 
 unlink( $stand_in ); // phpcs:ignore WordPress.WP.AlternativeFunctions.unlink_unlink
@@ -93,6 +94,9 @@ $check( $pro_installed ? 'with Pro still installed, the switch stays' : 'with no
 
 foreach ( $theirs as $name ) {
 	delete_option( $name );
+}
+foreach ( array_filter( $saved, static fn( $v ) => null !== $v ) as $name => $value ) {
+	update_option( $name, $value );
 }
 delete_transient( 'submex_pro_sbt_probe' );
 delete_transient( 'submex_cr_sbt_probe' );
