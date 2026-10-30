@@ -20,6 +20,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Early_Renewal {
 
+	private const OUTCOMES = array( 'submex_renewal_succeeded', 'submex_renewal_pending', 'submex_renewal_failed', 'submex_early_renewal_declined', 'submex_renewal_requires_action' );
+
 	public const OPTION = 'submex_allow_early_renewal';
 
 	public static function is_offered(): bool {
@@ -78,13 +80,13 @@ final class Early_Renewal {
 			}
 		};
 
-		foreach ( array( 'submex_renewal_succeeded', 'submex_renewal_pending', 'submex_renewal_failed', 'submex_renewal_requires_action' ) as $hook ) {
+		foreach ( self::OUTCOMES as $hook ) {
 			add_action( $hook, $watch, 1, 1 );
 		}
 
 		$processor->process( $id, true );
 
-		foreach ( array( 'submex_renewal_succeeded', 'submex_renewal_pending', 'submex_renewal_failed', 'submex_renewal_requires_action' ) as $hook ) {
+		foreach ( self::OUTCOMES as $hook ) {
 			remove_action( $hook, $watch, 1 );
 		}
 
@@ -108,7 +110,8 @@ final class Early_Renewal {
 				'ok'      => false,
 				'message' => __( 'Your bank needs to confirm that payment. Check your email for the link.', 'submex' ),
 			),
-			'submex_renewal_failed'          => array(
+			'submex_renewal_failed',
+			'submex_early_renewal_declined'  => array(
 				'ok'      => false,
 				'message' => __( 'That payment was declined, so nothing has been charged. Your subscription is unaffected.', 'submex' ),
 			),

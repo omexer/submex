@@ -273,6 +273,10 @@ class Subscriptions_Table extends \WP_List_Table {
 				continue;
 			}
 
+			if ( Subscription_Status::Active === $target && \Submex\Rest\Subscriptions_Controller::waiting_renewal( $subscription ) ) {
+				continue;
+			}
+
 			$subscription->transition_to( $target, __( 'Changed in bulk from the subscriptions list.', 'submex' ) );
 			$subscription->save();
 			++$changed;

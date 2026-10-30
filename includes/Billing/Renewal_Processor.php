@@ -27,6 +27,8 @@ class Renewal_Processor {
 
 	public const ACTION_RESOLVE = 'submex_resolve_pending_renewal';
 
+	public const ACTION_LAPSE = 'submex_customer_action_lapsed';
+
 	private const META_PAID_WHILE_PENDING = '_submex_paid_while_pending';
 
 	public function __construct(
@@ -47,6 +49,7 @@ class Renewal_Processor {
 		}
 
 		add_action( self::ACTION_RESOLVE, array( $this, 'resolve_queued' ), 10, 5 );
+		add_action( self::ACTION_LAPSE, array( $this, 'lapse_customer_action' ), 10, 1 );
 	}
 
 	/**
@@ -542,10 +545,20 @@ class Renewal_Processor {
 			)
 		);
 
+		// Paying early: the period is already paid for, so nothing below may hold it or start dunning.
+		$early = $this->is_early( $subscription );
+
 		if ( $result->is_success() ) {
 			// Before payment_complete(), whose hooks would otherwise settle this slot a second time.
 			$this->slots->mark_paid( (int) $slot->id, $order->get_id() );
-			$order->payment_complete( (string) $result->reference );
+
+			try {
+				$order->payment_complete( (string) $result->reference );
+			} catch ( \Throwable $e ) {
+				// The money is taken; a listener failing must not leave the date unmoved, or the next sweep bills the period again.
+				$this->activity->log( $subscription_id, Activity_Repository::TYPE_CHARGE_ATTEMPT, 'Payment taken, but completing its order failed: ' . $e->getMessage() );
+			}
+
 			$this->advance( $subscription, $slot );
 
 			do_action( 'submex_renewal_succeeded', $subscription, $order );
@@ -557,7 +570,11 @@ class Renewal_Processor {
 			$order->update_status( 'on-hold', __( 'Awaiting customer authentication.', 'submex' ) );
 			$order->update_meta_data( '_submex_action_url', $result->action_url );
 			$order->save();
-			$this->hold( $subscription, __( 'Waiting for the customer to confirm payment.', 'submex' ) );
+
+			if ( ! $early ) {
+				$this->hold( $subscription, __( 'Waiting for the customer to confirm payment.', 'submex' ) );
+				$this->schedule_lapse( $order );
+			}
 
 			do_action( 'submex_renewal_requires_action', $subscription, $order, $result );
 			return;
@@ -581,9 +598,82 @@ class Renewal_Processor {
 			return;
 		}
 
+		if ( $early ) {
+			// The renewal on its own date starts afresh; this attempt simply did not happen.
+			$this->slots->mark_abandoned( (int) $slot->id );
+			$order->update_status( 'cancelled', sprintf( 'Paying early was declined: %s', $result->describe() ) );
+
+			do_action( 'submex_early_renewal_declined', $subscription, $order, $result );
+			return;
+		}
+
 		// Definitive decline: bump attempt_group so the next attempt uses a fresh key.
 		$this->slots->mark_failed( (int) $slot->id );
 		$this->decline( $subscription, $order, $result );
+	}
+
+	private function is_early( Subscription $subscription ): bool {
+		$due = $this->as_date( $subscription->get_next_payment() );
+
+		return $due && $due > new \DateTimeImmutable( 'now', new \DateTimeZone( 'UTC' ) );
+	}
+
+	/**
+	 * A renewal waiting for the customer would otherwise wait for ever, on hold with no dunning to end it.
+	 */
+	private function schedule_lapse( \WC_Order $order ): void {
+		if ( ! function_exists( 'as_schedule_single_action' ) ) {
+			return;
+		}
+
+		/**
+		 * How long a renewal waits for the customer to confirm before it counts as a failed payment.
+		 *
+		 * @param int $days
+		 */
+		$days = max( 1, (int) apply_filters( 'submex_customer_action_days', 7 ) );
+
+		as_schedule_single_action( time() + $days * DAY_IN_SECONDS, self::ACTION_LAPSE, array( 'order_id' => $order->get_id() ), Renewal_Scheduler::GROUP );
+	}
+
+	/**
+	 * @param int|string $order_id
+	 */
+	public function lapse_customer_action( $order_id ): void {
+		$order = wc_get_order( (int) $order_id );
+		$slot  = $order instanceof \WC_Order && ! $order->is_paid() && '' !== (string) $order->get_meta( '_submex_action_url' ) ? $this->slot_for( $order ) : null;
+
+		if ( ! $slot || Charge_Slot_Repository::STATE_PAID === $slot->state || Charge_Slot_Repository::STATE_FAILED === $slot->state ) {
+			return;
+		}
+
+		$subscription_id = (int) $slot->subscription_id;
+
+		if ( ! $this->lock->acquire( $subscription_id ) ) {
+			as_schedule_single_action( time() + HOUR_IN_SECONDS, self::ACTION_LAPSE, array( 'order_id' => $order->get_id() ), Renewal_Scheduler::GROUP );
+			return;
+		}
+
+		try {
+			$subscription = wc_get_order( $subscription_id );
+
+			if ( $subscription instanceof Subscription ) {
+				$this->slots->mark_failed( (int) $slot->id );
+				$this->decline( $subscription, $order, Charge_Result::soft_decline( 'authentication_required', 'The customer did not confirm the payment.' ) );
+			}
+		} finally {
+			$this->lock->release( $subscription_id );
+		}
+	}
+
+	/**
+	 * The renewal a held subscription is waiting for its customer to pay, if any; reactivating it would bill nothing.
+	 */
+	public function awaiting_customer( Subscription $subscription ): ?\WC_Order {
+		$slot  = $this->slots->latest_unsettled( $subscription->get_id() );
+		$order = $slot && $slot->renewal_order_id ? wc_get_order( (int) $slot->renewal_order_id ) : null;
+
+		return $order instanceof \WC_Order && ! $order->is_paid() && '' !== (string) $order->get_meta( '_submex_action_url' ) ? $order : null;
 	}
 
 	private function decline( Subscription $subscription, \WC_Order $order, Charge_Result $result ): void {
@@ -784,8 +874,15 @@ class Renewal_Processor {
 		// the next one falls due. Advancing from it instead skipped a whole period.
 		$next = new \DateTimeImmutable( $slot->covers_to_gmt, new \DateTimeZone( 'UTC' ) );
 
+		// Paid after that date had passed: under catch-up the next charge is the next date still ahead, not straight away.
+		if ( 'charge_all' !== get_option( 'submex_catch_up_policy', 'rebase' ) && $next <= new \DateTimeImmutable( 'now', new \DateTimeZone( 'UTC' ) ) ) {
+			$next = $this->covers_to( Billing_Schedule::from_subscription( $subscription ), $next );
+		}
+
 		$subscription->set_next_payment( $next->format( 'Y-m-d H:i:s' ) );
 		$subscription->set_period_index( (int) $slot->period_index );
+		// Saved before the status change, whose listeners may throw.
+		$subscription->save();
 
 		if ( Subscription_Status::Active !== $subscription->get_status_enum() ) {
 			$subscription->transition_to( Subscription_Status::Active );

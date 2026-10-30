@@ -309,7 +309,7 @@ class Subscriptions_Controller {
 		$done = match ( $action ) {
 			'cancel'        => $this->transition( $subscription, Subscription_Status::Cancelled, $reason ),
 			'expire'        => $this->transition( $subscription, Subscription_Status::Expired, $reason ),
-			'reactivate'    => $this->transition( $subscription, Subscription_Status::Active, $reason ),
+			'reactivate'    => $this->change_status( $subscription, Subscription_Status::Active->value, $reason ),
 			'change_status' => $this->change_status( $subscription, (string) $request->get_param( 'status' ), $reason ),
 			'renew_now'     => $this->renew_now( $subscription ),
 			default         => null,
@@ -517,7 +517,29 @@ class Subscriptions_Controller {
 			return new \WP_Error( 'submex_unknown_status', __( 'Unknown subscription status.', 'submex' ), array( 'status' => 400 ) );
 		}
 
+		$waiting = Subscription_Status::Active === $target ? self::waiting_renewal( $subscription ) : null;
+
+		if ( $waiting ) {
+			return new \WP_Error(
+				'submex_awaiting_customer',
+				sprintf(
+					/* translators: %s: renewal order number */
+					__( 'Renewal #%s is waiting for the customer to confirm their payment, so reactivating would bill nothing. Send them its payment link, or mark the order paid if they paid another way; the subscription reactivates by itself.', 'submex' ),
+					$waiting->get_order_number()
+				),
+				array( 'status' => 409 )
+			);
+		}
+
 		return $this->transition( $subscription, $target, $reason );
+	}
+
+	public static function waiting_renewal( Subscription $subscription ): ?\WC_Order {
+		$processor = \Submex\Plugin::instance()->get( 'processor' );
+
+		return $processor instanceof \Submex\Billing\Renewal_Processor && Subscription_Status::OnHold === $subscription->get_status_enum()
+			? $processor->awaiting_customer( $subscription )
+			: null;
 	}
 
 	private function transition( Subscription $subscription, Subscription_Status $to, string $reason ): bool {
