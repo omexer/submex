@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.2.1
+
+* **PayPal bills what the order costs.** A PayPal plan is cached per product, so quantity, one-off items, tax and shipping never reached PayPal while the whole order was marked paid. Each subscription now overrides the plan with the order's recurring total per cycle and the rest of today's total as the setup fee; an order costing less than one renewal (beyond a cent of rounding) is refused. The pay-for-order page offers PayPal only for orders with a subscription.
+* **Provider amounts in the currency's own units.** `Currency::decimals()` / `Currency::minor_units()` give ISO 4217 minor units; Stripe uses them (with its own zero-decimal list, and three-decimal currencies rounded to 10) instead of WooCommerce's display decimals.
+* **PayPal webhooks.** The payment taken at approval is recorded on the checkout order (and marks it paid if the customer never returned) instead of booking a renewal; it is told apart by PayPal's own payment time. `BILLING.SUBSCRIPTION.CANCELLED` fires `submex_subscription_cancelled`; a failed payment fires `submex_gateway_payment_failed`, which sends Payment failed with no order to pay.
+* **Stripe without the customer.** Unknown charges are reconciled by their own idempotency key (`metadata.submex_key`; older charges by their renewal order). Checkout payments are found by a scheduled session check and before any retry. `processing` is pending, polled daily for a fortnight. 401/403/409/429 and idempotency conflicts are retried, not declined, and a refused key raises an admin warning. `process_refund` is implemented. The renewal adapter is registered whenever keys are saved, so the switch only stops new sign-ups.
+* **Renewal engine.** A renewal paid after its period passed rolls the next payment forward under the default catch-up policy; the next payment is saved before status hooks run; a declined early payment is abandoned without a hold (`submex_early_renewal_declined`); a renewal waiting for the customer becomes a failed payment after `submex_customer_action_days` (7), except manual renewals; Reactivate is refused while a renewal waits for the customer (`Subscriptions_Controller::waiting_renewal()`).
+* **Checkout.** Subscriptions are created pending, trials included, and start when the parent order goes from unpaid to paid (or on hold with nothing to pay); `submex_subscription_activated` fires once. Merchant New subscription is sent on activation. A guest's failed-payment account is reused only by the same session, before anyone logs into it.
+* **Product screen.** Attribute rows added later get "Used for variations" on variable subscriptions, new attributes default to it, and switching to Variable subscription clears Virtual and Downloadable.
+* **Emails.** Merchant emails default to WooCommerce's new-order recipient and have a Recipient(s) field.
+* **Uninstall.** Six Pro settings older than its prefix are kept; deleting a Pro before 0.54.0 no longer removes the Stripe keys.
+
 ## 1.2.0
 
 * **Stripe is included.** The Stripe gateway moves from Submex Pro into the free plugin, whole: the card checkout on Stripe's hosted page, automatic renewals charged off-session against the saved card, the block checkout, the Submex → Settings → Stripe section and the notice when the key for the chosen mode is missing. A free trial saves the card in setup mode without charging it.

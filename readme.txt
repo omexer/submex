@@ -4,7 +4,7 @@ Tags: woocommerce, subscriptions, recurring payments, billing, memberships
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -170,6 +170,17 @@ included in the plugin.
 
 == Changelog ==
 
+= 1.2.1 =
+* Fixed: PayPal charged only the plan's price while the whole order was marked paid. A second unit, a one-off item, tax and shipping now reach PayPal, and an order that costs less than one renewal is not sent to PayPal.
+* Fixed: a store set to show prices with no decimals sent Stripe a hundredth of the price, and a store in yen showing two decimals charged a hundred times it at checkout. Stripe is now sent each currency's own units.
+* Fixed: PayPal's first payment was also recorded as a renewal, with a receipt minutes after signup. A cancellation or failed payment at PayPal now emails the customer and the store.
+* Fixed: a renewal paid late was charged again at once; a payment made on a renewal's pay page could be charged a second time if the customer closed the tab before coming back; and a renewal that timed out could be marked paid with another period's payment.
+* Fixed: a free trial gave access before its checkout was paid. Subscriptions now start when their order is paid, once, and the store's "New subscription" email waits for that too.
+* Refunds from the order screen now reach Stripe. Turning Stripe off stops new sign-ups only; saved cards keep renewing. A renewal waiting for the customer to confirm counts as a failed payment after 7 days, and Submex warns when Stripe refuses its key.
+* Paying early that is declined no longer puts a paid-up subscription on hold, and Reactivate explains when a renewal is waiting for the customer instead of billing nothing.
+* A guest whose first payment failed can try again. Variable subscriptions can be given variations. Store emails go to WooCommerce's new-order recipient by default, with a recipient setting of their own.
+* Deleting Submex or an older Submex Pro with "delete data" on no longer removes the other's settings or the Stripe keys.
+
 = 1.2.0 =
 * **Stripe is included.** Customers pay by card on Stripe's own checkout page, and Submex charges the saved card again whenever a renewal falls due. A free trial saves the card without charging it. Set it up under Submex → Settings → Stripe.
 * A store that already used Stripe through Submex Pro keeps its keys, its settings and its subscriptions' saved cards, with nothing to set up again. Until Submex Pro is updated to 0.54.0, Pro's own Stripe keeps running.
@@ -262,6 +273,9 @@ included in the plugin.
 The full history is in CHANGELOG.md, inside the plugin.
 
 == Upgrade Notice ==
+
+= 1.2.1 =
+Fixes PayPal and Stripe charging the wrong amount in some stores, and trials giving access before payment. Recommended for every store. With Submex Pro, update Pro to 0.55.0 too.
 
 = 1.2.0 =
 Stripe card payments and automatic renewals are now part of the free plugin. With Submex Pro, update Pro to 0.54.0 too.
