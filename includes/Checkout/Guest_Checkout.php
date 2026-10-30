@@ -41,6 +41,16 @@ class Guest_Checkout {
 		add_action( 'woocommerce_store_api_checkout_update_order_from_request', array( $this, 'assign_owner' ), 9, 1 );
 
 		add_action( 'admin_notices', array( $this, 'warn_if_unreachable' ) );
+
+		// Paid, the account is the customer's to log into; the browser no longer speaks for it.
+		add_action( 'woocommerce_thankyou', array( $this, 'forget_account' ) );
+		add_action( 'woocommerce_payment_complete', array( $this, 'forget_account' ) );
+	}
+
+	public function forget_account(): void {
+		if ( function_exists( 'WC' ) && WC()->session ) {
+			WC()->session->set( self::SESSION_ACCOUNT, null );
+		}
 	}
 
 	public static function mode(): string {
@@ -199,6 +209,7 @@ class Guest_Checkout {
 	private function created_here( string $email ): int {
 		$user_id = function_exists( 'WC' ) && WC()->session ? (int) WC()->session->get( self::SESSION_ACCOUNT, 0 ) : 0;
 
-		return $user_id && email_exists( $email ) === $user_id ? $user_id : 0;
+		// Once somebody has logged into it, it belongs to them, not to whoever placed the failed order.
+		return $user_id && email_exists( $email ) === $user_id && ! get_user_meta( $user_id, 'wc_last_active', true ) ? $user_id : 0;
 	}
 }

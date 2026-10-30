@@ -2,6 +2,8 @@
 
 namespace Submex\Admin;
 
+use Submex\Gateways\Stripe\Stripe_Gateway;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -40,6 +42,16 @@ class Gateway_Notice {
 			$this->stripe_credentials(),
 			// The live and test keys are different fields, so fixing one and emptying the other is a new problem.
 			'yes' === get_option( 'submex_stripe_live', 'no' ) ? 'live' : 'test',
+			'stripe'
+		);
+
+		$rejected = (int) get_option( Stripe_Gateway::OPTION_KEY_REJECTED, 0 );
+
+		$this->notice(
+			'submex_stripe_key_rejected',
+			__( 'Stripe renewals are not being charged.', 'submex' ),
+			$rejected ? array( __( 'Stripe refused the secret key when Submex tried to charge a renewal, so renewals are waiting and being retried. Check that the key in Submex is current; a rolled or revoked key does this.', 'submex' ) ) : array(),
+			(string) $rejected,
 			'stripe'
 		);
 

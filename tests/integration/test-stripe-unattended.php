@@ -116,6 +116,33 @@ $made[] = $probe;
 $gateway->charge_renewal( $s, $probe, 'key-sent' );
 $check( 'and every charge carries its key for that search', 'key-sent' === ( $stripe->sent( 'POST /v1/payment_intents' )[0][1]['metadata']['submex_key'] ?? '' ) );
 
+// A charge sent by the previous version, left charging across the upgrade.
+$s              = $subscribe();
+$stripe->routes = array( 'POST /v1/payment_intents' => $err( 500, 'api_error' ) );
+\Submex\Plugin::instance()->get( 'processor' )->process( $s->get_id() );
+$open           = \Submex\Plugin::instance()->get( 'charge_slots' )->latest_unsettled( $s->get_id() );
+$stripe->routes = array(
+	'GET /v1/payment_intents/search?query=' . rawurlencode( 'metadata["submex_key"]' ) => $ok( array( 'data' => array() ) ),
+	'GET /v1/payment_intents/search'                                                  => $ok(
+		array(
+			'data' => array(
+				array( 'id' => 'pi_old_other', 'status' => 'succeeded', 'created' => time(), 'metadata' => array( 'submex_subscription' => (string) $s->get_id(), 'submex_order' => '999999' ) ),
+				array( 'id' => 'pi_old_this', 'status' => 'succeeded', 'created' => time(), 'metadata' => array( 'submex_subscription' => (string) $s->get_id(), 'submex_order' => (string) $open->renewal_order_id ) ),
+			),
+		)
+	),
+);
+$verdict = ( new Stripe_Gateway( $stripe ) )->reconcile( $s, 'key-from-before' );
+$check( 'an older charge with no key is found by its own renewal order', $verdict && $verdict->is_success() && 'pi_old_this' === $verdict->reference, $verdict ? $verdict->describe() : null );
+
+$conflict = static fn( $pre, $args, $url ) => str_starts_with( $url, 'https://api.stripe.com' )
+	? array( 'headers' => array(), 'body' => wp_json_encode( array( 'error' => array( 'type' => 'idempotency_error', 'message' => 'Keys for idempotent requests can only be used with the same parameters.' ) ) ), 'response' => array( 'code' => 400, 'message' => 'Bad Request' ), 'cookies' => array(), 'filename' => null )
+	: $pre;
+add_filter( 'pre_http_request', $conflict, 10, 3 );
+$result = ( new Stripe_Gateway( new Stripe_Client( 'sk_test_conflict' ) ) )->charge_renewal( $subscribe(), $probe, 'key-conflict' );
+remove_filter( 'pre_http_request', $conflict, 10 );
+$check( 'Stripe\'s idempotency conflict, which has no code, is retried and not a decline', $result->is_transient(), $result->describe() );
+
 echo "\n2. Paid on the pay page, never came back\n";
 $s              = $subscribe();
 $stripe->routes = array( 'POST /v1/payment_intents' => $err( 402, 'authentication_required' ) );
@@ -169,6 +196,13 @@ foreach ( array( array( 401, 'api_key_expired' ), array( 429, 'rate_limit' ), ar
 	$result         = ( new Stripe_Gateway( $stripe ) )->charge_renewal( $subscribe(), $probe, 'key-' . $code );
 	$check( "{$status} {$code} is retried, not a decline", $result->is_transient() && ! $result->is_definitive_decline(), $result->describe() );
 }
+
+$stripe->routes = array( 'POST /v1/payment_intents' => $err( 401, 'api_key_expired' ) );
+( new Stripe_Gateway( $stripe ) )->charge_renewal( $subscribe(), $probe, 'key-revoked' );
+$check( 'a refused key is remembered for the admin warning', (bool) get_option( Stripe_Gateway::OPTION_KEY_REJECTED ) );
+$stripe->routes = array( 'POST /v1/payment_intents' => $ok( array( 'id' => 'pi_fixed', 'status' => 'succeeded' ) ) );
+( new Stripe_Gateway( $stripe ) )->charge_renewal( $subscribe(), $probe, 'key-fixed' );
+$check( 'and forgotten once a charge goes through', ! get_option( Stripe_Gateway::OPTION_KEY_REJECTED ) );
 
 echo "\n5. Refunds reach Stripe\n";
 $paid = wc_create_order();

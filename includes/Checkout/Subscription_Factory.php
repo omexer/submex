@@ -32,9 +32,31 @@ class Subscription_Factory {
 		// Block checkout goes through the Store API, which fires its own hook and passes
 		// the order object rather than an ID. Without this, blocks create no subscription.
 		add_action( 'woocommerce_store_api_checkout_order_processed', array( $this, 'from_store_api' ), 10, 1 );
-		add_action( 'woocommerce_order_status_processing', array( $this, 'activate_for_order' ), 20, 1 );
-		add_action( 'woocommerce_order_status_completed', array( $this, 'activate_for_order' ), 20, 1 );
-		add_action( 'woocommerce_order_status_cancelled', array( $this, 'cancel_for_order' ), 20, 1 );
+		add_action( 'woocommerce_order_status_changed', array( $this, 'on_order_status_changed' ), 20, 3 );
+	}
+
+	/**
+	 * Start the subscription as its parent order becomes paid: processing then completed is one payment, not two.
+	 *
+	 * @param int    $order_id
+	 * @param string $from
+	 * @param string $to
+	 */
+	public function on_order_status_changed( $order_id, $from, $to ): void {
+		$paid = wc_get_is_paid_statuses();
+
+		if ( in_array( $from, $paid, true ) ) {
+			return;
+		}
+
+		$order = wc_get_order( (int) $order_id );
+
+		// Nothing to pay today (a trial) owes nothing, so a manual method's on-hold is as good as paid.
+		$owes_nothing = 'on-hold' === $to && $order instanceof \WC_Order && $order->get_total() <= 0;
+
+		if ( in_array( $to, $paid, true ) || $owes_nothing ) {
+			$this->activate_for_order( (int) $order_id );
+		}
 	}
 
 	/**
@@ -198,8 +220,8 @@ class Subscription_Factory {
 	 *
 	 * @param int $order_id
 	 */
-	public function activate_for_order( $order_id ): void {
-		$order = wc_get_order( (int) $order_id );
+	private function activate_for_order( int $order_id ): void {
+		$order = wc_get_order( $order_id );
 
 		if ( ! $order instanceof \WC_Order ) {
 			return;
@@ -219,12 +241,12 @@ class Subscription_Factory {
 		$status = $subscription->get_status_enum();
 		$target = $subscription->get_trial_end() ? Subscription_Status::Trialling : Subscription_Status::Active;
 
-		// Processing then completed both land here; only the first is the start. A trial from before 1.2.1 was created already trialling.
-		if ( 'yes' === $subscription->get_meta( self::META_ACTIVATED ) || ! in_array( $status, array( Subscription_Status::Pending, Subscription_Status::Trialling ), true ) ) {
+		// Already active is fine: PayPal's activation webhook can arrive before its order is paid.
+		if ( 'yes' === $subscription->get_meta( self::META_ACTIVATED ) || ! $status || $status->is_terminal() ) {
 			return;
 		}
 
-		if ( $status->can_transition_to( $target ) ) {
+		if ( Subscription_Status::Pending === $status ) {
 			$subscription->transition_to( $target );
 		}
 
@@ -234,23 +256,6 @@ class Subscription_Factory {
 		$this->scheduler->schedule_next( $subscription );
 
 		do_action( 'submex_subscription_activated', $subscription );
-	}
-
-	/**
-	 * A checkout abandoned at the gateway, or cancelled unpaid, never started what it created.
-	 *
-	 * @param int $order_id
-	 */
-	public function cancel_for_order( $order_id ): void {
-		$order        = wc_get_order( (int) $order_id );
-		$subscription = $order instanceof \WC_Order ? $this->existing_for_order( $order ) : null;
-
-		if ( ! $subscription || $order->get_id() !== $subscription->get_parent_order_id() || Subscription_Status::Pending !== $subscription->get_status_enum() ) {
-			return;
-		}
-
-		$subscription->transition_to( Subscription_Status::Cancelled, sprintf( 'Its order #%s was cancelled before it was paid.', $order->get_order_number() ) );
-		$subscription->save();
 	}
 
 	private function existing_for_order( \WC_Order $order ): ?Subscription {

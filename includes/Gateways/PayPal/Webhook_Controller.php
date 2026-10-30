@@ -169,7 +169,7 @@ class Webhook_Controller {
 
 		$now = new \DateTimeImmutable( 'now', new \DateTimeZone( 'UTC' ) );
 
-		if ( $this->is_initial_payment( $subscription, $now ) ) {
+		if ( $this->is_initial_payment( $subscription, $event ) ) {
 			$this->record_initial_payment( $subscription, $txn_id );
 			return;
 		}
@@ -221,14 +221,21 @@ class Webhook_Controller {
 	}
 
 	/**
-	 * PayPal reports the payment taken at approval like any other, but checkout's order already holds it.
+	 * PayPal reports what it takes at approval like any other payment, but checkout's order already holds it.
+	 *
+	 * Told apart by time, not by PayPal's billing dates: approval is within hours of checkout,
+	 * and the first renewal is at least a day away.
 	 */
-	private function is_initial_payment( Subscription $subscription, \DateTimeImmutable $now ): bool {
-		$initial = $this->slots->find( $subscription->get_id(), 0 );
+	private function is_initial_payment( Subscription $subscription, array $event ): bool {
+		$parent = $subscription->get_parent_order_id() ? wc_get_order( $subscription->get_parent_order_id() ) : null;
 
-		return $initial
-			&& 1 === $this->slots->next_index( $subscription->get_id() )
-			&& $now < new \DateTimeImmutable( (string) $initial->covers_to_gmt, new \DateTimeZone( 'UTC' ) );
+		if ( ! $parent instanceof \WC_Order || $parent->get_total() <= 0 || ! $parent->get_date_created() || 1 !== $this->slots->next_index( $subscription->get_id() ) ) {
+			return false;
+		}
+
+		$taken = strtotime( (string) ( $event['resource']['create_time'] ?? '' ) ) ?: time();
+
+		return $taken - $parent->get_date_created()->getTimestamp() < 12 * HOUR_IN_SECONDS;
 	}
 
 	private function record_initial_payment( Subscription $subscription, string $txn_id ): void {
@@ -237,6 +244,11 @@ class Webhook_Controller {
 		if ( $parent instanceof \WC_Order && '' !== $txn_id && '' === (string) $parent->get_meta( self::META_TXN_ID ) ) {
 			$parent->update_meta_data( self::META_TXN_ID, $txn_id );
 			$parent->save();
+		}
+
+		// The customer approved and closed the tab, so no return ever marked it paid.
+		if ( $parent instanceof \WC_Order && ! $parent->is_paid() ) {
+			$parent->payment_complete( (string) $subscription->get_meta( PayPal_Gateway::META_SUBSCRIPTION_ID ) );
 		}
 
 		$this->activity->log(

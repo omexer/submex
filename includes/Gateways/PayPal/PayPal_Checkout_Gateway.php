@@ -278,9 +278,12 @@ class PayPal_Checkout_Gateway extends \WC_Payment_Gateway {
 		$has_trial    = $terms->schedule()->has_trial();
 		$setup        = Currency::minor_units( $order->get_total(), $currency ) - ( $has_trial ? 0 : $recurring );
 
-		if ( $setup < 0 || $recurring <= 0 ) {
+		// A cent either way is tax rounding between the cart and the subscription, not a discount.
+		if ( $setup < -1 || $recurring <= 0 ) {
 			return null;
 		}
+
+		$setup = max( 0, $setup );
 
 		$money = static fn( int $minor ): array => array(
 			'value'         => wc_format_decimal( $minor / ( 10 ** Currency::decimals( $currency ) ), Currency::decimals( $currency ) ),

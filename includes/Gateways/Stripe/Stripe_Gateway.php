@@ -31,6 +31,8 @@ class Stripe_Gateway implements Recurring_Gateway {
 
 	public const ACTION_CHECK_INTENT = 'submex_stripe_check_intent';
 
+	public const OPTION_KEY_REJECTED = 'submex_stripe_key_rejected';
+
 	/** Stripe's own list, which differs from ISO 4217: it bills HUF and TWD in cents, for one. */
 	private const ZERO_DECIMAL = array( 'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF' );
 
@@ -156,6 +158,37 @@ class Stripe_Gateway implements Recurring_Gateway {
 				self::schedule_intent_check( (int) ( $intent['metadata']['submex_order'] ?? 0 ), (string) $intent['id'] );
 
 				return Charge_Result::pending( (string) $intent['id'], 'Stripe is still processing the payment.' );
+			}
+		}
+
+		return $this->reconcile_legacy( $subscription );
+	}
+
+	/**
+	 * A charge sent before 1.2.1 carries no key to search by, only the renewal order it was for.
+	 */
+	private function reconcile_legacy( Subscription $subscription ): ?Charge_Result {
+		$slots = \Submex\Plugin::instance()->get( 'charge_slots' );
+		$slot  = $slots instanceof \Submex\Data\Charge_Slot_Repository ? $slots->latest_unsettled( $subscription->get_id() ) : null;
+		$order = $slot ? (string) (int) $slot->renewal_order_id : '';
+
+		if ( '' === $order || '0' === $order ) {
+			return null;
+		}
+
+		$search = $this->client->get(
+			'/v1/payment_intents/search?query=' . rawurlencode( sprintf( 'metadata["submex_subscription"]:"%d"', $subscription->get_id() ) ) . '&limit=5'
+		);
+
+		if ( ! $search['ok'] ) {
+			return Charge_Result::error( $search['error'] );
+		}
+
+		foreach ( $search['body']['data'] ?? array() as $intent ) {
+			$legacy = ! isset( $intent['metadata']['submex_key'] ) && (string) ( $intent['metadata']['submex_order'] ?? '' ) === $order;
+
+			if ( $legacy && 'succeeded' === ( $intent['status'] ?? '' ) ) {
+				return Charge_Result::success( (string) $intent['id'] );
 			}
 		}
 
@@ -323,6 +356,13 @@ class Stripe_Gateway implements Recurring_Gateway {
 	 * Map a Stripe response onto the four outcomes the pipeline distinguishes.
 	 */
 	private function interpret( array $response, \WC_Order $renewal ): Charge_Result {
+		// Retried quietly, a revoked key would leave every renewal unpaid with nobody told.
+		if ( in_array( $response['status'], array( 401, 403 ), true ) ) {
+			update_option( self::OPTION_KEY_REJECTED, time(), false );
+		} elseif ( $response['ok'] ) {
+			delete_option( self::OPTION_KEY_REJECTED );
+		}
+
 		if ( $response['ok'] ) {
 			$intent = $response['body'];
 

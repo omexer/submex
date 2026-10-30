@@ -73,15 +73,35 @@ $order->update_status( 'completed' );
 $check( 'completing the order later does not start it again', 1 === $started, $started );
 $check( 'nor tell the merchant again', 1 === $merchant_mails(), $sent );
 
-echo "\n2. A checkout cancelled before it was paid\n";
+echo "\n2. Paid after WooCommerce cancelled the unpaid order\n";
 [ $order, $s ] = $checkout( $trial );
-$order->update_status( 'cancelled' );
-$check( 'cancels the subscription it created', Subscription_Status::Cancelled === wc_get_order( $s->get_id() )->get_status_enum(), wc_get_order( $s->get_id() )->get_status() );
+$order->update_status( 'cancelled', 'Unpaid order cancelled - time limit reached.' );
+$check( 'the subscription waits, granting nothing', Subscription_Status::Pending === wc_get_order( $s->get_id() )->get_status_enum(), wc_get_order( $s->get_id() )->get_status() );
+wc_get_order( $order->get_id() )->payment_complete( 'paid-late' );
+$check( 'and starts when the payment lands', Subscription_Status::Trialling === wc_get_order( $s->get_id() )->get_status_enum(), wc_get_order( $s->get_id() )->get_status() );
+
+echo "\n3. The gateway activates it before the order is paid\n";
+$started = 0;
+$sent    = array();
+[ $order, $s ] = $checkout( submex_test_product() );
+$s->transition_to( Subscription_Status::Active, 'PayPal webhook, as the harness.' );
+$s->save();
+$order->payment_complete( 'returned-later' );
+$check( 'paying still starts it, once', 1 === $started, $started );
+$check( 'and the merchant is told', 1 === $merchant_mails(), $sent );
+
+echo "\n4. A free trial taken with a manual payment method\n";
+$started       = 0;
+[ $order, $s ] = $checkout( $trial );
+$order->set_total( '0' );
+$order->save();
+$order->update_status( 'on-hold', 'Awaiting a transfer of nothing.' );
+$check( 'starts with nothing to pay', Subscription_Status::Trialling === wc_get_order( $s->get_id() )->get_status_enum() && 1 === $started, wc_get_order( $s->get_id() )->get_status() );
 
 remove_action( 'submex_subscription_activated', $count );
 remove_filter( 'wp_mail', $spy );
 
-echo "\n3. A guest whose first payment failed\n";
+echo "\n5. A guest whose first payment failed\n";
 wp_set_current_user( 0 );
 wc_load_cart();
 WC()->cart->empty_cart();
@@ -104,6 +124,12 @@ $second = wc_create_order();
 $second->set_billing_email( $email );
 $guest->assign_owner( $second );
 $check( 'the second attempt uses that account', $account === (int) $second->get_customer_id(), $second->get_customer_id() );
+
+update_user_meta( $account, 'wc_last_active', time() );
+wc_clear_notices();
+$guest->validate_classic();
+$check( 'once the owner has logged in, the address needs a login again', 1 === wc_notice_count( 'error' ) );
+delete_user_meta( $account, 'wc_last_active' );
 
 WC()->session->set( 'submex_checkout_account', 0 );
 wc_clear_notices();

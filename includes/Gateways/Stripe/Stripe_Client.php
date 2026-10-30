@@ -93,7 +93,8 @@ class Stripe_Client {
 			'status' => $status,
 			'body'   => $parsed,
 			'error'  => (string) ( $parsed['error']['message'] ?? 'Unexpected response from Stripe.' ),
-			'code'   => (string) ( $parsed['error']['decline_code'] ?? $parsed['error']['code'] ?? '' ),
+			// An idempotency conflict carries its kind only in the error type, with no code.
+			'code'   => (string) ( $parsed['error']['decline_code'] ?? $parsed['error']['code'] ?? ( 'idempotency_error' === ( $parsed['error']['type'] ?? '' ) ? 'idempotency_error' : '' ) ),
 		);
 	}
 
