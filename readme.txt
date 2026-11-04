@@ -4,11 +4,12 @@ Tags: woocommerce, subscriptions, recurring payments, billing, memberships
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
+Requires Plugins: woocommerce
 Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Sell subscriptions in WooCommerce: recurring billing, free trials, PayPal, and customers who manage their own plan.
+Sell subscriptions in WooCommerce: recurring billing, free trials, Stripe and PayPal, and customers who manage their own plan.
 
 == Description ==
 
@@ -49,7 +50,7 @@ Submex turns WooCommerce products into subscriptions and runs the renewal billin
 
 * **Overview** walks you through setting up — connect a payment method, create a product, run a test renewal that charges nobody — then shows recurring revenue (net of tax), what needs your attention and your latest subscriptions.
 * **All subscriptions** lets you search, filter, sort and change subscriptions in bulk, and open any one to see its history, charge it now or move its dates.
-* **Health** checks, under Settings: whether the renewal queue is running, charges whose outcome is still unknown, renewals waiting more than 10 days for their payment provider to confirm them, whether the double-charge safeguard is in place, and subscriptions whose renewals add tax twice — listed with a Repair action, since subscriptions sold before 0.19.4 in tax-inclusive stores are never changed silently.
+* **Health** checks, under Settings: whether the renewal queue is running, charges whose outcome is still unknown, renewals waiting more than 10 days for their payment provider to confirm them, whether the double-charge safeguard is in place, and subscriptions whose renewals add tax twice, listed with a Repair action so nothing is ever changed silently.
 * Ten emails for the moments that matter — seven to the customer (including a reminder before each renewal) and three to you — each with a preview under Email Notifications on WooCommerce 9.6 and later.
 * Customer roles and downloadable files that follow the subscription.
 * **FluentCRM:** choose tags and lists on each subscription product. The contact has them while the subscription is active or in a free trial and loses them when it stops, and only tags and lists Submex added are ever removed.
@@ -58,15 +59,19 @@ Submex turns WooCommerce products into subscriptions and runs the renewal billin
 
 = Submex Pro =
 
-A separate plugin adds:
+A separate, optional plugin extends Submex with additional payment gateways, advanced plans and pricing, customer retention tools, more integrations and reporting. Submex itself is complete and fully functional on its own.
 
-* **Plans and pricing:** variable subscriptions, several plans per product, instalment and split payment plans, introductory renewal prices, fixed expiry dates, minimum terms, payment caps, purchase limits, shipping on renewals and delivery schedules.
-* **Keeping customers:** pause and resume, plan switching, upgrade suggestions and "switch instead of cancelling", a retention offer on cancellation, a win-back email campaign, anniversary thank-yous with an optional gift, and members-only content.
-* **Getting paid:** configurable payment retries and a grace period, with a recovery report, card updates from My Account with expiring-card and "update your payment details" emails, recurring coupons and sign-up fee coupons, subscription webhooks, and WhatsApp notifications.
-* **More gateways:** Square, Braintree, Authorize.net, Mollie, Xendit, Razorpay (UPI Autopay), GoCardless Direct Debit, Adyen, WooPayments, Paddle, and bKash and SSLCommerz by payment link.
-* **Checkout and emails:** one-click checkout, your own Subscribe button text, trial ending and expiring soon reminders, and editing each email's subject, heading and content inside Submex.
-* **Integrations:** LearnDash, Tutor LMS, LearnPress, MailPoet, WP Fusion, AutomatorWP, AutomateWoo, AffiliateWP recurring referrals, BuddyBoss and BuddyPress groups, License Manager for WooCommerce and WP Software License.
-* Reports, subscription health with a digest email, a live QR status page, and WooCommerce API keys on the subscription API.
+= Source code =
+
+The JavaScript for Submex's admin screens is bundled. Its unbundled source is in the plugin's `src/` directory, alongside the build configuration (`package.json`, `webpack.config.js`, `tailwind.config.js`).
+
+To rebuild it, run these commands in the plugin folder:
+
+`npm install`
+
+`npm run build`
+
+The build uses @wordpress/scripts with Tailwind CSS and PostCSS, and needs Node.js.
 
 == Installation ==
 
@@ -79,13 +84,9 @@ To turn a product into a subscription yourself, edit it and choose **Subscriptio
 
 == Frequently Asked Questions ==
 
-= Is this ready for a live store? =
-
-Not yet. The renewal engine is built and tested against a running WordPress, and Stripe and PayPal are included. What has not happened yet is a payment through a real PayPal account, and a renewal watched firing on its own over days. Until both have, use it on a staging site.
-
 = Which payment methods can renew automatically? =
 
-Stripe and PayPal, both included. Stripe saves the card at checkout and Submex charges each renewal itself; PayPal bills its own schedule. Submex Pro adds Square, Braintree, Authorize.net, Mollie, Xendit and WooPayments renewals against the payment method those plugins saved at checkout, and its own checkouts for Razorpay (UPI Autopay), GoCardless Direct Debit and Adyen; Paddle bills its own schedule, as PayPal does. bKash and SSLCommerz cannot charge a customer again automatically, so Pro emails each renewal as a payment link. Without any of them, each renewal is an invoice the customer pays.
+Stripe and PayPal, both included. Without a gateway, each renewal is an invoice the customer pays by hand. A separate Pro plugin adds further gateways.
 
 = What happens to a Direct Debit renewal while it clears? =
 
@@ -101,65 +102,35 @@ Yes, from My Account, and that cannot be turned off. A customer who cannot cance
 
 = Does it work with High-Performance Order Storage? =
 
-Yes. Subscriptions are a native WooCommerce order type, stored in the HPOS tables. WooCommerce's older post-based order storage is supported in the code as well, but has not been tested end to end.
+Yes. Subscriptions are a native WooCommerce order type, stored in the HPOS tables.
 
 == External services ==
 
-Submex talks to a payment provider only when you have switched that provider on and entered
-its credentials. Nothing is sent anywhere by default, and Submex sends nothing to its own
-author or to any analytics service.
+Submex talks to a payment provider only when you have switched that provider on and entered its credentials. Nothing is sent anywhere by default, and Submex sends nothing to its own author or to any analytics service.
 
 = PayPal =
 
-Used to create and run the billing plan, when PayPal is enabled under
-**Submex → Settings → PayPal**.
+Used to create and run the billing plan, when PayPal is enabled under **Submex → Settings → PayPal**.
 
-Requests go to `https://api-m.paypal.com`, or to `https://api-m.sandbox.paypal.com` when the
-environment is set to Sandbox. They are made when a subscription product is bought, and
-whenever PayPal notifies the site of a payment so Submex can verify that the notification is
-genuine. What is sent: the product name, the price, currency and billing cycle of the plan
-including any free trial or sign-up fee, the order number, the customer's first name, last
-name and billing email, this site's name and the addresses PayPal returns the customer to,
-and — for verification — the notification PayPal sent back together with the signature
-headers that came with it.
+Requests go to `https://api-m.paypal.com`, or to `https://api-m.sandbox.paypal.com` when the environment is set to Sandbox. They are made when a subscription product is bought, and whenever PayPal notifies the site of a payment so Submex can verify that the notification is genuine. What is sent: the product name, the price, currency and billing cycle of the plan including any free trial or sign-up fee, the order number, the customer's first name, last name and billing email, this site's name and the addresses PayPal returns the customer to, and — for verification — the notification PayPal sent back together with the signature headers that came with it.
 
-PayPal's terms: https://www.paypal.com/legalhub/useragreement-full — PayPal's privacy
-statement: https://www.paypal.com/legalhub/privacy-full
+PayPal's terms: https://www.paypal.com/legalhub/useragreement-full — PayPal's privacy statement: https://www.paypal.com/legalhub/privacy-full
 
 = Stripe =
 
-Used to take the card payment and charge each renewal, when Stripe is enabled under
-**Submex → Settings → Stripe**.
+Used to take the card payment and charge each renewal, when Stripe is enabled under **Submex → Settings → Stripe**.
 
-Requests go to `https://api.stripe.com`, with the test or live secret key depending on the
-environment chosen. They are made when a customer pays by card at checkout, when they come
-back from Stripe's payment page so Submex can confirm the payment, whenever a renewal is
-charged, and when Submex checks whether a renewal whose result never arrived was charged.
-What is sent: the customer's billing email, and their name if a card has to be linked to a
-Stripe customer; the order number and amount, the currency, and the addresses Stripe returns
-the customer to; and for a renewal, the amount, the currency, the subscription and order
-numbers and the Stripe customer and card saved at checkout. The card itself is entered on
-Stripe's page and never reaches this site.
+Requests go to `https://api.stripe.com`, with the test or live secret key depending on the environment chosen. They are made when a customer pays by card at checkout, when they come back from Stripe's payment page so Submex can confirm the payment, whenever a renewal is charged, and when Submex checks whether a renewal whose result never arrived was charged. What is sent: the customer's billing email, and their name if a card has to be linked to a Stripe customer; the order number and amount, the currency, and the addresses Stripe returns the customer to; and for a renewal, the amount, the currency, the subscription and order numbers and the Stripe customer and card saved at checkout. The card itself is entered on Stripe's page and never reaches this site.
 
-Stripe's terms: https://stripe.com/legal/ssa — Stripe's privacy policy:
-https://stripe.com/privacy
+Stripe's terms: https://stripe.com/legal/ssa — Stripe's privacy policy: https://stripe.com/privacy
 
-= WordPress.org =
+= WordPress.org plugin directory =
 
-The Integrations screen can install a companion plugin for you. Doing so asks
-`https://api.wordpress.org` for that plugin's download, exactly as **Plugins → Add New**
-does. It happens only when you click Install, and sends only the plugin's slug.
+Used only when an administrator clicks **Install** on the Integrations screen to add the FluentCRM plugin (`fluent-crm`). Nothing is requested or installed automatically.
 
-== Source code ==
+When the button is clicked, the site asks the WordPress.org plugin API (`https://api.wordpress.org`) for that plugin's details and download, exactly as **Plugins → Add New** does. The only data sent is the plugin slug, plus the WordPress version and site address that WordPress includes with every plugin request.
 
-The JavaScript for Submex's admin screens is bundled, and its unbundled source ships in this
-plugin's `src/` directory alongside the build configuration. To rebuild it:
-
-`npm install`
-`npm run build`
-
-The build uses @wordpress/scripts with the webpack, Tailwind and PostCSS configuration files
-included in the plugin.
+WordPress.org privacy policy: https://wordpress.org/about/privacy/
 
 == Screenshots ==
 
@@ -196,7 +167,7 @@ included in the plugin.
 * Fixed: PayPal turned on under Submex's settings was not offered at checkout until it was also turned on under WooCommerce → Settings → Payments. Turning either one on now turns on the other; turning PayPal off under Payments alone still keeps existing subscribers renewing.
 
 = 1.1.1 =
-* The cancel form in My Account names the right end date when an extension, such as Submex Pro's pause, moves it.
+* The cancel form in My Account names the right end date when an extension moves it.
 
 = 1.1.0 =
 * Ask before cancelling: an optional reasons screen before a customer cancels, off by default. Continue canceling is always one click.
@@ -208,98 +179,21 @@ included in the plugin.
 * Fixed: the Submex logo in the admin header was cut off.
 
 = 1.0.1 =
-* Renamed to Submex Subscription Billing for WooCommerce (slug `submex`). Options, tables, hooks, order statuses and the text domain use the `submex` prefix, so a store that ran an earlier build under the old name starts fresh.
-* Integrations: installing an integration plugin no longer reloads core admin files WordPress has already loaded, and uninstalling no longer loads `wp-admin/includes/plugin.php` itself.
+* Integrations: installing an integration plugin no longer reloads core admin files WordPress has already loaded.
 
 = 1.0.0 =
-* First stable release. Submex is no longer a development release: everything from 0.32.0, with the readme and user guide updated to match.
-
-= 0.32.0 =
-* Submex's setup notices (PayPal not configured, guest checkout unreachable, tax added twice) appear only on Submex's screens and WooCommerce → Settings (the tax notice also on the orders screens), and Dismiss keeps them away until the problem changes.
-* Downloadable files bought on a subscription follow that subscription; the same product bought once keeps its files.
-* Deleting Submex with "delete data" on no longer removes Submex Pro's or add-ons' settings.
-* Checkout refuses a cart holding more than one subscription, with a message saying so.
-* PayPal: one product sold on different terms gets a PayPal plan for each.
-* For developers: a cart line can be a subscription on terms of its own (new `submex_line_terms` filter). See CHANGELOG.md.
-
-= 0.31.0 =
-* **EasySubscription is now Submex.** New name, slug (`submex`) and prefixes throughout. Settings and data from EasySubscription are not carried over.
-* Admin notices from WordPress and other plugins are no longer moved into the notification bell; only Submex's own are.
-* Markup is escaped where it is printed, and the product-type script is enqueued rather than printed.
-
-= 0.30.3 =
-* **WordPress.org Plugin Check:** the FluentCRM tile no longer loads its icon from another site, and the readme changelog is shorter; the full history is in CHANGELOG.md.
-
-= 0.30.2 =
-* **Fix:** with the real FluentCRM plugin, no contact was created or tagged when a subscription started.
-
-= 0.30.1 =
-* **Fix:** FluentCRM tags and lists did not appear on subscription products, and were not applied, with the real FluentCRM plugin active.
-
-= 0.30.0 =
-* **FluentCRM integration.** Choose FluentCRM tags and lists on each subscription product: they are added when the subscription starts and removed when it ends, after any grace period. Tags a customer already had are never removed.
-
-= 0.29.0 =
-* Email Notifications (renamed from Notifications): turn each email on or off, and preview it as your customers will see it.
-* Cart & Checkout keeps guest checkout and mixed checkout.
-* Payments: PayPal. Stripe, one-click checkout, custom button labels, the trial ending and expiring soon reminders, in-app email editing and API access are part of Submex Pro.
-* The product's Shipping settings appear only when an add-on uses them; WooCommerce's own Virtual option decides whether a subscription ships.
-* Tested with WordPress 7.1.
-
-= 0.28.1 =
-* The notification bell sits beside Help and Settings with its count as a small pill next to it, instead of a badge that covered the bell.
-
-= 0.28.0 =
-* **SubKit is now Submex in every name:** folder, files, code, settings, database tables, hooks, the API (`submex/v1`) and the repository. It is a new plugin: nothing is carried over from SubKit.
-* **Quieter admin notices.** Only what needs you now — renewals or money at risk, or the result of something you just did — shows under the header, as compact cards (three at most). Everything else, including other plugins' notices, waits in a bell with a count in the top bar.
-
-= 0.27.0 =
-* **Your logo.** The Submex logo leads every screen, and its icon marks the admin menu.
-* **Notifications.** Every Submex email is listed with one switch — the same switch WooCommerce uses, so both screens always agree — and edited inside Submex: subject, heading, additional content and format, with a preview. The renewal reminder is now set in hours before the renewal (existing stores are converted automatically).
-* **New emails:** a trial ending reminder (3 days before a free trial turns into a paid subscription), an expiring soon reminder for subscriptions with an end date, and a subscription reactivated email.
-* **Cart & Checkout:** choose whether subscriptions and one-time products can be bought together, send customers straight to checkout when they subscribe, and set the Subscribe button text.
-* **API Settings:** let WooCommerce API keys use the subscription API (off by default; a read-only key can only read), with the list of endpoints and a link to create keys. Payment webhooks are unaffected.
-
-= 0.26.1 =
-* Settings show a number's unit in its title, such as "Grace period after due date (Days)", instead of beside the box.
-
-= 0.26.0 =
-* **Settings without reloads.** Switching sections is instant, settings that depend on a switch appear and disappear as you toggle it, and Save stores your changes in place with a confirmation. Unsaved changes are kept while you move between sections, and you are asked before leaving with changes unsaved.
-
-= 0.25.0 =
-* **The admin is one app.** Home, All subscriptions, Settings, Integrations and Help open inside one screen: moving between them, from the sidebar or from links, no longer reloads the page, and the browser's back and forward buttons work. Links and bookmarks keep working as before. Integrations and Help are rebuilt for it.
-* The dashboard's "needs attention" links now open the subscription list already filtered.
-
-The full history is in CHANGELOG.md, inside the plugin.
+* Initial release.
 
 == Upgrade Notice ==
 
 = 1.2.1 =
-Fixes PayPal and Stripe charging the wrong amount in some stores, and trials giving access before payment. Recommended for every store. With Submex Pro, update Pro to 0.55.0 too.
+Fixes PayPal and Stripe charging the wrong amount in some stores, and trials giving access before payment. Recommended for every store. If you use Submex Pro, update it as well.
 
 = 1.2.0 =
-Stripe card payments and automatic renewals are now part of the free plugin. With Submex Pro, update Pro to 0.54.0 too.
+Stripe card payments and automatic renewals are now part of the free plugin. If you use Submex Pro, update it as well.
 
 = 1.1.3 =
 Subscription products show their price and Virtual box again when edited, so a digital subscription no longer needs shipping. Settings are now only under Submex → Settings.
 
-= 1.1.2 =
-PayPal turned on in Submex's settings now shows at checkout without a second switch under WooCommerce → Payments.
-
-= 1.1.1 =
-The cancel form names the right end date for a paused subscription (with Submex Pro 0.53.1).
-
-= 1.1.0 =
-Adds Ask before cancelling (off by default), editable cancellation reasons and confirmation messages.
-
-= 1.0.1 =
-The plugin is now Submex Subscription Billing for WooCommerce. Install it fresh: settings and subscriptions from the old name are not carried over.
-
 = 1.0.0 =
-First stable release.
-
-= 0.13.1 =
-Fixes missed renewals being skipped on stores with more than 50 active subscriptions.
-
-= 0.13.0 =
-Submex now opens on a Home screen, and the subscriptions list moves to Submex → All subscriptions. Old links still work.
+Initial release.
