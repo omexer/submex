@@ -73,6 +73,11 @@ class Role_Management {
 			return;
 		}
 
+		// Still paid for until the period runs out, when it moves on to cancelled.
+		if ( Subscription_Status::PendingCancel === $status ) {
+			return;
+		}
+
 		if ( ! $subscription->in_grace() ) {
 			$this->demote( $subscription );
 		}
