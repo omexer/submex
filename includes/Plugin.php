@@ -211,6 +211,7 @@ final class Plugin {
 		);
 
 		( new Stripe_Keys_Guard() )->register();
+		( new \Submex\Admin\Gateway_Key_Check() )->register();
 
 		if ( self::owns_stripe() ) {
 			Gateway_Switch::link( Stripe_Checkout_Gateway::ID, 'submex_stripe_enabled' );

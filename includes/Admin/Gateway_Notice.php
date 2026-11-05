@@ -45,6 +45,17 @@ class Gateway_Notice {
 			'stripe'
 		);
 
+		foreach ( Gateway_Refusals::all() as $submex_id => $submex_refusal ) {
+			$this->notice(
+				'submex_refused_' . $submex_id,
+				/* translators: %s: payment provider name */
+				sprintf( __( '%s refused this store, so customers cannot pay with it.', 'submex' ), $submex_refusal['title'] ),
+				array( $submex_refusal['reason'] ),
+				md5( $submex_refusal['reason'] ),
+				$submex_refusal['section']
+			);
+		}
+
 		$rejected = (int) get_option( Stripe_Gateway::OPTION_KEY_REJECTED, 0 );
 
 		$this->notice(

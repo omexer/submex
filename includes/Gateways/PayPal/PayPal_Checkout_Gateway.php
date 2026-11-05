@@ -2,6 +2,7 @@
 
 namespace Submex\Gateways\PayPal;
 
+use Submex\Admin\Gateway_Refusals;
 use Submex\Admin\Settings_Page;
 use Submex\Domain\Currency;
 use Submex\Product\Line_Terms;
@@ -131,6 +132,8 @@ class PayPal_Checkout_Gateway extends \WC_Payment_Gateway {
 
 		$plan = $this->plans->plan_for( $product, $terms );
 		if ( ! $plan['ok'] ) {
+			Gateway_Refusals::record( self::ID, 'PayPal', $plan['error'], 'paypal' );
+
 			return $this->abort( $order, $plan['error'] );
 		}
 
@@ -158,8 +161,12 @@ class PayPal_Checkout_Gateway extends \WC_Payment_Gateway {
 		);
 
 		if ( ! $response['ok'] || empty( $response['body']['id'] ) ) {
+			Gateway_Refusals::record( self::ID, 'PayPal', $response['error'], 'paypal' );
+
 			return $this->abort( $order, $response['error'] );
 		}
+
+		Gateway_Refusals::clear( self::ID );
 
 		$order->update_meta_data( PayPal_Gateway::META_SUBSCRIPTION_ID, $response['body']['id'] );
 		$order->update_meta_data( PayPal_Gateway::META_PLAN_ID, $plan['plan_id'] );
