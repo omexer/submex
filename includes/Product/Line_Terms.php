@@ -109,6 +109,15 @@ final class Line_Terms {
 	}
 
 	/**
+	 * Whether amounts are shown without the tax that each payment will carry.
+	 */
+	public function shown_without_tax( \WC_Product $product ): bool {
+		$where = null === $this->cart_item && null === $this->order_item ? 'shop' : 'cart';
+
+		return wc_tax_enabled() && $product->is_taxable() && 'excl' === get_option( 'woocommerce_tax_display_' . $where );
+	}
+
+	/**
 	 * An amount as the customer is shown it: for the line's quantity, with or without tax as the store displays prices, by the cart's setting for a line and the shop's otherwise.
 	 */
 	public function shown( Money $amount, \WC_Product $product ): Money {

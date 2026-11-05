@@ -291,6 +291,16 @@ class Setup_Guide {
 			}
 		}
 
+		$registry = \Submex\Plugin::instance()->get( 'gateways' );
+		$methods  = WC()->payment_gateways()->payment_gateways();
+
+		// A hosted gateway renews through the provider's own plugin, so it has no method here of its own to ask.
+		foreach ( $registry instanceof \Submex\Gateways\Gateway_Registry ? $registry->all() : array() as $gateway ) {
+			if ( ! isset( $methods[ $gateway->id() ] ) && method_exists( $gateway, 'is_configured' ) && $gateway->is_configured() ) {
+				$names[] = $gateway->title();
+			}
+		}
+
 		return $names;
 	}
 

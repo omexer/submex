@@ -229,6 +229,43 @@ $declined = $act( $s, 'renew_now' );
 $check( 'a declined overdue renewal is reported as declined too', 402 === $declined->get_status(), $declined->get_status() );
 $approve = true;
 
+echo "\n4b. What Renew now reports\n";
+$s = $subscription( Test_Gateway::ID, 20 );
+$check( 'a paid renewal says it was paid', 'paid' === ( $act( $s, 'renew_now' )->get_data()['renewal_result'] ?? '' ) );
+$s = $subscription( 'manual', 20 );
+$check( 'a pay-by-link renewal says the customer was asked', 'needs_customer' === ( $act( $s, 'renew_now' )->get_data()['renewal_result'] ?? '' ) );
+
+echo "\n4c. The last paid period\n";
+$last = $subscription( Test_Gateway::ID, 20 );
+$last->set_end_date( gmdate( 'Y-m-d H:i:s', time() + 10 * DAY_IN_SECONDS ) );
+$last->save();
+$before = $last->get_next_payment();
+update_option( \Submex\Lifecycle\Early_Renewal::OPTION, 'yes' );
+$check( 'Pay early is not offered', ! \Submex\Lifecycle\Early_Renewal::is_available_for( wc_get_order( $last->get_id() ) ) );
+delete_option( \Submex\Lifecycle\Early_Renewal::OPTION );
+$refused = $act( $last, 'renew_now' );
+$check( 'Renew now is refused', 409 === $refused->get_status(), $refused->get_data() );
+$plugin->get( 'processor' )->process( $last->get_id(), true );
+$kept = wc_get_order( $last->get_id() );
+$check( 'and pressing it anyway does not end what was paid for', Subscription_Status::Active === $kept->get_status_enum() && $before === $kept->get_next_payment(), $kept->get_status() );
+$request = new WP_REST_Request( 'PUT', '/submex/v1/subscriptions/' . $last->get_id() );
+$request->set_param( 'end_date', '' );
+$scheduler->unschedule( $last->get_id() );
+rest_do_request( $request );
+$check( 'clearing the end date queues the reminder and the charge', (bool) as_next_scheduled_action( Renewal_Scheduler::ACTION_REMINDER, array( 'subscription_id' => $last->get_id() ), Renewal_Scheduler::GROUP ) && (bool) as_next_scheduled_action( Renewal_Scheduler::ACTION_RENEWAL, array( 'subscription_id' => $last->get_id() ), Renewal_Scheduler::GROUP ) );
+
+$cancelling = $subscription( Test_Gateway::ID, 20 );
+$cancelling->transition_to( Subscription_Status::PendingCancel );
+$cancelling->save();
+$scheduler->schedule_at( $cancelling->get_id(), time() + 20 * DAY_IN_SECONDS );
+$sooner  = time() + 5 * DAY_IN_SECONDS;
+$request = new WP_REST_Request( 'PUT', '/submex/v1/subscriptions/' . $cancelling->get_id() );
+$request->set_param( 'next_payment', gmdate( 'Y-m-d H:i:s', $sooner ) );
+rest_do_request( $request );
+$at = as_next_scheduled_action( Renewal_Scheduler::ACTION_RENEWAL, array( 'subscription_id' => $cancelling->get_id() ), Renewal_Scheduler::GROUP );
+$check( 'a cancelling subscription ends on its moved date', $at && abs( $at - $sooner ) < 120, array( $at, $sooner ) );
+$check( 'with no renewal reminder', ! as_next_scheduled_action( Renewal_Scheduler::ACTION_REMINDER, array( 'subscription_id' => $cancelling->get_id() ), Renewal_Scheduler::GROUP ) );
+
 echo "\n5. Customers who pay by link\n";
 $sent = array();
 $spy  = static function ( $args ) use ( &$sent ) {
@@ -365,9 +402,16 @@ $render = static function ( callable $print ): string {
 	return (string) ob_get_clean();
 };
 $check( 'unpaid, the thank-you page says it starts once paid', str_contains( $render( static fn() => $summary->thank_you( $bought->get_id() ) ), 'once this order is paid' ) );
+$paid_email = '';
+$early_mail = static function ( $order_id ) use ( &$paid_email, $summary, $render ): void {
+	$paid_email = $render( static fn() => $summary->email( wc_get_order( $order_id ), false, false ) );
+};
+add_action( 'woocommerce_order_status_pending_to_processing', $early_mail, 1 );
 $bought->payment_complete( 'x' );
+remove_action( 'woocommerce_order_status_pending_to_processing', $early_mail, 1 );
 $bought = wc_get_order( $bought->get_id() );
 $page   = $render( static fn() => $summary->thank_you( $bought->get_id() ) );
+$check( 'the paid email, sent before the subscription starts, states the date too', str_contains( $paid_email, 'next payment is on' ) && ! str_contains( $paid_email, 'once this order is paid' ), $paid_email );
 $check( 'paid, it states the price and next date', str_contains( $page, 'every month' ) && str_contains( $page, 'next payment is on' ), $page );
 $check( 'the customer email has it', str_contains( $render( static fn() => $summary->email( $bought, false, false ) ), 'Your subscription' ) );
 $check( 'the plain text email too', str_contains( $render( static fn() => $summary->email( $bought, false, true ) ), 'next payment is on' ) );
@@ -381,10 +425,32 @@ $renewal_order->save();
 $made[] = $renewal_order;
 $check( 'nor a renewal order', '' === $render( static fn() => $summary->thank_you( $renewal_order->get_id() ) ) );
 
+echo "\n11b. Tax left out of the amounts shown\n";
+$tax_on  = get_option( 'woocommerce_calc_taxes' );
+$display = get_option( 'woocommerce_tax_display_shop' );
+update_option( 'woocommerce_calc_taxes', 'yes' );
+update_option( 'woocommerce_tax_display_shop', 'excl' );
+$taxed = wc_get_product( submex_test_product()->get_id() );
+$check( 'the terms say so', str_contains( implode( ' ', array_column( $disclosure->lines( $taxed ), 'text' ) ), 'exclude tax' ) );
+$check( 'and so does the consent', str_contains( $disclosure->sentence( $taxed ), 'exclude tax' ) );
+update_option( 'woocommerce_tax_display_shop', 'incl' );
+$check( 'shown with tax, nothing is added', ! str_contains( $disclosure->sentence( $taxed ), 'exclude tax' ) );
+update_option( 'woocommerce_calc_taxes', $tax_on );
+update_option( 'woocommerce_tax_display_shop', $display );
+
 echo "\n12. The setup checklist\n";
 $guide_steps = ( new \Submex\Admin\Setup_Guide( $plugin->get( 'scheduler' ) ) )->steps();
 $payment_step = array_values( array_filter( $guide_steps, static fn( $step ) => str_contains( strtolower( (string) ( $step['title'] ?? '' ) ), 'payment' ) ) )[0] ?? array();
 $offered = array_filter( WC()->payment_gateways()->payment_gateways(), static fn( $m ) => str_starts_with( (string) $m->id, 'submex' ) && 'yes' === $m->enabled && $m->is_available() );
+$plugin->get( 'gateways' )->add(
+	new class() extends \Submex\Gateways\Manual_Gateway {
+		public function id(): string { return 'sk_hosted'; }
+		public function title(): string { return 'Hosted harness'; }
+		public function is_configured(): bool { return true; }
+	}
+);
+$with_hosted = array_values( array_filter( ( new \Submex\Admin\Setup_Guide( $plugin->get( 'scheduler' ) ) )->steps(), static fn( $step ) => str_contains( strtolower( (string) ( $step['title'] ?? '' ) ), 'payment' ) ) )[0] ?? array();
+$check( 'a connected hosted gateway ticks it', true === ( $with_hosted['done'] ?? false ) && str_contains( (string) ( $with_hosted['detail'] ?? '' ), 'Hosted harness' ), $with_hosted );
 $check( 'a gateway only ticks the step if it is really offered', (bool) ( $payment_step['done'] ?? false ) === (bool) $offered, array( $payment_step['done'] ?? null, array_keys( $offered ) ) );
 
 foreach ( $made as $thing ) {

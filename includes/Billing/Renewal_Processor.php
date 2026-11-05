@@ -104,6 +104,13 @@ class Renewal_Processor {
 		$stop = apply_filters( 'submex_stop_billing', $this->end_date_reached( $subscription ), $subscription );
 
 		if ( is_string( $stop ) && '' !== $stop ) {
+			$due = $this->as_date( $subscription->get_next_payment() );
+
+			// Asked for ahead of time, finishing now would take away a period already paid for.
+			if ( $even_if_not_due && $due && $due > new \DateTimeImmutable( 'now', new \DateTimeZone( 'UTC' ) ) ) {
+				return;
+			}
+
 			$this->finish( $subscription, $stop );
 			return;
 		}
@@ -712,6 +719,16 @@ class Renewal_Processor {
 	/**
 	 * End a subscription that has reached its natural conclusion rather than renewing it.
 	 */
+	/**
+	 * Whether the coming due date ends this subscription rather than renewing it, so there is nothing to pay ahead for.
+	 */
+	public function ends_at_next_due( Subscription $subscription ): bool {
+		/** This filter is documented in includes/Billing/Renewal_Processor.php */
+		$stop = apply_filters( 'submex_stop_billing', $this->end_date_reached( $subscription ), $subscription );
+
+		return is_string( $stop ) && '' !== $stop;
+	}
+
 	private function finish( Subscription $subscription, string $reason ): void {
 		$this->close( $subscription, Subscription_Status::Expired, $reason );
 

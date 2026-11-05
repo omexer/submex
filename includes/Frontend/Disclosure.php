@@ -88,7 +88,16 @@ class Disclosure {
 		 * @param \WC_Product $product
 		 * @param Line_Terms  $terms   What they were written from; its cart_item() or order_item() is the line, if any.
 		 */
-		return apply_filters( 'submex_disclosure_lines', $lines, $product, $terms );
+		$lines = apply_filters( 'submex_disclosure_lines', $lines, $product, $terms );
+
+		if ( is_array( $lines ) && $terms->shown_without_tax( $product ) ) {
+			$lines[] = array(
+				'key'  => 'tax',
+				'text' => __( 'Amounts exclude tax, which is added where it applies', 'submex' ),
+			);
+		}
+
+		return $lines;
 	}
 
 	/**
@@ -174,7 +183,11 @@ class Disclosure {
 		 * @param \WC_Product $product
 		 * @param Line_Terms  $terms
 		 */
-		return (string) apply_filters( 'submex_disclosure_sentence', $this->default_sentence( $product, $terms ), $product, $terms );
+		$sentence = (string) apply_filters( 'submex_disclosure_sentence', $this->default_sentence( $product, $terms ), $product, $terms );
+
+		return $terms->shown_without_tax( $product )
+			? $sentence . ' ' . __( 'Amounts exclude tax, which is added where it applies.', 'submex' )
+			: $sentence;
 	}
 
 	private function default_sentence( \WC_Product $product, Line_Terms $terms ): string {

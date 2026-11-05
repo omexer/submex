@@ -4,7 +4,7 @@
  * Everything the WP_List_Table did: status tabs with counts, search, sorting, per-row
  * actions, bulk actions and pagination - without a page load between any of them.
  */
-import { renewQuestion } from './renew-question';
+import { renewNotice, renewQuestion } from './renew-question';
 import { useEffect, useState, useCallback } from '@wordpress/element';
 import { __, sprintf, _n } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
@@ -298,14 +298,8 @@ export function List( {
 			method: 'POST',
 			data: { action: 'renew_now' },
 		} )
-			.then( () => {
-				setNotice( {
-					ok: true,
-					message: __(
-						'The renewal went through. The activity log has the details.',
-						'submex'
-					),
-				} );
+			.then( ( response ) => {
+				setNotice( renewNotice( response?.renewal_result ) );
 
 				return load( query );
 			} )
@@ -632,7 +626,8 @@ export function List( {
 										</TableCell>
 										<TableCell className="sb-text-right">
 											{ row.billable &&
-											! row.payment_pending ? (
+											! row.payment_pending &&
+											! row.provider_bills ? (
 												<Button
 													variant="outline"
 													size="sm"

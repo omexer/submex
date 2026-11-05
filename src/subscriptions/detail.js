@@ -1,7 +1,7 @@
 /**
  * One subscription: what it is, what happens next, and the things you can do to it.
  */
-import { renewQuestion } from './renew-question';
+import { renewNotice, renewQuestion } from './renew-question';
 import { useEffect, useState, useCallback } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
@@ -164,17 +164,12 @@ export function Detail( { id, onBack, onFail } ) {
 			method: 'POST',
 			data: { action },
 		} )
-			.then( () => {
-				setNotice( {
-					ok: true,
-					message:
-						'renew_now' === action && data?.pays_by_link
-							? __(
-									'A renewal was raised and the customer was emailed a link to pay it.',
-									'submex'
-							  )
-							: __( 'Done.', 'submex' ),
-				} );
+			.then( ( response ) => {
+				setNotice(
+					'renew_now' === action
+						? renewNotice( response?.renewal_result )
+						: { ok: true, message: __( 'Done.', 'submex' ) }
+				);
 
 				return load();
 			} )

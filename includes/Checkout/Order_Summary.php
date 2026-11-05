@@ -24,16 +24,17 @@ class Order_Summary {
 	 * @param int|string $order_id
 	 */
 	public function thank_you( $order_id ): void {
-		$subscription = self::for_order( wc_get_order( $order_id ) );
+		$order        = wc_get_order( $order_id );
+		$subscription = self::for_order( $order );
 
-		if ( ! $subscription ) {
+		if ( ! $subscription || ! $order instanceof \WC_Order ) {
 			return;
 		}
 
 		printf(
 			'<section class="submex-order-summary"><h2>%1$s</h2><p>%2$s</p><p><a class="wp-element-button button" href="%3$s">%4$s</a></p></section>',
 			esc_html__( 'Your subscription', 'submex' ),
-			esc_html( self::sentence( $subscription ) ),
+			esc_html( self::sentence( $subscription, $order ) ),
 			esc_url( self::manage_url( $subscription ) ),
 			esc_html__( 'Manage your subscription', 'submex' )
 		);
@@ -52,14 +53,14 @@ class Order_Summary {
 		}
 
 		if ( $plain_text ) {
-			echo "\n" . esc_html( self::sentence( $subscription ) ) . "\n" . esc_url_raw( self::manage_url( $subscription ) ) . "\n";
+			echo "\n" . esc_html( self::sentence( $subscription, $order ) ) . "\n" . esc_url_raw( self::manage_url( $subscription ) ) . "\n";
 			return;
 		}
 
 		printf(
 			'<h2>%1$s</h2><p>%2$s <a href="%3$s">%4$s</a></p>',
 			esc_html__( 'Your subscription', 'submex' ),
-			esc_html( self::sentence( $subscription ) ),
+			esc_html( self::sentence( $subscription, $order ) ),
 			esc_url( self::manage_url( $subscription ) ),
 			esc_html__( 'Manage your subscription', 'submex' )
 		);
@@ -87,12 +88,12 @@ class Order_Summary {
 		return $status && ( $status->is_billable() || Subscription_Status::Pending === $status || Subscription_Status::OnHold === $status ) ? $subscription : null;
 	}
 
-	private static function sentence( Subscription $subscription ): string {
+	private static function sentence( Subscription $subscription, \WC_Order $order ): string {
 		$price = wp_strip_all_tags( Status_Presenter::price( $subscription ) );
 		$next  = $subscription->get_next_payment();
 
-		// Unpaid, so its dates only start counting once it is paid.
-		if ( Subscription_Status::Pending === $subscription->get_status_enum() || empty( $next ) ) {
+		// By the order: WooCommerce sends its paid email before the subscription is started.
+		if ( ! $order->is_paid() || empty( $next ) ) {
 			/* translators: %s: recurring price such as "$25.00 every month" */
 			return sprintf( __( '%s. It starts once this order is paid.', 'submex' ), $price );
 		}

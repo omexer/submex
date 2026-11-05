@@ -31,6 +31,8 @@ class Subscriptions_Controller {
 
 	private const REST_BASE = 'subscriptions';
 
+	private ?string $renewal_result = null;
+
 	public function __construct(
 		private readonly Activity_Repository $activity,
 		private readonly ?Renewal_Processor $processor = null
@@ -277,6 +279,7 @@ class Subscriptions_Controller {
 		}
 
 		$moved = false;
+		$was   = $subscription->get_status_enum();
 
 		foreach ( array( 'next_payment', 'end_date' ) as $field ) {
 			$value = $request->get_param( $field );
@@ -295,6 +298,7 @@ class Subscriptions_Controller {
 
 			if ( 'end_date' === $field && '' === $value ) {
 				$subscription->set_end_date( null );
+				$moved = true;
 				continue;
 			}
 
@@ -305,7 +309,7 @@ class Subscriptions_Controller {
 				continue;
 			}
 
-			if ( $date && 'next_payment' === $field ) {
+			if ( $date ) {
 				$moved = true;
 			}
 
@@ -335,9 +339,15 @@ class Subscriptions_Controller {
 		// The queued renewal and reminder still hold the old date, and the sweeper leaves anything queued alone.
 		$scheduler = \Submex\Plugin::instance()->get( 'scheduler' );
 
-		if ( $moved && $scheduler instanceof \Submex\Billing\Renewal_Scheduler && $subscription->get_status_enum()?->is_billable() ) {
-			$scheduler->unschedule( $subscription->get_id() );
-			$scheduler->schedule_next( $subscription );
+		if ( $moved && $scheduler instanceof \Submex\Billing\Renewal_Scheduler ) {
+			if ( $was && $was->is_billable() ) {
+				$scheduler->unschedule( $subscription->get_id() );
+				$scheduler->schedule_next( $subscription );
+			} elseif ( Subscription_Status::PendingCancel === $was && $subscription->get_next_payment() ) {
+				// Its queued action is what ends the access, and a cancelling customer gets no reminder.
+				$scheduler->unschedule( $subscription->get_id() );
+				$scheduler->schedule_at( $subscription->get_id(), (int) strtotime( $subscription->get_next_payment() . ' UTC' ) );
+			}
 		}
 
 		$this->activity->log(
@@ -415,7 +425,13 @@ class Subscriptions_Controller {
 			);
 		}
 
-		return new \WP_REST_Response( $this->present( wc_get_order( $subscription->get_id() ) ) );
+		$body = $this->present( wc_get_order( $subscription->get_id() ) );
+
+		if ( null !== $this->renewal_result ) {
+			$body['renewal_result'] = $this->renewal_result;
+		}
+
+		return new \WP_REST_Response( $body );
 	}
 
 	/**
@@ -527,7 +543,7 @@ class Subscriptions_Controller {
 			);
 		}
 
-		$guard = 'submex_renew_now_' . $subscription->get_id();
+		$guard = \Submex\Lifecycle\Early_Renewal::guard_key( $subscription->get_id() );
 
 		if ( get_transient( $guard ) ) {
 			return new \WP_Error(
@@ -537,15 +553,32 @@ class Subscriptions_Controller {
 			);
 		}
 
+		$due = strtotime( (string) $subscription->get_next_payment() . ' UTC' );
+
+		if ( $due && $due > time() && $this->processor->ends_at_next_due( $subscription ) ) {
+			return new \WP_Error(
+				'submex_last_period',
+				__( 'This is the last paid period, so there is no further payment to take. The subscription ends on its next payment date.', 'submex' ),
+				array( 'status' => 409 )
+			);
+		}
+
 		set_transient( $guard, 1, MINUTE_IN_SECONDS );
 
+		$outcome  = null;
 		$declined = null;
-		$watch    = static function ( $charged, $order, $result ) use ( &$declined, $subscription ): void {
-			if ( $charged instanceof Subscription && $charged->get_id() === $subscription->get_id() ) {
+		$watch    = static function ( $charged, $order = null, $result = null ) use ( &$outcome, &$declined, $subscription ): void {
+			if ( ! $charged instanceof Subscription || $charged->get_id() !== $subscription->get_id() || null !== $outcome ) {
+				return;
+			}
+
+			$outcome = current_action();
+
+			if ( in_array( $outcome, array( 'submex_renewal_failed', 'submex_early_renewal_declined' ), true ) && $result instanceof \Submex\Gateways\Charge_Result ) {
 				$declined = $result->describe();
 			}
 		};
-		$hooks    = array( 'submex_renewal_failed', 'submex_early_renewal_declined' );
+		$hooks    = array( 'submex_renewal_succeeded', 'submex_renewal_pending', 'submex_renewal_requires_action', 'submex_renewal_failed', 'submex_early_renewal_declined' );
 
 		foreach ( $hooks as $hook ) {
 			add_action( $hook, $watch, 1, 3 );
@@ -568,6 +601,13 @@ class Subscriptions_Controller {
 				array( 'status' => 402 )
 			);
 		}
+
+		$this->renewal_result = match ( $outcome ) {
+			'submex_renewal_succeeded'       => 'paid',
+			'submex_renewal_pending'         => 'pending',
+			'submex_renewal_requires_action' => 'needs_customer',
+			default                          => 'unknown',
+		};
 
 		return true;
 	}
@@ -638,6 +678,18 @@ class Subscriptions_Controller {
 				__( 'This subscription is already running, so there is nothing to reactivate.', 'submex' ),
 				array( 'status' => 409 )
 			);
+		}
+
+		/**
+		 * Reactivate a subscription some other way, such as Pro resuming one a customer paused. Null to leave it to this.
+		 *
+		 * @param bool|\WP_Error|null $done
+		 * @param Subscription        $subscription
+		 */
+		$handled = apply_filters( 'submex_reactivate_subscription', null, $subscription );
+
+		if ( null !== $handled ) {
+			return $handled;
 		}
 
 		$done = $this->change_status( $subscription, Subscription_Status::Active->value, $reason );

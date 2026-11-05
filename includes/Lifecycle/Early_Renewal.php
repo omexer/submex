@@ -29,11 +29,25 @@ final class Early_Renewal {
 	}
 
 	/**
+	 * Shared with the admin's Renew now, so a merchant and a customer pressing within a minute pay one period.
+	 */
+	public static function guard_key( int $subscription_id ): string {
+		return 'submex_renew_now_' . $subscription_id;
+	}
+
+	/**
 	 * Only a gateway Submex charges itself can be asked to charge today. A gateway that
 	 * bills from a plan of its own, such as PayPal, has no way to bring a payment forward.
 	 */
 	public static function is_available_for( Subscription $subscription ): bool {
 		if ( ! self::is_offered() ) {
+			return false;
+		}
+
+		$processor = \Submex\Plugin::instance()->get( 'processor' );
+
+		// The last paid period has no next payment to bring forward.
+		if ( $processor instanceof Renewal_Processor && $processor->ends_at_next_due( $subscription ) ) {
 			return false;
 		}
 
@@ -69,7 +83,7 @@ final class Early_Renewal {
 			);
 		}
 
-		$guard = 'submex_renew_early_' . $subscription->get_id();
+		$guard = self::guard_key( $subscription->get_id() );
 
 		// A real charge for a further period, so a double click must not pay two.
 		if ( get_transient( $guard ) ) {
@@ -102,7 +116,8 @@ final class Early_Renewal {
 			remove_action( $hook, $watch, 1 );
 		}
 
-		if ( 'submex_renewal_succeeded' !== $outcome && 'submex_renewal_pending' !== $outcome ) {
+		// Only a definite decline frees it: with no outcome the charge may still have gone through.
+		if ( 'submex_renewal_failed' === $outcome || 'submex_early_renewal_declined' === $outcome ) {
 			delete_transient( $guard );
 		}
 
@@ -138,7 +153,7 @@ final class Early_Renewal {
 			),
 			default                          => array(
 				'ok'      => false,
-				'message' => __( 'We could not take that payment just now. Nothing has been charged.', 'submex' ),
+				'message' => __( 'We could not confirm that payment just now. Check your subscription and your statement before trying again.', 'submex' ),
 			),
 		};
 	}
