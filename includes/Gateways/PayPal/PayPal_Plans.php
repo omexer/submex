@@ -28,7 +28,7 @@ class PayPal_Plans {
 	/**
 	 * The plan id for this product, creating it at PayPal if needed.
 	 *
-	 * @return array{ok: bool, plan_id: string, error: string}
+	 * @return array{ok: bool, plan_id: string, error: string, status?: int}
 	 */
 	public function plan_for( \WC_Product $product, ?Line_Terms $terms = null ): array {
 		$terms  = $terms ?? Line_Terms::for_product( $product );
@@ -105,7 +105,7 @@ class PayPal_Plans {
 	}
 
 	/**
-	 * @return array{ok: bool, id: string, error: string}
+	 * @return array{ok: bool, id: string, error: string, status: int}
 	 */
 	private function paypal_product_for( \WC_Product $product ): array {
 		$existing = (string) $product->get_meta( self::META_PRODUCT );
@@ -148,7 +148,7 @@ class PayPal_Plans {
 	}
 
 	/**
-	 * @return array{ok: bool, id: string, error: string}
+	 * @return array{ok: bool, id: string, error: string, status: int}
 	 */
 	private function create_plan( \WC_Product $product, Line_Terms $terms, int $total_cycles, string $paypal_product_id ): array {
 		$schedule = $terms->schedule();
