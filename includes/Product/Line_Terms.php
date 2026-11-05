@@ -51,6 +51,15 @@ final class Line_Terms {
 		self::$cart_lines ??= new \WeakMap();
 
 		if ( isset( self::$cart_lines[ $product ] ) ) {
+			$known = self::$cart_lines[ $product ];
+
+			// Terms and price stay as first read; a quantity changed since is not that request's stale price.
+			if ( ( $item['quantity'] ?? 1 ) === ( $known->cart_item['quantity'] ?? 1 ) ) {
+				return $known;
+			}
+
+			self::$cart_lines[ $product ] = new self( $known->schedule, $known->price, $known->signup_fee, $item, null );
+
 			return self::$cart_lines[ $product ];
 		}
 
@@ -100,7 +109,7 @@ final class Line_Terms {
 	}
 
 	/**
-	 * An amount as the customer is shown it: with or without tax as the store displays prices, by the cart's setting for a line and the shop's otherwise.
+	 * An amount as the customer is shown it: for the line's quantity, with or without tax as the store displays prices, by the cart's setting for a line and the shop's otherwise.
 	 */
 	public function shown( Money $amount, \WC_Product $product ): Money {
 		return Money::from_decimal(
@@ -108,12 +117,21 @@ final class Line_Terms {
 				$product,
 				array(
 					'price'           => $amount->decimal(),
+					'qty'             => $this->quantity(),
 					'display_context' => null === $this->cart_item && null === $this->order_item ? 'shop' : 'cart',
 				)
 			),
 			$amount->currency(),
 			$amount->decimals()
 		);
+	}
+
+	public function quantity(): int {
+		if ( null !== $this->cart_item ) {
+			return max( 1, (int) ( $this->cart_item['quantity'] ?? 1 ) );
+		}
+
+		return $this->order_item ? max( 1, (int) $this->order_item->get_quantity() ) : 1;
 	}
 
 	/**

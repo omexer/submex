@@ -1,7 +1,7 @@
 <?php
 /**
- * The amounts in a disclosure are the ones the store displays: with or without tax, on the shop's setting
- * on a product page and the cart's in the cart, on classic and block checkout alike.
+ * The amounts in a disclosure are the ones the store charges and displays: for the quantity in the cart, with or
+ * without tax, on the shop's setting on a product page and the cart's in the cart, on classic and block checkout alike.
  *
  * @package Submex
  */
@@ -111,6 +111,28 @@ $prices( 'no', 'excl', 'excl' );
 $check( 'without tax throughout', str_contains( $facts( $plain_product ), 'Then $60.00 every month' ) );
 $prices( 'yes', 'incl', 'incl' );
 $check( 'with tax throughout', str_contains( $facts( $plain_product ), 'Then $60.00 every month' ) );
+
+echo "\nSeveral of them cost several times as much\n";
+$prices( 'no', 'excl', 'excl' );
+WC()->cart->empty_cart();
+wc_clear_notices();
+$key = WC()->cart->add_to_cart( $fee_product->get_id(), 2 );
+WC()->cart->calculate_totals();
+$in = $plugin->get( 'store_api' )->cart_data();
+$check( 'the cart charges for two, before tax', '130.00' === wc_format_decimal( WC()->cart->get_subtotal(), 2 ), WC()->cart->get_subtotal() );
+$check( 'the fee, first payment and renewal say so', str_contains( implode( ' | ', $in['lines'] ), '$10.00 sign-up fee today' ) && str_contains( implode( ' | ', $in['lines'] ), 'First payment $130.00 today' ) && str_contains( implode( ' | ', $in['lines'] ), 'Then $120.00 every month' ), $in['lines'] );
+$check( 'and so do the headline and consent', str_contains( $in['price_line'], '$120.00' ) && str_contains( $in['consent'], '$120.00' ), $in );
+WC()->cart->set_quantity( $key, 3 );
+WC()->cart->calculate_totals();
+$in = $plugin->get( 'store_api' )->cart_data();
+$check( 'changing the quantity in the same request keeps up', str_contains( implode( ' | ', $in['lines'] ), 'Then $180.00 every month' ), $in['lines'] );
+$prices( 'no', 'incl', 'incl' );
+WC()->cart->set_quantity( $key, 2 );
+WC()->cart->calculate_totals();
+$in = $plugin->get( 'store_api' )->cart_data();
+$check( 'with tax on all of it', str_contains( implode( ' | ', $in['lines'] ), 'First payment $156.00 today' ) && str_contains( implode( ' | ', $in['lines'] ), 'Then $144.00 every month' ), $in['lines'] );
+$prices( 'no', 'excl', 'excl' );
+$check( 'a product page is for one', str_contains( $facts( $fee_product ), 'Then $60.00 every month' ), $facts( $fee_product ) );
 
 WC()->cart->empty_cart();
 foreach ( array( $plain_product, $fee_product, $trial_product ) as $product ) {
