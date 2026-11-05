@@ -78,6 +78,8 @@ $first_order = static function ( string $method, string $intent ) use ( &$made )
 	$order = wc_create_order();
 	$order->set_billing_email( 'sb-stripe@example.test' );
 	$order->set_billing_first_name( 'Harness' );
+	$order->set_billing_address_1( '1 Test St' );
+	$order->set_billing_country( 'DE' );
 	$order->set_payment_method( Stripe_Gateway::ID );
 	$order->set_transaction_id( $intent );
 	$order->update_meta_data( Stripe_Gateway::META_METHOD, $method );
@@ -135,6 +137,8 @@ $paid = wc_get_orders( array( 'limit' => -1, 'meta_key' => '_submex_subscription
 $paid = array_filter( $paid, static fn( $o ) => (int) $o->get_meta( '_submex_subscription_id' ) === $s->get_id() && 'pi_renewal' === $o->get_transaction_id() );
 $check( 'the renewal is charged', Subscription_Status::Active === $s->get_status_enum() && 1 === count( $paid ) && strtotime( (string) $s->get_next_payment() ) > time(), array( 'status' => $s->get_status(), 'paid' => count( $paid ), 'next' => $s->get_next_payment() ) );
 $check( 'against the card from checkout, through a new customer', 'cus_harness' === ( $charge['customer'] ?? '' ) && 'pm_first' === ( $charge['payment_method'] ?? '' ) && 'true' === ( $charge['off_session'] ?? '' ), $charge );
+$created = array_values( array_filter( $stripe->calls, static fn( $c ) => 'POST /v1/customers' === $c[0] ) )[0][1] ?? array();
+$check( 'a new customer carries the billing address, which Stripe requires on some accounts', 'DE' === ( $created['address']['country'] ?? '' ) && '1 Test St' === ( $created['address']['line1'] ?? '' ), $created );
 $check( 'the customer is kept for next time', 'cus_harness' === $s->get_meta( Stripe_Gateway::META_CUSTOMER ) && 'pm_first' === $s->get_meta( Stripe_Gateway::META_METHOD ) );
 $key = (string) ( $stripe->sent( 'POST /v1/customers' )[0][2] ?? '' );
 $check( 'the customer is created idempotently', str_starts_with( $key, 'submex_customer_' ) && str_ends_with( $key, '_' . $s->get_id() ), $key );

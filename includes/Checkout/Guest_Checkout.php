@@ -32,6 +32,8 @@ class Guest_Checkout {
 
 	private const SESSION_ACCOUNT = 'submex_checkout_account';
 
+	public const META_NEW_ACCOUNT = '_submex_new_account';
+
 	public function register(): void {
 		add_action( 'woocommerce_checkout_process', array( $this, 'validate_classic' ) );
 		add_action( 'woocommerce_store_api_cart_errors', array( $this, 'validate_store_api' ), 10, 1 );
@@ -41,6 +43,7 @@ class Guest_Checkout {
 		add_action( 'woocommerce_store_api_checkout_update_order_from_request', array( $this, 'assign_owner' ), 9, 1 );
 
 		add_action( 'admin_notices', array( $this, 'warn_if_unreachable' ) );
+		add_filter( 'woocommerce_order_received_verify_known_shoppers', array( $this, 'verify_known_shopper' ) );
 
 		// Paid, the account is the customer's to log into; the browser no longer speaks for it.
 		add_action( 'woocommerce_thankyou', array( $this, 'forget_account' ) );
@@ -100,7 +103,28 @@ class Guest_Checkout {
 
 		if ( $user_id ) {
 			$order->set_customer_id( $user_id );
+			$order->update_meta_data( self::META_NEW_ACCOUNT, 'yes' );
 		}
+	}
+
+	/**
+	 * An account made at this checkout has no password yet, so asking its buyer to log in would only hide their order.
+	 *
+	 * @param bool $verify
+	 */
+	public function verify_known_shopper( $verify ): bool {
+		global $wp;
+
+		$order = wc_get_order( absint( $wp->query_vars['order-received'] ?? 0 ) );
+
+		if ( ! $order instanceof \WC_Order || 'yes' !== $order->get_meta( self::META_NEW_ACCOUNT ) ) {
+			return (bool) $verify;
+		}
+
+		$since = $order->get_date_paid() ?: $order->get_date_created();
+
+		// The same ten minutes WooCommerce gives a guest; after that the emailed link and a login take over.
+		return ! $since || time() - $since->getTimestamp() > 10 * MINUTE_IN_SECONDS ? (bool) $verify : false;
 	}
 
 	/**

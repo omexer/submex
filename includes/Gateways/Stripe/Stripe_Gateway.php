@@ -310,6 +310,15 @@ class Stripe_Gateway implements Recurring_Gateway {
 				array(
 					'email'    => $first->get_billing_email(),
 					'name'     => trim( $first->get_formatted_billing_full_name() ),
+					// Stripe refuses off-session charges without these on some accounts, such as Indian ones exporting.
+					'address'  => array(
+						'line1'       => $first->get_billing_address_1(),
+						'line2'       => $first->get_billing_address_2(),
+						'city'        => $first->get_billing_city(),
+						'state'       => $first->get_billing_state(),
+						'postal_code' => $first->get_billing_postcode(),
+						'country'     => $first->get_billing_country(),
+					),
 					'metadata' => array( 'submex_subscription' => (string) $subscription->get_id() ),
 				),
 				// Reused by a retry after a failed attach; the site keeps stores sharing an account apart.

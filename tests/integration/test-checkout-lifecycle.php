@@ -146,6 +146,21 @@ $second->set_billing_email( $email );
 $guest->assign_owner( $second );
 $check( 'the second attempt uses that account', $account === (int) $second->get_customer_id(), $second->get_customer_id() );
 
+echo "\n5b. The new account's order page\n";
+global $wp;
+$wp->query_vars['order-received'] = $first->get_id();
+$check( 'is marked as new', 'yes' === $first->get_meta( Guest_Checkout::META_NEW_ACCOUNT ) );
+$first->save();
+$check( 'shows right after buying, with no login', false === $guest->verify_known_shopper( true ) );
+$first->set_date_created( time() - HOUR_IN_SECONDS );
+$first->save();
+$check( 'but asks for one later', true === $guest->verify_known_shopper( true ) );
+$known = wc_create_order( array( 'customer_id' => 1 ) );
+$wp->query_vars['order-received'] = $known->get_id();
+$check( 'and always for an existing customer', true === $guest->verify_known_shopper( true ) );
+$known->delete( true );
+unset( $wp->query_vars['order-received'] );
+
 update_user_meta( $account, 'wc_last_active', time() );
 wc_clear_notices();
 $guest->validate_classic();
