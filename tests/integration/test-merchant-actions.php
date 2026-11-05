@@ -173,6 +173,39 @@ $request->set_param( 'next_payment', gmdate( 'Y-m-d H:i:s', $move ) );
 rest_do_request( $request );
 $check( 'a subscription on hold is not queued to charge by moving its date', ! as_next_scheduled_action( Renewal_Scheduler::ACTION_RENEWAL, $as_args, Renewal_Scheduler::GROUP ) );
 
+$overdue = $subscription( Test_Gateway::ID, -2 );
+$request = new WP_REST_Request( 'PUT', '/submex/v1/subscriptions/' . $overdue->get_id() );
+$request->set_param( 'next_payment', gmdate( 'Y-m-d H:i', time() - 3 * DAY_IN_SECONDS ) );
+$check( 'a date in the past is refused, or saving would bill at once', 400 === rest_do_request( $request )->get_status() );
+$request = new WP_REST_Request( 'PUT', '/submex/v1/subscriptions/' . $overdue->get_id() );
+$request->set_param( 'next_payment', substr( (string) $overdue->get_next_payment(), 0, 16 ) );
+$request->set_param( 'end_date', gmdate( 'Y-m-d H:i:s', time() + 60 * DAY_IN_SECONDS ) );
+$check( 'an unchanged overdue date does not block setting an end date', 200 === rest_do_request( $request )->get_status() );
+$request = new WP_REST_Request( 'PUT', '/submex/v1/subscriptions/' . $overdue->get_id() );
+$request->set_param( 'end_date', '' );
+rest_do_request( $request );
+$check( 'and an end date can be cleared', empty( wc_get_order( $overdue->get_id() )->get_end_date() ), wc_get_order( $overdue->get_id() )->get_end_date() );
+
+echo "\n3b. A subscription the provider bills\n";
+$plugin->get( 'gateways' )->add(
+	new class() implements \Submex\Gateways\Recurring_Gateway {
+		public function id(): string { return 'sk_managed'; }
+		public function title(): string { return 'Managed harness'; }
+		public function model(): \Submex\Gateways\Gateway_Model { return \Submex\Gateways\Gateway_Model::GatewayManaged; }
+		public function supports( string $f ): bool { return true; }
+		public function create_mandate( Subscription $s, \WC_Order $o ): \Submex\Gateways\Charge_Result { return \Submex\Gateways\Charge_Result::success( 'm' ); }
+		public function charge_renewal( Subscription $s, \WC_Order $r, string $k ): \Submex\Gateways\Charge_Result { return \Submex\Gateways\Charge_Result::success( 'c' ); }
+		public function reconcile( Subscription $s, string $k ): ?\Submex\Gateways\Charge_Result { return null; }
+		public function cancel_mandate( Subscription $s ): bool { return true; }
+		public function update_payment_method( Subscription $s, string $t ): bool { return true; }
+	}
+);
+$managed = $subscription( 'sk_managed', 10 );
+$check( 'Renew now is refused, not reported as done', 409 === $act( $managed, 'renew_now' )->get_status() );
+$request = new WP_REST_Request( 'PUT', '/submex/v1/subscriptions/' . $managed->get_id() );
+$request->set_param( 'next_payment', gmdate( 'Y-m-d H:i:s', time() + 30 * DAY_IN_SECONDS ) );
+$check( 'and its date cannot be moved here', 409 === rest_do_request( $request )->get_status() );
+
 echo "\n4. Renew now\n";
 $s      = $subscription( Test_Gateway::ID, 20 );
 $first  = $act( $s, 'renew_now' );
@@ -339,6 +372,9 @@ $check( 'paid, it states the price and next date', str_contains( $page, 'every m
 $check( 'the customer email has it', str_contains( $render( static fn() => $summary->email( $bought, false, false ) ), 'Your subscription' ) );
 $check( 'the plain text email too', str_contains( $render( static fn() => $summary->email( $bought, false, true ) ), 'next payment is on' ) );
 $check( 'but not the store email', '' === $render( static fn() => $summary->email( $bought, true, false ) ) );
+$started->transition_to( Subscription_Status::Cancelled );
+$started->save();
+$check( 'once cancelled, a later email promises no next payment', '' === $render( static fn() => $summary->email( wc_get_order( $bought->get_id() ), false, false ) ) );
 $renewal_order = wc_create_order( array( 'customer_id' => 1 ) );
 $renewal_order->update_meta_data( '_submex_subscription_id', $started->get_id() );
 $renewal_order->save();

@@ -77,7 +77,14 @@ class Order_Summary {
 
 		$subscription = wc_get_order( (int) $order->get_meta( '_submex_subscription_id' ) );
 
-		return $subscription instanceof Subscription && $subscription->get_parent_order_id() === $order->get_id() ? $subscription : null;
+		if ( ! $subscription instanceof Subscription || $subscription->get_parent_order_id() !== $order->get_id() ) {
+			return null;
+		}
+
+		// A later email about this order, such as a refund, must not promise a payment that will never come.
+		$status = $subscription->get_status_enum();
+
+		return $status && ( $status->is_billable() || Subscription_Status::Pending === $status || Subscription_Status::OnHold === $status ) ? $subscription : null;
 	}
 
 	private static function sentence( Subscription $subscription ): string {

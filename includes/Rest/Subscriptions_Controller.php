@@ -276,8 +276,18 @@ class Subscriptions_Controller {
 			return $subscription;
 		}
 
+		$moved = false;
+
 		foreach ( array( 'next_payment', 'end_date' ) as $field ) {
 			$value = $request->get_param( $field );
+
+			if ( 'next_payment' === $field && null !== $value && self::provider_bills( $subscription ) ) {
+				return new \WP_Error(
+					'submex_provider_bills',
+					__( 'The payment provider bills this subscription on its own schedule, so its next payment cannot be moved from here.', 'submex' ),
+					array( 'status' => 409 )
+				);
+			}
 
 			if ( null === $value ) {
 				continue;
@@ -289,6 +299,15 @@ class Subscriptions_Controller {
 			}
 
 			$date = $this->parse_date( (string) $value );
+
+			// The form sends both fields, to the minute; one left as it was is not a change.
+			if ( $date && substr( $date, 0, 16 ) === substr( (string) $subscription->{"get_$field"}(), 0, 16 ) ) {
+				continue;
+			}
+
+			if ( $date && 'next_payment' === $field ) {
+				$moved = true;
+			}
 
 			// A past next payment would bill the customer the moment it is saved.
 			if ( $date && strtotime( $date . ' UTC' ) <= time() ) {
@@ -316,7 +335,7 @@ class Subscriptions_Controller {
 		// The queued renewal and reminder still hold the old date, and the sweeper leaves anything queued alone.
 		$scheduler = \Submex\Plugin::instance()->get( 'scheduler' );
 
-		if ( null !== $request->get_param( 'next_payment' ) && $scheduler instanceof \Submex\Billing\Renewal_Scheduler && $subscription->get_status_enum()?->is_billable() ) {
+		if ( $moved && $scheduler instanceof \Submex\Billing\Renewal_Scheduler && $subscription->get_status_enum()?->is_billable() ) {
 			$scheduler->unschedule( $subscription->get_id() );
 			$scheduler->schedule_next( $subscription );
 		}
@@ -500,6 +519,14 @@ class Subscriptions_Controller {
 			);
 		}
 
+		if ( self::provider_bills( $subscription ) ) {
+			return new \WP_Error(
+				'submex_provider_bills',
+				__( 'The payment provider bills this subscription on its own schedule, so it cannot be renewed from here.', 'submex' ),
+				array( 'status' => 409 )
+			);
+		}
+
 		$guard = 'submex_renew_now_' . $subscription->get_id();
 
 		if ( get_transient( $guard ) ) {
@@ -583,6 +610,12 @@ class Subscriptions_Controller {
 		return $subscription instanceof Subscription
 			? $subscription
 			: new \WP_Error( 'submex_not_found', __( 'No subscription with that id.', 'submex' ), array( 'status' => 404 ) );
+	}
+
+	private static function provider_bills( Subscription $subscription ): bool {
+		$registry = \Submex\Plugin::instance()->get( 'gateways' );
+
+		return $registry instanceof \Submex\Gateways\Gateway_Registry && \Submex\Gateways\Gateway_Model::GatewayManaged === $registry->for_subscription( $subscription )->model();
 	}
 
 	private function payments_made( Subscription $subscription ): int {
@@ -710,6 +743,7 @@ class Subscriptions_Controller {
 			'period_index'           => $subscription->get_period_index(),
 			'payments_made'          => $this->payments_made( $subscription ),
 			'pays_by_link'           => \Submex\Frontend\MyAccount\Status_Presenter::pays_by_link( $subscription ),
+			'provider_bills'         => self::provider_bills( $subscription ),
 			'payment_method'         => $subscription->get_payment_method(),
 			'payment_method_title'   => $subscription->get_payment_method_title(),
 			'billable'               => (bool) ( $status && $status->is_billable() ),

@@ -196,9 +196,10 @@ export function Detail( { id, onBack, onFail } ) {
 			path: `/submex/v1/subscriptions/${ id }`,
 			method: 'POST',
 			data: {
-				next_payment: dates.next_payment
-					? dates.next_payment.replace( 'T', ' ' )
-					: undefined,
+				next_payment:
+					dates.next_payment && ! data.provider_bills
+						? dates.next_payment.replace( 'T', ' ' )
+						: undefined,
 				end_date: endDatePayload( dates.end_date, data.end_date ),
 			},
 		} )
@@ -380,7 +381,9 @@ export function Detail( { id, onBack, onFail } ) {
 					</CardHeader>
 					<CardContent className="sb-flex sb-flex-col sb-gap-5">
 						<div className="sb-flex sb-flex-wrap sb-items-center sb-gap-2">
-							{ data.billable && ! data.payment_pending ? (
+							{ data.billable &&
+							! data.payment_pending &&
+							! data.provider_bills ? (
 								<Button
 									disabled={ busy }
 									onClick={ () =>
@@ -407,7 +410,9 @@ export function Detail( { id, onBack, onFail } ) {
 							) : null }
 						</div>
 
-						{ data.billable && ! data.payment_pending ? (
+						{ data.billable &&
+						! data.payment_pending &&
+						! data.provider_bills ? (
 							<p className="sb-m-0 sb-text-xs sb-text-muted-foreground">
 								{ data.pays_by_link
 									? __(
@@ -441,6 +446,7 @@ export function Detail( { id, onBack, onFail } ) {
 							<Input
 								id="submex-next-payment"
 								type="datetime-local"
+								disabled={ data.provider_bills }
 								value={ dates.next_payment }
 								onChange={ ( event ) =>
 									setDates( {
