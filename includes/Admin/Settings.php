@@ -110,7 +110,7 @@ class Settings extends \WC_Settings_Page {
 			),
 			array(
 				'title'    => __( 'Allow customers to renew early', 'submex' ),
-				'desc'     => __( 'Customers can pay their next renewal before it is due. The renewal date stays the same.', 'submex' ),
+				'desc'     => __( 'Customers can pay their next renewal before it is due. Their next payment then moves on by one period.', 'submex' ),
 				'type'     => 'checkbox',
 				'id'       => \Submex\Lifecycle\Early_Renewal::OPTION,
 				'default'  => 'no',

@@ -3,6 +3,7 @@
 namespace Submex\Emails;
 
 use Submex\Domain\Subscription;
+use Submex\Domain\Subscription_Status;
 use Submex\Lifecycle\Cancellation_Survey;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -37,7 +38,7 @@ class Merchant_Subscription_Cancelled extends Subscription_Email {
 	protected function intro(): string {
 		return sprintf(
 			/* translators: 1: customer, 2: recurring amount */
-			__( '%1$s cancelled a subscription worth %2$s.', 'submex' ),
+			__( 'The subscription of %1$s, worth %2$s, was cancelled.', 'submex' ),
 			trim( $this->subscription->get_billing_first_name() . ' ' . $this->subscription->get_billing_last_name() ) ?: $this->subscription->get_billing_email(),
 			$this->amount( $this->subscription->get_total() )
 		);
@@ -63,7 +64,10 @@ class Merchant_Subscription_Cancelled extends Subscription_Email {
 			$facts[ __( 'They said', 'submex' ) ] = $detail;
 		}
 
-		$end = $this->subscription->get_end_date() ?: $this->subscription->get_next_payment();
+		// Once fully cancelled the access has already ended; a date would only mislead.
+		$end = Subscription_Status::PendingCancel === $this->subscription->get_status_enum()
+			? ( $this->subscription->get_end_date() ?: $this->subscription->get_next_payment() )
+			: null;
 
 		if ( ! empty( $end ) ) {
 			$facts[ __( 'Access ends', 'submex' ) ] = $this->date( $end );

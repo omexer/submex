@@ -2,6 +2,7 @@
 
 namespace Submex\Frontend;
 
+use Submex\Lifecycle\Cancellation_Policy;
 use Submex\Domain\Billing_Schedule;
 use Submex\Domain\Money;
 use Submex\Product\Line_Terms;
@@ -73,10 +74,12 @@ class Disclosure {
 			'text' => sprintf( __( 'Then %1$s %2$s', 'submex' ), $this->amount( $price ), $schedule->describe() ),
 		);
 
-		$lines[] = array(
-			'key'  => 'cancel',
-			'text' => __( 'Cancel anytime', 'submex' ),
-		);
+		if ( Cancellation_Policy::is_offered() ) {
+			$lines[] = array(
+				'key'  => 'cancel',
+				'text' => __( 'Cancel anytime', 'submex' ),
+			);
+		}
 
 		/**
 		 * Filter the disclosure lines.
@@ -178,22 +181,39 @@ class Disclosure {
 		$schedule = $terms->schedule();
 		$price    = $terms->shown( $terms->recurring_price(), $product );
 
+		$cancels  = Cancellation_Policy::is_offered();
+
 		if ( $schedule->has_trial() ) {
-			return sprintf(
-				/* translators: 1: trial length such as "14 days" or "1 month", 2: amount, 3: billing interval */
-				__( "You're starting a subscription. After a free trial of %1\$s you'll be charged %2\$s %3\$s until you cancel.", 'submex' ),
+			$sentence = sprintf(
+				$cancels
+					/* translators: 1: trial length such as "14 days" or "1 month", 2: amount, 3: billing interval */
+					? __( "You're starting a subscription. After a free trial of %1\$s you'll be charged %2\$s %3\$s until you cancel.", 'submex' )
+					/* translators: 1: trial length such as "14 days" or "1 month", 2: amount, 3: billing interval */
+					: __( "You're starting a subscription. After a free trial of %1\$s you'll be charged %2\$s %3\$s.", 'submex' ),
 				$schedule->describe_trial(),
+				$this->amount( $price ),
+				$schedule->describe()
+			);
+		} else {
+			$sentence = sprintf(
+				$cancels
+					/* translators: 1: amount, 2: billing interval */
+					? __( "You're starting a subscription. You'll be charged %1\$s %2\$s until you cancel.", 'submex' )
+					/* translators: 1: amount, 2: billing interval */
+					: __( "You're starting a subscription. You'll be charged %1\$s %2\$s.", 'submex' ),
 				$this->amount( $price ),
 				$schedule->describe()
 			);
 		}
 
-		return sprintf(
-			/* translators: 1: amount, 2: billing interval */
-			__( "You're starting a subscription. You'll be charged %1\$s %2\$s until you cancel.", 'submex' ),
-			$this->amount( $price ),
-			$schedule->describe()
-		);
+		$fee = $terms->shown( $terms->signup_fee(), $product );
+
+		if ( $fee->is_zero() ) {
+			return $sentence;
+		}
+
+		/* translators: %s: sign-up fee amount */
+		return $sentence . ' ' . sprintf( __( 'A one-time sign-up fee of %s is charged today.', 'submex' ), $this->amount( $fee ) );
 	}
 
 	/**

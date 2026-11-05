@@ -69,6 +69,18 @@ final class Early_Renewal {
 			);
 		}
 
+		$guard = 'submex_renew_early_' . $subscription->get_id();
+
+		// A real charge for a further period, so a double click must not pay two.
+		if ( get_transient( $guard ) ) {
+			return array(
+				'ok'      => false,
+				'message' => __( 'That payment was just made. Check your subscription before trying again.', 'submex' ),
+			);
+		}
+
+		set_transient( $guard, 1, MINUTE_IN_SECONDS );
+
 		// The pipeline reports itself through actions rather than a return value, and the
 		// charge slot is what actually decides, so listen instead of assuming.
 		$outcome = null;
@@ -90,21 +102,30 @@ final class Early_Renewal {
 			remove_action( $hook, $watch, 1 );
 		}
 
-		return self::describe( $outcome );
+		if ( 'submex_renewal_succeeded' !== $outcome && 'submex_renewal_pending' !== $outcome ) {
+			delete_transient( $guard );
+		}
+
+		return self::describe( $outcome, $id );
 	}
 
 	/**
 	 * @return array{ok: bool, message: string}
 	 */
-	private static function describe( ?string $outcome ): array {
+	private static function describe( ?string $outcome, int $id ): array {
+		$charged = wc_get_order( $id );
+		$next    = $charged instanceof Subscription ? $charged->get_next_payment() : null;
 		return match ( $outcome ) {
 			'submex_renewal_succeeded'       => array(
 				'ok'      => true,
-				'message' => __( 'Thank you — your next period is paid. Your renewal date has not changed.', 'submex' ),
+				'message' => $next
+					/* translators: %s: date of the next payment */
+					? sprintf( __( 'Thank you — your next period is paid. Your next payment is now on %s.', 'submex' ), date_i18n( (string) get_option( 'date_format' ), (int) strtotime( $next . ' UTC' ) ) )
+					: __( 'Thank you — your next period is paid.', 'submex' ),
 			),
 			'submex_renewal_pending'         => array(
 				'ok'      => true,
-				'message' => __( 'Thank you — your payment is on its way. It can take a few working days to clear, and your renewal date has not changed.', 'submex' ),
+				'message' => __( 'Thank you — your payment is on its way. It can take a few working days to clear.', 'submex' ),
 			),
 			'submex_renewal_requires_action' => array(
 				'ok'      => false,

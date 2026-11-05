@@ -122,7 +122,7 @@ $submex_cancel_refused = $submex_live && ! $submex_can_cancel ? \Submex\Frontend
 			<?php
 			printf(
 				/* translators: 1: amount, 2: the date it would otherwise be taken */
-				esc_html__( 'You can pay your next %1$s now instead of on %2$s. Your renewal date stays the same.', 'submex' ),
+				esc_html__( 'You can pay your next %1$s now instead of on %2$s. Your next payment then moves on by one period.', 'submex' ),
 				wp_kses_post( $subscription->get_formatted_order_total() ),
 				esc_html( date_i18n( (string) get_option( 'date_format' ), strtotime( $subscription->get_next_payment() . ' UTC' ) ) )
 			);

@@ -39,7 +39,7 @@ $plugin->get( 'gateways' )->add(
 	}
 );
 
-$subscription = static function ( string $gateway, int $days ) use ( &$made ): Subscription {
+$subscription = static function ( string $gateway, int $days, Subscription_Status $status = Subscription_Status::Active ) use ( &$made ): Subscription {
 	$product = submex_test_product();
 	$s       = new Subscription();
 	$s->set_customer_id( 1 );
@@ -55,7 +55,7 @@ $subscription = static function ( string $gateway, int $days ) use ( &$made ): S
 	$s->transition_to( Subscription_Status::Pending );
 	$s->calculate_totals( false );
 	$s->save();
-	$s->transition_to( Subscription_Status::Active );
+	$s->transition_to( $status );
 	$s->save();
 	$made[] = $s;
 
@@ -226,6 +226,131 @@ $emails['Submex_Renewal_Reminder']->trigger( $card );
 $check( 'a card subscription still gets the charge wording', str_contains( (string) end( $sent ), 'charge' ), end( $sent ) );
 remove_filter( 'wp_mail', $spy );
 
+echo "\n6. When customers cannot cancel\n";
+$was = get_option( \Submex\Lifecycle\Cancellation_Policy::OPTION, null );
+update_option( \Submex\Lifecycle\Cancellation_Policy::OPTION, 'no' );
+$disclosure = new \Submex\Frontend\Disclosure();
+$promise    = submex_test_product();
+$words      = strtolower( wp_strip_all_tags( implode( ' ', array_column( $disclosure->lines( $promise ), 'text' ) ) . ' ' . $disclosure->sentence( $promise ) ) );
+$check( 'the terms do not promise cancelling', ! str_contains( $words, 'cancel' ), $words );
+$sent = array();
+add_filter( 'wp_mail', $spy );
+$quiet = $subscription( Test_Gateway::ID, 5 );
+$emails['Submex_Subscription_Started']->trigger( $quiet );
+$check( 'nor does the started email', ! str_contains( (string) end( $sent ), 'cancel at any time' ), end( $sent ) );
+$emails['Submex_Renewal_Reminder']->trigger( $quiet );
+$check( 'nor the reminder', ! str_contains( strtolower( (string) end( $sent ) ), 'cancel' ), end( $sent ) );
+remove_filter( 'wp_mail', $spy );
+null === $was ? delete_option( \Submex\Lifecycle\Cancellation_Policy::OPTION ) : update_option( \Submex\Lifecycle\Cancellation_Policy::OPTION, $was );
+
+echo "\n7. A sign-up fee in the consent\n";
+$fee = new \Submex\Product\Simple_Subscription();
+$fee->set_name( 'SK fee plan' );
+$fee->set_regular_price( '30' );
+$fee->update_meta_data( Subscription_Product::META_PERIOD, 'month' );
+$fee->update_meta_data( Subscription_Product::META_INTERVAL, 1 );
+$fee->update_meta_data( Subscription_Product::META_SIGNUP_FEE, '10' );
+$fee->save();
+$made[] = $fee;
+$check( 'is stated', str_contains( html_entity_decode( wp_strip_all_tags( $disclosure->sentence( wc_get_product( $fee->get_id() ) ) ) ), 'sign-up fee of $10.00' ), $disclosure->sentence( wc_get_product( $fee->get_id() ) ) );
+
+echo "\n8. Cancelled by the store\n";
+$sent = array();
+add_filter( 'wp_mail', $spy );
+$gone = $subscription( Test_Gateway::ID, 5 );
+$gone->transition_to( Subscription_Status::Cancelled );
+$gone->save();
+$emails['Submex_Merchant_Cancelled']->trigger( $gone );
+$check( 'the merchant email gives no access date', ! str_contains( (string) end( $sent ), 'Access ends' ), end( $sent ) );
+remove_filter( 'wp_mail', $spy );
+
+echo "\n9. The list and the numbers\n";
+$soon_s = $subscription( Test_Gateway::ID, 2 );
+$late_s = $subscription( Test_Gateway::ID, 90 );
+$order_ids = static function ( string $order ) use ( $soon_s, $late_s ): array {
+	$request = new WP_REST_Request( 'GET', '/submex/v1/subscriptions' );
+	$request->set_param( 'orderby', 'next_payment' );
+	$request->set_param( 'order', $order );
+	$request->set_param( 'per_page', 100 );
+	$rows = rest_do_request( $request )->get_data();
+
+	return array_values( array_intersect( array_column( $rows, 'id' ), array( $soon_s->get_id(), $late_s->get_id() ) ) );
+};
+$check( 'sorting by next payment ascending puts the sooner first', array( $soon_s->get_id(), $late_s->get_id() ) === $order_ids( 'ASC' ), $order_ids( 'ASC' ) );
+$check( 'and descending puts it last', array( $late_s->get_id(), $soon_s->get_id() ) === $order_ids( 'DESC' ), $order_ids( 'DESC' ) );
+
+$fetch = static function ( Subscription $s ): array {
+	return rest_do_request( new WP_REST_Request( 'GET', '/submex/v1/subscriptions/' . $s->get_id() ) )->get_data();
+};
+$free_trial = wc_create_order( array( 'customer_id' => 1 ) );
+$free_trial->set_total( '0' );
+$free_trial->payment_complete();
+$made[]     = $free_trial;
+$trial_sub  = $subscription( Test_Gateway::ID, 7 );
+$trial_sub->set_parent_order_id( $free_trial->get_id() );
+$trial_sub->save();
+$check( 'a free trial has made no payments', 0 === $fetch( $trial_sub )['payments_made'], $fetch( $trial_sub )['payments_made'] );
+$paid = wc_create_order( array( 'customer_id' => 1 ) );
+$paid->set_total( '20' );
+$paid->payment_complete();
+$made[]   = $paid;
+$paid_sub = $subscription( Test_Gateway::ID, 7 );
+$paid_sub->set_parent_order_id( $paid->get_id() );
+$paid_sub->save();
+$check( 'a paid checkout has made one', 1 === $fetch( $paid_sub )['payments_made'], $fetch( $paid_sub )['payments_made'] );
+$check( 'the screen knows who pays by link', true === $fetch( $manual )['pays_by_link'] && false === $fetch( $paid_sub )['pays_by_link'] );
+
+echo "\n10. Reactivate\n";
+$sent = array();
+$running = $act( $paid_sub, 'reactivate' );
+$check( 'a running subscription is refused', 409 === $running->get_status(), $running->get_status() );
+$trialling = $subscription( Test_Gateway::ID, 7, Subscription_Status::Trialling );
+$act( $trialling, 'reactivate' );
+$check( 'a trial stays a trial', Subscription_Status::Trialling === wc_get_order( $trialling->get_id() )->get_status_enum(), wc_get_order( $trialling->get_id() )->get_status() );
+$held = $subscription( Test_Gateway::ID, 7 );
+$held->transition_to( Subscription_Status::OnHold );
+$held->save();
+$act( $held, 'reactivate' );
+$check( 'one on hold becomes active', Subscription_Status::Active === wc_get_order( $held->get_id() )->get_status_enum() );
+$check( 'and the customer is told', (bool) as_next_scheduled_action( \Submex\Emails\Mailer::ACTION_REACTIVATED, null, Renewal_Scheduler::GROUP ) );
+as_unschedule_all_actions( \Submex\Emails\Mailer::ACTION_REACTIVATED );
+
+echo "\n11. What the customer sees on their order\n";
+$summary = new \Submex\Checkout\Order_Summary();
+$bought  = wc_create_order( array( 'customer_id' => 1 ) );
+$bought->add_product( submex_test_product(), 1 );
+$bought->calculate_totals( false );
+$bought->save();
+$made[] = $bought;
+$plugin->get( 'subscription_factory' )->from_checkout( $bought->get_id() );
+$bought  = wc_get_order( $bought->get_id() );
+$started = wc_get_order( (int) $bought->get_meta( '_submex_subscription_id' ) );
+$made[]  = $started;
+$render = static function ( callable $print ): string {
+	ob_start();
+	$print();
+	return (string) ob_get_clean();
+};
+$check( 'unpaid, the thank-you page says it starts once paid', str_contains( $render( static fn() => $summary->thank_you( $bought->get_id() ) ), 'once this order is paid' ) );
+$bought->payment_complete( 'x' );
+$bought = wc_get_order( $bought->get_id() );
+$page   = $render( static fn() => $summary->thank_you( $bought->get_id() ) );
+$check( 'paid, it states the price and next date', str_contains( $page, 'every month' ) && str_contains( $page, 'next payment is on' ), $page );
+$check( 'the customer email has it', str_contains( $render( static fn() => $summary->email( $bought, false, false ) ), 'Your subscription' ) );
+$check( 'the plain text email too', str_contains( $render( static fn() => $summary->email( $bought, false, true ) ), 'next payment is on' ) );
+$check( 'but not the store email', '' === $render( static fn() => $summary->email( $bought, true, false ) ) );
+$renewal_order = wc_create_order( array( 'customer_id' => 1 ) );
+$renewal_order->update_meta_data( '_submex_subscription_id', $started->get_id() );
+$renewal_order->save();
+$made[] = $renewal_order;
+$check( 'nor a renewal order', '' === $render( static fn() => $summary->thank_you( $renewal_order->get_id() ) ) );
+
+echo "\n12. The setup checklist\n";
+$guide_steps = ( new \Submex\Admin\Setup_Guide( $plugin->get( 'scheduler' ) ) )->steps();
+$payment_step = array_values( array_filter( $guide_steps, static fn( $step ) => str_contains( strtolower( (string) ( $step['title'] ?? '' ) ), 'payment' ) ) )[0] ?? array();
+$offered = array_filter( WC()->payment_gateways()->payment_gateways(), static fn( $m ) => str_starts_with( (string) $m->id, 'submex' ) && 'yes' === $m->enabled && $m->is_available() );
+$check( 'a gateway only ticks the step if it is really offered', (bool) ( $payment_step['done'] ?? false ) === (bool) $offered, array( $payment_step['done'] ?? null, array_keys( $offered ) ) );
+
 foreach ( $made as $thing ) {
 	if ( $thing instanceof Subscription ) {
 		as_unschedule_all_actions( '', array( 'subscription_id' => $thing->get_id() ), Renewal_Scheduler::GROUP );
@@ -234,7 +359,9 @@ foreach ( $made as $thing ) {
 			$renewal->delete( true );
 		}
 	}
-	$thing->delete( true );
+	if ( $thing instanceof WC_Data && $thing->get_id() ) {
+		$thing->delete( true );
+	}
 }
 
 submex_test_done( $fail );

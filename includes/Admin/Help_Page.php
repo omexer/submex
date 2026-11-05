@@ -104,8 +104,8 @@ class Help_Page {
 			array(
 				'icon'  => '1',
 				'title' => __( 'Run the setup checks', 'submex' ),
-				'body'  => __( 'Home runs a real renewal end to end without charging anyone. If renewals are the problem, that test usually says why.', 'submex' ),
-				'label' => __( 'Open Home', 'submex' ),
+				'body'  => __( 'Overview runs a real renewal end to end without charging anyone. If renewals are the problem, that test usually says why.', 'submex' ),
+				'label' => __( 'Open Overview', 'submex' ),
 				'url'   => admin_url( 'admin.php?page=' . Menu::SLUG ),
 			),
 			array(

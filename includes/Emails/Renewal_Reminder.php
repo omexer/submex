@@ -4,6 +4,7 @@ namespace Submex\Emails;
 
 use Submex\Domain\Subscription;
 use Submex\Frontend\MyAccount\Status_Presenter;
+use Submex\Lifecycle\Cancellation_Policy;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -82,8 +83,14 @@ class Renewal_Reminder extends Subscription_Email {
 	}
 
 	protected function outro(): string {
-		return Status_Presenter::pays_by_link( $this->subscription )
-			? __( 'You can change or cancel it any time before that date.', 'submex' )
-			: __( 'Nothing to do if you want it to continue. You can change or cancel it any time before that date.', 'submex' );
+		$can_cancel = Cancellation_Policy::allows( $this->subscription );
+
+		if ( Status_Presenter::pays_by_link( $this->subscription ) ) {
+			return $can_cancel ? __( 'You can change or cancel it any time before that date.', 'submex' ) : '';
+		}
+
+		return $can_cancel
+			? __( 'Nothing to do if you want it to continue. You can change or cancel it any time before that date.', 'submex' )
+			: __( 'Nothing to do if you want it to continue.', 'submex' );
 	}
 }

@@ -203,6 +203,22 @@ class Subscriptions_Controller {
 			'order'   => 'ASC' === strtoupper( (string) $request->get_param( 'order' ) ) ? 'ASC' : 'DESC',
 		);
 
+		if ( 'next_payment' === $args['orderby'] ) {
+			// OR, so a subscription with no next payment stays in the list instead of being joined away.
+			$args['meta_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				'relation' => 'OR',
+				'due'      => array(
+					'key'     => '_submex_next_payment',
+					'compare' => 'EXISTS',
+				),
+				array(
+					'key'     => '_submex_next_payment',
+					'compare' => 'NOT EXISTS',
+				),
+			);
+			$args['orderby']    = 'due';
+		}
+
 		$status = $request->get_param( 'status' );
 
 		if ( $status ) {
@@ -267,7 +283,21 @@ class Subscriptions_Controller {
 				continue;
 			}
 
+			if ( 'end_date' === $field && '' === $value ) {
+				$subscription->set_end_date( null );
+				continue;
+			}
+
 			$date = $this->parse_date( (string) $value );
+
+			// A past next payment would bill the customer the moment it is saved.
+			if ( $date && strtotime( $date . ' UTC' ) <= time() ) {
+				return new \WP_Error(
+					'submex_date_in_past',
+					__( 'Choose a date in the future.', 'submex' ),
+					array( 'status' => 400 )
+				);
+			}
 
 			if ( ! $date ) {
 				return new \WP_Error(
@@ -294,7 +324,7 @@ class Subscriptions_Controller {
 		$this->activity->log(
 			$subscription->get_id(),
 			Activity_Repository::TYPE_SCHEDULE_CHANGE,
-			'Schedule changed over the REST API.',
+			sprintf( 'Schedule changed by %s.', wp_get_current_user()->display_name ?: 'an administrator' ),
 			array(),
 			'api'
 		);
@@ -318,7 +348,7 @@ class Subscriptions_Controller {
 		$done = match ( $action ) {
 			'cancel'        => $this->transition( $subscription, Subscription_Status::Cancelled, $reason ),
 			'expire'        => $this->transition( $subscription, Subscription_Status::Expired, $reason ),
-			'reactivate'    => $this->change_status( $subscription, Subscription_Status::Active->value, $reason ),
+			'reactivate'    => $this->reactivate( $subscription, $reason ),
 			'change_status' => $this->change_status( $subscription, (string) $request->get_param( 'status' ), $reason ),
 			'renew_now'     => $this->renew_now( $subscription ),
 			default         => null,
@@ -555,6 +585,38 @@ class Subscriptions_Controller {
 			: new \WP_Error( 'submex_not_found', __( 'No subscription with that id.', 'submex' ), array( 'status' => 404 ) );
 	}
 
+	private function payments_made( Subscription $subscription ): int {
+		$parent = wc_get_order( $subscription->get_parent_order_id() );
+
+		// The period index counts renewals; the checkout only counts if money changed hands.
+		return $subscription->get_period_index() + ( $parent instanceof \WC_Order && $parent->is_paid() && (float) $parent->get_total() > 0 ? 1 : 0 );
+	}
+
+	/**
+	 * @return bool|\WP_Error
+	 */
+	private function reactivate( Subscription $subscription, string $reason ) {
+		$from = $subscription->get_status_enum();
+
+		// Would end a free trial early and bill for it.
+		if ( Subscription_Status::Trialling === $from || Subscription_Status::Active === $from ) {
+			return new \WP_Error(
+				'submex_not_held',
+				__( 'This subscription is already running, so there is nothing to reactivate.', 'submex' ),
+				array( 'status' => 409 )
+			);
+		}
+
+		$done = $this->change_status( $subscription, Subscription_Status::Active->value, $reason );
+
+		if ( true === $done && Subscription_Status::OnHold === $from ) {
+			/** This action is documented in submex-pro/includes/Lifecycle/Subscription_Actions.php */
+			do_action( 'submex_subscription_resumed', $subscription );
+		}
+
+		return $done;
+	}
+
 	/**
 	 * @return bool|\WP_Error
 	 */
@@ -646,6 +708,8 @@ class Subscriptions_Controller {
 				: '',
 			'end_date'               => $subscription->get_end_date(),
 			'period_index'           => $subscription->get_period_index(),
+			'payments_made'          => $this->payments_made( $subscription ),
+			'pays_by_link'           => \Submex\Frontend\MyAccount\Status_Presenter::pays_by_link( $subscription ),
 			'payment_method'         => $subscription->get_payment_method(),
 			'payment_method_title'   => $subscription->get_payment_method_title(),
 			'billable'               => (bool) ( $status && $status->is_billable() ),

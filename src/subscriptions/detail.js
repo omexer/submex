@@ -1,6 +1,7 @@
 /**
  * One subscription: what it is, what happens next, and the things you can do to it.
  */
+import { renewQuestion } from './renew-question';
 import { useEffect, useState, useCallback } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
@@ -23,6 +24,15 @@ import {
 	statusVariant,
 	whenDue,
 } from './format';
+
+// Empty clears a date that was set; never set and left empty sends nothing.
+function endDatePayload( value, saved ) {
+	if ( value ) {
+		return value.replace( 'T', ' ' );
+	}
+
+	return saved ? '' : undefined;
+}
 
 function Fact( { label, children } ) {
 	return (
@@ -157,7 +167,13 @@ export function Detail( { id, onBack, onFail } ) {
 			.then( () => {
 				setNotice( {
 					ok: true,
-					message: __( 'Done.', 'submex' ),
+					message:
+						'renew_now' === action && data?.pays_by_link
+							? __(
+									'A renewal was raised and the customer was emailed a link to pay it.',
+									'submex'
+							  )
+							: __( 'Done.', 'submex' ),
 				} );
 
 				return load();
@@ -183,9 +199,7 @@ export function Detail( { id, onBack, onFail } ) {
 				next_payment: dates.next_payment
 					? dates.next_payment.replace( 'T', ' ' )
 					: undefined,
-				end_date: dates.end_date
-					? dates.end_date.replace( 'T', ' ' )
-					: undefined,
+				end_date: endDatePayload( dates.end_date, data.end_date ),
 			},
 		} )
 			.then( () => {
@@ -313,7 +327,7 @@ export function Detail( { id, onBack, onFail } ) {
 				/>
 				<Stat
 					label={ __( 'Payments made', 'submex' ) }
-					value={ String( Number( data.period_index || 0 ) + 1 ) }
+					value={ String( data.payments_made ?? 0 ) }
 					meta={
 						formatDay( data.date_created )
 							? sprintf(
@@ -372,12 +386,8 @@ export function Detail( { id, onBack, onFail } ) {
 									onClick={ () =>
 										act(
 											'renew_now',
-											sprintf(
-												/* translators: %s: recurring total. */
-												__(
-													'This charges the customer %s right now. Continue?',
-													'submex'
-												),
+											renewQuestion(
+												data.pays_by_link,
 												data.total_formatted
 											)
 										)
@@ -386,21 +396,28 @@ export function Detail( { id, onBack, onFail } ) {
 									{ __( 'Renew now', 'submex' ) }
 								</Button>
 							) : null }
-							<Button
-								variant="outline"
-								disabled={ busy }
-								onClick={ () => act( 'reactivate' ) }
-							>
-								{ __( 'Reactivate', 'submex' ) }
-							</Button>
+							{ ! data.billable ? (
+								<Button
+									variant="outline"
+									disabled={ busy }
+									onClick={ () => act( 'reactivate' ) }
+								>
+									{ __( 'Reactivate', 'submex' ) }
+								</Button>
+							) : null }
 						</div>
 
 						{ data.billable && ! data.payment_pending ? (
 							<p className="sb-m-0 sb-text-xs sb-text-muted-foreground">
-								{ __(
-									'Charging now takes the next payment immediately and moves the schedule on. It does not skip the queue for a failed one - the activity log below says what happened last.',
-									'submex'
-								) }
+								{ data.pays_by_link
+									? __(
+											'This emails the customer a link to pay their next renewal. The schedule moves on once they pay.',
+											'submex'
+									  )
+									: __(
+											'Charging now takes the next payment immediately and moves the schedule on. It does not skip the queue for a failed one - the activity log below says what happened last.',
+											'submex'
+									  ) }
 							</p>
 						) : null }
 
@@ -419,7 +436,7 @@ export function Detail( { id, onBack, onFail } ) {
 								className="sb-text-xs sb-text-muted-foreground"
 								htmlFor="submex-next-payment"
 							>
-								{ __( 'Next payment', 'submex' ) }
+								{ __( 'Next payment (UTC)', 'submex' ) }
 							</label>
 							<Input
 								id="submex-next-payment"
@@ -437,7 +454,7 @@ export function Detail( { id, onBack, onFail } ) {
 								className="sb-text-xs sb-text-muted-foreground"
 								htmlFor="submex-end-date"
 							>
-								{ __( 'Ends', 'submex' ) }
+								{ __( 'Ends (UTC)', 'submex' ) }
 							</label>
 							<Input
 								id="submex-end-date"
@@ -468,7 +485,7 @@ export function Detail( { id, onBack, onFail } ) {
 							</h4>
 							<p className="sb-m-0 sb-text-xs sb-text-muted-foreground">
 								{ __(
-									'Billing stops and the customer keeps what the last payment covered. This cannot be undone.',
+									'Billing stops and the subscription ends now, even if the customer has paid time left. This cannot be undone.',
 									'submex'
 								) }
 							</p>

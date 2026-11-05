@@ -4,6 +4,7 @@
  * Everything the WP_List_Table did: status tabs with counts, search, sorting, per-row
  * actions, bulk actions and pagination - without a page load between any of them.
  */
+import { renewQuestion } from './renew-question';
 import { useEffect, useState, useCallback } from '@wordpress/element';
 import { __, sprintf, _n } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
@@ -282,11 +283,7 @@ export function List( {
 
 	const renew = ( row ) => {
 		// This charges a real customer, so it names the amount and asks first.
-		const question = sprintf(
-			/* translators: %s: recurring total. */
-			__( 'This charges the customer %s right now. Continue?', 'submex' ),
-			row.total_formatted
-		);
+		const question = renewQuestion( row.pays_by_link, row.total_formatted );
 
 		// eslint-disable-next-line no-alert
 		if ( ! window.confirm( question ) ) {
@@ -305,7 +302,7 @@ export function List( {
 				setNotice( {
 					ok: true,
 					message: __(
-						'The renewal was put through. The activity log says what happened.',
+						'The renewal went through. The activity log has the details.',
 						'submex'
 					),
 				} );

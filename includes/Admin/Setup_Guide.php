@@ -266,6 +266,8 @@ class Setup_Guide {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 		$wpdb->delete( $wpdb->prefix . 'submex_activity', array( 'subscription_id' => $id ), array( '%d' ) );
 
+		$this->scheduler->unschedule( $id );
+
 		$subscription = wc_get_order( $id );
 		if ( $subscription ) {
 			$subscription->delete( true );
@@ -275,28 +277,18 @@ class Setup_Guide {
 	/**
 	 * Which gateways can actually charge a renewal right now.
 	 *
-	 * Asks the registry rather than naming one, so a gateway added by Pro counts and the
-	 * checklist never tells a shop using another gateway to go and connect PayPal.
+	 * Names none, so a gateway added by Pro counts and a shop on another gateway is never sent to connect PayPal.
 	 *
 	 * @return string[]
 	 */
 	private function connected_gateways(): array {
-		$registry = \Submex\Plugin::instance()->get( 'gateways' );
-
-		if ( ! $registry instanceof \Submex\Gateways\Gateway_Registry ) {
-			return array();
-		}
-
 		$names = array();
 
-		foreach ( $registry->all() as $gateway ) {
-			// Manual and the test gateway are always present and charge nobody by
-			// themselves, so counting them would tick this step on a store with nothing set up.
-			if ( in_array( $gateway->id(), array( 'submex_manual', Test_Gateway::ID ), true ) ) {
-				continue;
+		foreach ( WC()->payment_gateways()->payment_gateways() as $id => $method ) {
+			// Offered at checkout, not merely loaded: a gateway with no keys or switched off bills nobody.
+			if ( str_starts_with( (string) $id, 'submex' ) && Test_Gateway::ID !== $id && 'yes' === $method->enabled && $method->is_available() ) {
+				$names[] = wp_strip_all_tags( $method->get_method_title() );
 			}
-
-			$names[] = $gateway->title();
 		}
 
 		return $names;

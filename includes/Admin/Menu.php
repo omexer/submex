@@ -455,7 +455,11 @@ class Menu {
 
 		$confirm = sprintf(
 			/* translators: %s: recurring total */
-			__( 'This charges the customer %s right now. Continue?', 'submex' ),
+			\Submex\Frontend\MyAccount\Status_Presenter::pays_by_link( $subscription )
+				/* translators: %s: recurring total */
+				? __( 'This raises a renewal for %s and emails the customer a link to pay it. Continue?', 'submex' )
+				/* translators: %s: recurring total */
+				: __( 'This charges the customer %s right now. Continue?', 'submex' ),
 			wp_strip_all_tags( $subscription->get_formatted_order_total() )
 		);
 

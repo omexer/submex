@@ -171,6 +171,8 @@ final class Plugin {
 		$this->services['guest_checkout'] = new Guest_Checkout();
 		$this->services['guest_checkout']->register();
 
+		( new \Submex\Checkout\Order_Summary() )->register();
+
 		$this->services['subscription_factory'] = new Subscription_Factory(
 			$this->services['charge_slots'],
 			$this->services['activity'],

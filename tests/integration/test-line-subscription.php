@@ -234,7 +234,7 @@ $equals( 'recalculating does not re-add the fee or reprice the line', $total(), 
 $text = $cart_text();
 $equals( 'the cart line states the line\'s terms', $text['lines'], array( 'PRICE$24.00 every 2 weeks' ) );
 $equals( 'so does the recurring total', $text['totals'], 'Recurring $24.00 every 2 weeks' );
-$equals( 'and the consent', $text['consent'], "You're starting a subscription. You'll be charged $24.00 every 2 weeks until you cancel." );
+$equals( 'and the consent', $text['consent'], "You're starting a subscription. You'll be charged $24.00 every 2 weeks until you cancel. A one-time sign-up fee of $5.00 is charged today." );
 $equals(
 	'the block checkout says the same',
 	$text['blocks'],
@@ -242,7 +242,7 @@ $equals(
 		'has_subscription' => true,
 		'price_line'       => '$24.00 every 2 weeks',
 		'lines'            => array( '$5.00 sign-up fee today', 'First payment $29.00 today', 'Then $24.00 every 2 weeks', 'Cancel anytime' ),
-		'consent'          => "You're starting a subscription. You'll be charged $24.00 every 2 weeks until you cancel.",
+		'consent'          => "You're starting a subscription. You'll be charged $24.00 every 2 weeks until you cancel. A one-time sign-up fee of $5.00 is charged today.",
 	)
 );
 

@@ -3,6 +3,7 @@
 namespace Submex\Emails;
 
 use Submex\Domain\Subscription;
+use Submex\Lifecycle\Cancellation_Policy;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -60,6 +61,6 @@ class Subscription_Started extends Subscription_Email {
 	}
 
 	protected function outro(): string {
-		return __( 'You can cancel at any time from your account.', 'submex' );
+		return Cancellation_Policy::allows( $this->subscription ) ? __( 'You can cancel at any time from your account.', 'submex' ) : '';
 	}
 }
