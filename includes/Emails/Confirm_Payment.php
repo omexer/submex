@@ -3,6 +3,7 @@
 namespace Submex\Emails;
 
 use Submex\Domain\Subscription;
+use Submex\Frontend\MyAccount\Status_Presenter;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -45,6 +46,14 @@ class Confirm_Payment extends Subscription_Email {
 	}
 
 	protected function intro(): string {
+		if ( Status_Presenter::pays_by_link( $this->subscription ) ) {
+			return sprintf(
+				/* translators: %s: amount */
+				__( 'Your subscription renewal of %s is ready to pay. Nothing is taken automatically, so use the button below when you are ready.', 'submex' ),
+				$this->amount( $this->related_order ? $this->related_order->get_total() : $this->subscription->get_total() )
+			);
+		}
+
 		return sprintf(
 			/* translators: %s: amount */
 			__( 'Your bank needs you to confirm the %s payment for your subscription. It takes a few seconds and nothing has been charged yet.', 'submex' ),
@@ -63,7 +72,7 @@ class Confirm_Payment extends Subscription_Email {
 		$url = $this->action_url ?: ( $this->related_order ? $this->related_order->get_checkout_payment_url() : '' );
 
 		return $url ? array(
-			'label' => __( 'Confirm payment', 'submex' ),
+			'label' => Status_Presenter::pays_by_link( $this->subscription ) ? __( 'Pay renewal', 'submex' ) : __( 'Confirm payment', 'submex' ),
 			'url'   => $url,
 		) : null;
 	}

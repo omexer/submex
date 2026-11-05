@@ -144,7 +144,7 @@ class Setup_Guide {
 			$this->redirect_back( 'invalid' );
 		}
 
-		$product = new \WC_Product_Simple();
+		$product = new \Submex\Product\Simple_Subscription();
 		$product->set_name( $name );
 		$product->set_regular_price( $price );
 		$product->set_status( 'publish' );

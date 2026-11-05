@@ -18,7 +18,8 @@
 		return;
 	}
 
-	function Disclosure( props ) {
+	// The cart's extension data is handed to the Fill's child, never to the plugin's own render.
+	function Terms( props ) {
 		var data = ( props.extensions || {} ).submex;
 
 		if ( ! data || ! data.has_subscription ) {
@@ -26,28 +27,28 @@
 		}
 
 		return el(
-			ExperimentalOrderMeta,
-			null,
+			'div',
+			{
+				className: 'submex-blocks-disclosure',
+				role: 'group',
+				'aria-label': __( 'Subscription terms', 'submex' ),
+			},
+			el( 'p', { className: 'submex-blocks-disclosure__price' }, data.price_line ),
 			el(
-				'div',
-				{
-					className: 'submex-blocks-disclosure',
-					role: 'group',
-					'aria-label': __( 'Subscription terms', 'submex' ),
-				},
-				el( 'p', { className: 'submex-blocks-disclosure__price' }, data.price_line ),
-				el(
-					'ul',
-					{ className: 'submex-blocks-disclosure__facts' },
-					( data.lines || [] ).map( function ( line, index ) {
-						return el( 'li', { key: 'submex-fact-' + index }, line );
-					} )
-				),
-				data.consent
-					? el( 'p', { className: 'submex-blocks-disclosure__consent' }, data.consent )
-					: null
-			)
+				'ul',
+				{ className: 'submex-blocks-disclosure__facts' },
+				( data.lines || [] ).map( function ( line, index ) {
+					return el( 'li', { key: 'submex-fact-' + index }, line );
+				} )
+			),
+			data.consent
+				? el( 'p', { className: 'submex-blocks-disclosure__consent' }, data.consent )
+				: null
 		);
+	}
+
+	function Disclosure() {
+		return el( ExperimentalOrderMeta, null, el( Terms ) );
 	}
 
 	wp.plugins.registerPlugin( 'submex-subscription-terms', {

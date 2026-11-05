@@ -37,6 +37,7 @@ class Product_Types {
 
 		add_filter( 'woocommerce_product_supports', array( $this, 'supports' ), 10, 3 );
 		add_filter( 'woocommerce_attribute_default_is_variation', array( $this, 'attribute_is_variation' ), 10, 2 );
+		add_filter( 'woocommerce_add_to_cart_handler', array( $this, 'add_to_cart_handler' ), 10, 2 );
 
 		// Without these there is no Add to cart button at all. WooCommerce renders one by
 		// firing woocommerce_{type}_add_to_cart, and it only registers listeners for the
@@ -232,6 +233,16 @@ jQuery( function ( $ ) {
 JS;
 
 		wp_add_inline_script( 'wc-admin-product-meta-boxes', sprintf( $template, wp_json_encode( self::SIMPLE ), wp_json_encode( self::VARIABLE ) ) );
+	}
+
+	/**
+	 * WooCommerce routes by type name, so without this a chosen variation is dropped and the parent goes in the cart.
+	 *
+	 * @param string           $handler
+	 * @param \WC_Product|null $product
+	 */
+	public function add_to_cart_handler( $handler, $product = null ): string {
+		return $product instanceof \WC_Product && self::VARIABLE === $product->get_type() ? 'variable' : (string) $handler;
 	}
 
 	/**

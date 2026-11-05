@@ -50,7 +50,8 @@ class Product_Meta_Fields {
 		global $product_object;
 
 		printf(
-			'<div class="submex-product-options show_if_%s show_if_%s">',
+			// options_group: WooCommerce hides a tab when no direct child of this kind is showing.
+			'<div class="options_group submex-product-options show_if_%s show_if_%s">',
 			esc_attr( Product_Types::SIMPLE ),
 			esc_attr( Product_Types::VARIABLE )
 		);
@@ -154,6 +155,11 @@ class Product_Meta_Fields {
 		// The type is the switch now. The meta is still written so anything reading it
 		// directly - an older extension, a report - keeps seeing the truth.
 		$is_subscription = Product_Types::is_subscription_type( $product );
+
+		// A legacy simple product bills by this meta, so saving it must not end that; one just retyped from a subscription stops.
+		if ( ! $is_subscription && 'simple' === \WC_Product_Factory::get_product_type( $product->get_id() ) && 'simple' === $product->get_type() ) {
+			return;
+		}
 
 		$product->update_meta_data( Subscription_Product::META_ENABLED, $is_subscription ? 'yes' : 'no' );
 

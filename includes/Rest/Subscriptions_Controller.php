@@ -282,6 +282,15 @@ class Subscriptions_Controller {
 		}
 
 		$subscription->save();
+
+		// The queued renewal and reminder still hold the old date, and the sweeper leaves anything queued alone.
+		$scheduler = \Submex\Plugin::instance()->get( 'scheduler' );
+
+		if ( null !== $request->get_param( 'next_payment' ) && $scheduler instanceof \Submex\Billing\Renewal_Scheduler && $subscription->get_status_enum()?->is_billable() ) {
+			$scheduler->unschedule( $subscription->get_id() );
+			$scheduler->schedule_next( $subscription );
+		}
+
 		$this->activity->log(
 			$subscription->get_id(),
 			Activity_Repository::TYPE_SCHEDULE_CHANGE,
@@ -447,8 +456,8 @@ class Subscriptions_Controller {
 	/**
 	 * Charge now, through the same pipeline as a scheduled renewal.
 	 *
-	 * Not a shortcut of its own: the charge slot still decides whether a charge may
-	 * happen, so a button pressed twice cannot bill a customer twice.
+	 * Paying ahead is a real charge for the next period, so the slot alone cannot tell a
+	 * double click from meaning it: a second press within a minute is refused.
 	 *
 	 * @return bool|\WP_Error
 	 */
@@ -461,8 +470,47 @@ class Subscriptions_Controller {
 			);
 		}
 
+		$guard = 'submex_renew_now_' . $subscription->get_id();
+
+		if ( get_transient( $guard ) ) {
+			return new \WP_Error(
+				'submex_renewal_just_run',
+				__( 'A renewal for this subscription was just put through. Check its activity before trying again.', 'submex' ),
+				array( 'status' => 409 )
+			);
+		}
+
+		set_transient( $guard, 1, MINUTE_IN_SECONDS );
+
+		$declined = null;
+		$watch    = static function ( $charged, $order, $result ) use ( &$declined, $subscription ): void {
+			if ( $charged instanceof Subscription && $charged->get_id() === $subscription->get_id() ) {
+				$declined = $result->describe();
+			}
+		};
+		$hooks    = array( 'submex_renewal_failed', 'submex_early_renewal_declined' );
+
+		foreach ( $hooks as $hook ) {
+			add_action( $hook, $watch, 1, 3 );
+		}
+
 		// Asked for deliberately, so a date still in the future must not silently stop it.
 		$this->processor->process( $subscription->get_id(), true );
+
+		foreach ( $hooks as $hook ) {
+			remove_action( $hook, $watch, 1 );
+		}
+
+		if ( null !== $declined ) {
+			delete_transient( $guard );
+
+			return new \WP_Error(
+				'submex_renewal_declined',
+				/* translators: %s: why the payment was declined */
+				sprintf( __( 'The renewal was not paid: %s', 'submex' ), $declined ),
+				array( 'status' => 402 )
+			);
+		}
 
 		return true;
 	}

@@ -3,6 +3,7 @@
 namespace Submex\Emails;
 
 use Submex\Domain\Subscription;
+use Submex\Frontend\MyAccount\Status_Presenter;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -42,6 +43,15 @@ class Renewal_Reminder extends Subscription_Email {
 	protected function intro(): string {
 		$trialling = 'submex-trialling' === $this->subscription->get_status();
 
+		if ( ! $trialling && Status_Presenter::pays_by_link( $this->subscription ) ) {
+			return sprintf(
+				/* translators: 1: amount, 2: date */
+				__( 'Your renewal of %1$s is due on %2$s. We will send you a link to pay it.', 'submex' ),
+				$this->amount( $this->subscription->get_total() ),
+				$this->date( $this->subscription->get_next_payment() )
+			);
+		}
+
 		return sprintf(
 			$trialling
 				/* translators: 1: amount, 2: date */
@@ -72,6 +82,8 @@ class Renewal_Reminder extends Subscription_Email {
 	}
 
 	protected function outro(): string {
-		return __( 'Nothing to do if you want it to continue. You can change or cancel it any time before that date.', 'submex' );
+		return Status_Presenter::pays_by_link( $this->subscription )
+			? __( 'You can change or cancel it any time before that date.', 'submex' )
+			: __( 'Nothing to do if you want it to continue. You can change or cancel it any time before that date.', 'submex' );
 	}
 }
