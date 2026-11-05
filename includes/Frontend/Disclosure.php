@@ -32,8 +32,8 @@ class Disclosure {
 		$now      = $now ?? new \DateTimeImmutable( 'now', new \DateTimeZone( 'UTC' ) );
 		$terms    = $terms ?? Line_Terms::for_product( $product );
 		$schedule = $terms->schedule();
-		$price    = $terms->recurring_price();
-		$fee      = $terms->signup_fee();
+		$price    = $terms->shown( $terms->recurring_price(), $product );
+		$fee      = $terms->shown( $terms->signup_fee(), $product );
 
 		$lines = array();
 
@@ -56,7 +56,7 @@ class Disclosure {
 		// Always state what is charged first and when. This is the single most common
 		// point of confusion: am I paying now, or after the trial?
 		$first_date = $schedule->trial_end_from( $now );
-		$first_due  = $schedule->has_trial() ? $price : $price->add( $fee );
+		$first_due  = $schedule->has_trial() ? $price : $terms->shown( $terms->recurring_price()->add( $terms->signup_fee() ), $product );
 
 		$lines[] = array(
 			'key'  => 'first_payment',
@@ -101,7 +101,7 @@ class Disclosure {
 		 * @param \WC_Product $product
 		 * @param Line_Terms  $terms
 		 */
-		return (string) apply_filters( 'submex_disclosure_price_line', $this->default_price_line( $terms ), $product, $terms );
+		return (string) apply_filters( 'submex_disclosure_price_line', $this->default_price_line( $product, $terms ), $product, $terms );
 	}
 
 	/**
@@ -121,18 +121,18 @@ class Disclosure {
 		$terms = Line_Terms::for_product( $product );
 		$line  = $this->price_line( $product, $terms );
 
-		if ( $line !== $this->default_price_line( $terms ) ) {
+		if ( $line !== $this->default_price_line( $product, $terms ) ) {
 			return $line;
 		}
 
 		return $woo_html . ' <span class="submex-price-interval">' . esc_html( $terms->schedule()->describe() ) . '</span>';
 	}
 
-	private function default_price_line( Line_Terms $terms ): string {
+	private function default_price_line( \WC_Product $product, Line_Terms $terms ): string {
 		return sprintf(
 			/* translators: 1: price, 2: billing interval such as "every month" */
 			__( '%1$s %2$s', 'submex' ),
-			$this->amount( $terms->recurring_price() ),
+			$this->amount( $terms->shown( $terms->recurring_price(), $product ) ),
 			$terms->schedule()->describe()
 		);
 	}
@@ -171,12 +171,12 @@ class Disclosure {
 		 * @param \WC_Product $product
 		 * @param Line_Terms  $terms
 		 */
-		return (string) apply_filters( 'submex_disclosure_sentence', $this->default_sentence( $terms ), $product, $terms );
+		return (string) apply_filters( 'submex_disclosure_sentence', $this->default_sentence( $product, $terms ), $product, $terms );
 	}
 
-	private function default_sentence( Line_Terms $terms ): string {
+	private function default_sentence( \WC_Product $product, Line_Terms $terms ): string {
 		$schedule = $terms->schedule();
-		$price    = $terms->recurring_price();
+		$price    = $terms->shown( $terms->recurring_price(), $product );
 
 		if ( $schedule->has_trial() ) {
 			return sprintf(

@@ -100,6 +100,23 @@ final class Line_Terms {
 	}
 
 	/**
+	 * An amount as the customer is shown it: with or without tax as the store displays prices, by the cart's setting for a line and the shop's otherwise.
+	 */
+	public function shown( Money $amount, \WC_Product $product ): Money {
+		return Money::from_decimal(
+			(float) wc_get_price_to_display(
+				$product,
+				array(
+					'price'           => $amount->decimal(),
+					'display_context' => null === $this->cart_item && null === $this->order_item ? 'shop' : 'cart',
+				)
+			),
+			$amount->currency(),
+			$amount->decimals()
+		);
+	}
+
+	/**
 	 * @return array<string, mixed>|null
 	 */
 	public function cart_item(): ?array {
