@@ -45,7 +45,7 @@ use Submex\Frontend\MyAccount\Cancel_Flow;
 		<input type="hidden" name="submex_detail" value="<?php echo esc_attr( $detail ); ?>" />
 
 		<div class="submex-cancel__actions">
-			<button type="submit" class="button submex-btn"><?php echo esc_html( $decline_text ); ?></button>
+			<button type="submit" class="button wp-element-button submex-btn"><?php echo esc_html( $decline_text ); ?></button>
 		</div>
 	</form>
 </div>

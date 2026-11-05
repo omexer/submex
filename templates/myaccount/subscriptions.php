@@ -15,7 +15,7 @@ use Submex\Frontend\MyAccount\Status_Presenter;
 if ( empty( $subscriptions ) ) : ?>
 	<div class="submex-empty">
 		<p><?php esc_html_e( "You don't have any subscriptions.", 'submex' ); ?></p>
-		<a class="woocommerce-Button button" href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>">
+		<a class="woocommerce-Button button wp-element-button submex-btn" href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>">
 			<?php esc_html_e( 'Browse products', 'submex' ); ?>
 		</a>
 	</div>
@@ -39,7 +39,7 @@ if ( empty( $subscriptions ) ) : ?>
 				</span>
 			</div>
 
-			<p class="submex-card__price"><?php echo wp_kses_post( $submex_subscription->get_formatted_order_total() ); ?></p>
+			<p class="submex-card__price"><?php echo wp_kses_post( Status_Presenter::price( $submex_subscription ) ); ?></p>
 
 			<?php if ( $submex_state['detail'] ) : ?>
 				<p class="submex-card__detail"><?php echo esc_html( $submex_state['detail'] ); ?></p>
@@ -48,7 +48,7 @@ if ( empty( $subscriptions ) ) : ?>
 			<div class="submex-card__actions">
 				<?php $submex_action = \Submex\Frontend\MyAccount\Status_Presenter::primary_action( $submex_subscription ); ?>
 				<?php if ( $submex_action ) : ?>
-					<a class="button submex-btn submex-btn--primary" href="<?php echo esc_url( $submex_action['url'] ); ?>">
+					<a class="button wp-element-button submex-btn submex-btn--primary" href="<?php echo esc_url( $submex_action['url'] ); ?>">
 						<?php echo esc_html( $submex_action['label'] ); ?>
 					</a>
 				<?php endif; ?>

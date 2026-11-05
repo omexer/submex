@@ -19,6 +19,6 @@ defined( 'ABSPATH' ) || exit;
 	<h2 class="submex-message__title"><?php echo esc_html( $title ); ?></h2>
 	<div class="submex-message__description"><?php echo wp_kses( wpautop( $description ), \Submex\Admin\Allowed_Html::rich_text() ); ?></div>
 	<p class="submex-message__close">
-		<a class="button submex-btn" href="<?php echo esc_url( $close_url ); ?>"><?php echo esc_html( $button_text ); ?></a>
+		<a class="button wp-element-button submex-btn" href="<?php echo esc_url( $close_url ); ?>"><?php echo esc_html( $button_text ); ?></a>
 	</p>
 </div>

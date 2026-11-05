@@ -57,7 +57,7 @@ $submex_id = (string) $subscription->get_id();
 	<?php endif; ?>
 
 	<div class="submex-cancel__actions">
-		<button type="submit" name="submex_choice" value="<?php echo esc_attr( Cancel_Flow::KEEP ); ?>" class="button submex-btn submex-btn--primary"><?php echo esc_html( (string) $display['keep_text'] ); ?></button>
-		<button type="submit" name="submex_choice" value="<?php echo esc_attr( Cancel_Flow::CONTINUE ); ?>" class="button submex-btn"><?php echo esc_html( (string) $display['continue_text'] ); ?></button>
+		<button type="submit" name="submex_choice" value="<?php echo esc_attr( Cancel_Flow::KEEP ); ?>" class="button wp-element-button submex-btn submex-btn--primary"><?php echo esc_html( (string) $display['keep_text'] ); ?></button>
+		<button type="submit" name="submex_choice" value="<?php echo esc_attr( Cancel_Flow::CONTINUE ); ?>" class="button wp-element-button submex-btn"><?php echo esc_html( (string) $display['continue_text'] ); ?></button>
 	</div>
 </form>

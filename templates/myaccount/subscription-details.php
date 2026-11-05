@@ -51,7 +51,7 @@ $submex_cancel_refused = $submex_live && ! $submex_can_cancel ? \Submex\Frontend
 	<?php $submex_action = \Submex\Frontend\MyAccount\Status_Presenter::primary_action( $subscription ); ?>
 	<?php if ( $submex_action ) : ?>
 		<p class="submex-detail__action">
-			<a class="submex-btn submex-btn--primary" href="<?php echo esc_url( $submex_action['url'] ); ?>">
+			<a class="button wp-element-button submex-btn submex-btn--primary" href="<?php echo esc_url( $submex_action['url'] ); ?>">
 				<?php echo esc_html( $submex_action['label'] ); ?>
 			</a>
 		</p>
@@ -71,7 +71,7 @@ $submex_cancel_refused = $submex_live && ! $submex_can_cancel ? \Submex\Frontend
 
 	<p class="submex-detail__total">
 		<strong><?php esc_html_e( 'Recurring total', 'submex' ); ?>:</strong>
-		<?php echo wp_kses_post( $subscription->get_formatted_order_total() ); ?>
+		<?php echo wp_kses_post( Status_Presenter::price( $subscription ) ); ?>
 	</p>
 
 	<?php
@@ -94,9 +94,9 @@ $submex_cancel_refused = $submex_live && ! $submex_can_cancel ? \Submex\Frontend
 	$submex_extra_actions = (array) apply_filters( 'submex_myaccount_actions', array(), $subscription );
 	?>
 	<?php if ( $submex_extra_actions ) : ?>
-		<p class="submex-actions">
+		<div class="submex-actions">
 			<?php foreach ( $submex_extra_actions as $submex_slug => $submex_label ) : ?>
-				<form method="post" style="display:inline-block;margin:0 .4em .4em 0">
+				<form method="post">
 					<?php wp_nonce_field( 'submex_pro_' . $subscription->get_id() ); ?>
 					<input type="hidden" name="submex_pro_action" value="<?php echo esc_attr( (string) $submex_slug ); ?>" />
 					<input type="hidden" name="submex_subscription" value="<?php echo esc_attr( (string) $subscription->get_id() ); ?>" />
@@ -109,10 +109,10 @@ $submex_cancel_refused = $submex_live && ! $submex_can_cancel ? \Submex\Frontend
 					 */
 					do_action( 'submex_myaccount_action_fields', (string) $submex_slug, $subscription );
 					?>
-					<button type="submit" class="button submex-btn"><?php echo esc_html( (string) $submex_label ); ?></button>
+					<button type="submit" class="button wp-element-button submex-btn"><?php echo esc_html( (string) $submex_label ); ?></button>
 				</form>
 			<?php endforeach; ?>
-		</p>
+		</div>
 	<?php endif; ?>
 
 	<?php if ( \Submex\Lifecycle\Early_Renewal::is_available_for( $subscription ) ) : ?>
@@ -133,7 +133,7 @@ $submex_cancel_refused = $submex_live && ! $submex_can_cancel ? \Submex\Frontend
 			<?php wp_nonce_field( 'submex_renew_early_' . $subscription->get_id() ); ?>
 			<input type="hidden" name="submex_action" value="renew_early" />
 			<input type="hidden" name="submex_subscription" value="<?php echo esc_attr( (string) $subscription->get_id() ); ?>" />
-			<button type="submit" class="button submex-btn"><?php esc_html_e( 'Pay now', 'submex' ); ?></button>
+			<button type="submit" class="button wp-element-button submex-btn"><?php esc_html_e( 'Pay now', 'submex' ); ?></button>
 		</form>
 	<?php endif; ?>
 
@@ -164,7 +164,7 @@ $submex_cancel_refused = $submex_live && ! $submex_can_cancel ? \Submex\Frontend
 			<input type="hidden" name="submex_subscription" value="<?php echo esc_attr( (string) $subscription->get_id() ); ?>" />
 			<input type="hidden" name="submex_auto_renew" value="<?php echo $submex_auto_on ? 'off' : 'on'; ?>" />
 
-			<button type="submit" class="button submex-btn">
+			<button type="submit" class="button wp-element-button submex-btn">
 				<?php
 				if ( $submex_by_link ) {
 					echo $submex_auto_on
@@ -200,7 +200,7 @@ $submex_cancel_refused = $submex_live && ! $submex_can_cancel ? \Submex\Frontend
 			<p class="submex-cancel__effect"><?php echo esc_html( $submex_effect ); ?></p>
 
 			<div class="submex-cancel__actions">
-				<a class="button submex-btn" href="<?php echo esc_url( \Submex\Frontend\MyAccount\Cancel_Flow::view_url( $subscription ) ); ?>"><?php esc_html_e( 'Cancel subscription', 'submex' ); ?></a>
+				<a class="button wp-element-button submex-btn" href="<?php echo esc_url( \Submex\Frontend\MyAccount\Cancel_Flow::view_url( $subscription ) ); ?>"><?php esc_html_e( 'Cancel subscription', 'submex' ); ?></a>
 			</div>
 		<?php else : ?>
 			<form method="post" class="submex-cancel">
@@ -211,8 +211,8 @@ $submex_cancel_refused = $submex_live && ! $submex_can_cancel ? \Submex\Frontend
 				<p class="submex-cancel__effect"><?php echo esc_html( $submex_effect ); ?></p>
 
 				<div class="submex-cancel__actions">
-					<button type="submit" class="button submex-btn"><?php esc_html_e( 'Cancel subscription', 'submex' ); ?></button>
-					<a class="button submex-btn" href="<?php echo esc_url( wc_get_account_endpoint_url( $endpoint ) ); ?>">
+					<button type="submit" class="button wp-element-button submex-btn"><?php esc_html_e( 'Cancel subscription', 'submex' ); ?></button>
+					<a class="button wp-element-button submex-btn" href="<?php echo esc_url( wc_get_account_endpoint_url( $endpoint ) ); ?>">
 						<?php esc_html_e( 'Keep subscription', 'submex' ); ?>
 					</a>
 				</div>

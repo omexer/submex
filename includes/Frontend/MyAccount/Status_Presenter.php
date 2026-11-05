@@ -3,6 +3,7 @@
 namespace Submex\Frontend\MyAccount;
 
 use Submex\Data\Charge_Slot_Repository;
+use Submex\Domain\Billing_Schedule;
 use Submex\Domain\Subscription;
 use Submex\Domain\Subscription_Status;
 use Submex\Gateways\Gateway_Model;
@@ -248,6 +249,20 @@ class Status_Presenter {
 	/**
 	 * Name the subscription by what it contains, not by its ID.
 	 */
+	/**
+	 * What it costs and how often, as HTML: a bare amount does not tell a customer what they are signed up to.
+	 */
+	public static function price( Subscription $subscription ): string {
+		try {
+			$cycle = Billing_Schedule::from_subscription( $subscription )->describe();
+		} catch ( \InvalidArgumentException $e ) {
+			// A subscription with no valid period still has to show its page.
+			return $subscription->get_formatted_order_total();
+		}
+
+		return sprintf( '%s <span class="submex-price__cycle">%s</span>', $subscription->get_formatted_order_total(), esc_html( $cycle ) );
+	}
+
 	public static function title( Subscription $subscription ): string {
 		$names = array();
 

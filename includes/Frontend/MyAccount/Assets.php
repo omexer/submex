@@ -34,26 +34,32 @@ class Assets {
 		.submex-card{border:1px solid rgba(0,0,0,.12);border-radius:8px;padding:1rem}
 		.submex-card--warning{border-left:4px solid #b8860b}
 		.submex-card--positive{border-left:4px solid #2e7d32}
-		.submex-card--muted{opacity:.75}
+		.submex-card--muted{background:rgba(0,0,0,.02)}
 		.submex-card__head{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;justify-content:space-between}
 		.submex-card__title{margin:0;font-size:1.05rem}
 		.submex-card__price{margin:.35rem 0;font-weight:600}
+		.submex-price__cycle{font-weight:400;font-size:.9em}
 		.submex-card__detail{margin:.25rem 0;font-size:.9em;opacity:.85}
 		.submex-badge{display:inline-block;padding:.2em .6em;border-radius:999px;font-size:.8em;border:1px solid currentColor}
 		.submex-badge--positive{color:#2e7d32}
 		.submex-badge--warning{color:#8a6100}
 		.submex-badge--muted{color:#666}
-		.submex-card__actions{margin-top:.75rem}
-		/* 44px minimum touch targets: cancel must be reachable on a phone. */
-		.submex-card__actions .button,.submex-cancel__actions .button{min-height:44px;line-height:44px;padding:0 1rem}
+		.submex-card__actions{margin-top:.75rem;display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center}
+		/* The theme colours buttons; block themes through wp-element-button. Their size and layout are set here so they hold on any theme. 44px: cancel must be reachable on a phone. */
+		.submex-btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:44px;padding:.5rem 1.25rem;line-height:1.3;text-align:center;text-decoration:none;cursor:pointer}
 		.submex-items{margin:.5rem 0 1rem;padding-left:1.1rem}
+		.submex-back{margin:0 0 1rem}
+		.submex-detail .submex-card__head h2{margin:0;font-size:1.5rem}
+		.submex-detail__state{margin:.5rem 0 1rem}
+		.submex-detail__action{margin:0 0 1.25rem}
+		.submex-detail>h3{margin:1.5rem 0 .6rem;padding-top:1.25rem;border-top:1px solid rgba(0,0,0,.12);font-size:1.05rem}
+		.submex-detail__total{margin:.5rem 0}
+		.submex-detail form{margin:0}
+		.submex-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin:1rem 0}
 		/* Equal visual weight: cancel is never a grey link next to a primary button. */
-		.submex-cancel__actions{display:flex;flex-wrap:wrap;gap:.6rem}
-		.submex-cancel__actions .submex-btn--primary{background:#7f54b3;border-color:#7f54b3;color:#fff;font-weight:600}
-			.submex-btn--primary:hover{background:#6b4699;border-color:#6b4699;color:#fff}
-			.submex-card__link{align-self:center;font-size:.9em}
-			.submex-detail__action{margin:0 0 1.25rem}
-			.submex-btn{flex:1 1 12rem;text-align:center}
+		.submex-cancel__actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.75rem}
+		.submex-cancel__actions .submex-btn{flex:1 1 12rem}
+		.submex-card__link{font-size:.9em}
 		.submex-empty{padding:1rem 0}
 		.submex-flow{display:grid;gap:1rem;max-width:36rem}
 		.submex-flow--center{text-align:center;margin:0 auto}
