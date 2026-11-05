@@ -151,7 +151,7 @@ WordPress.org privacy policy: https://wordpress.org/about/privacy/
 * Fixed: with customer cancellation off, the terms and emails still promised it. Pay early now says the next payment moves on by one period, as it does.
 * Fixed: the setup checklist ticked "Connect a payment method" with nothing working. Sorting by next payment works. Payments made no longer counts a free trial.
 * Reactivate is only offered on a subscription that is not running, tells the customer, and no longer ends a trial early. Renew now and moving the date are refused where PayPal bills on its own schedule.
-* New: the thank-you page and the order email say what was signed up for, the next payment date and where to manage it.
+* New: the thank-you page and the order email say what was signed up for, the next payment date and where to manage it. A guest whose account was just made sees their order straight away, instead of being asked to log in.
 * Fixed: PayPal charged only the plan's price while the whole order was marked paid. A second unit, a one-off item, tax and shipping now reach PayPal, and an order that costs less than one renewal is not sent to PayPal.
 * Fixed: a store set to show prices with no decimals sent Stripe a hundredth of the price, and a store in yen showing two decimals charged a hundred times it at checkout. Stripe is now sent each currency's own units.
 * Fixed: PayPal's first payment was also recorded as a renewal, with a receipt minutes after signup. A cancellation or failed payment at PayPal now emails the customer and the store.

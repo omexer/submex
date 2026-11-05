@@ -15,7 +15,8 @@
 * **Cancellation off.** Disclosure lines, consent and emails follow `Cancellation_Policy`. Merchant cancel email is neutral on who cancelled and gives no access date once cancelled.
 * **Admin.** Checklist asks what is really offered at checkout; list sorts by next payment; `payments_made` excludes a $0 checkout; Reactivate refuses running subscriptions and emails on hold to active; test renewal leaves nothing queued; schedule inputs say UTC.
 * **Pay early.** Copy matches the result, and a double press pays once.
-* **Order summary.** New `Checkout\Order_Summary` on the thank-you page and customer order emails.
+* **Order summary.** New `Checkout\Order_Summary` on the thank-you page and customer order emails. An account made at this checkout sees its order page for ten minutes without logging in (`_submex_new_account`).
+* **Stripe.** A customer created to recover a card carries the billing address, which Stripe requires for off-session charges on some accounts.
 
 * **PayPal bills what the order costs.** A PayPal plan is cached per product, so quantity, one-off items, tax and shipping never reached PayPal while the whole order was marked paid. Each subscription now overrides the plan with the order's recurring total per cycle and the rest of today's total as the setup fee; an order costing less than one renewal (beyond a cent of rounding) is refused. The pay-for-order page offers PayPal only for orders with a subscription.
 * **Provider amounts in the currency's own units.** `Currency::decimals()` / `Currency::minor_units()` give ISO 4217 minor units; Stripe uses them (with its own zero-decimal list, and three-decimal currencies rounded to 10) instead of WooCommerce's display decimals.
