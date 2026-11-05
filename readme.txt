@@ -146,7 +146,7 @@ WordPress.org privacy policy: https://wordpress.org/about/privacy/
 * Fixed: the block cart and checkout showed no subscription terms or consent. They now show the price, what is paid today and when it renews, and a sign-up fee is named in the consent.
 * Fixed: saving a product made from the setup checklist ended its subscription. Products already billing as simple products keep billing when saved.
 * Fixed: moving a subscription's next payment left the charge and the reminder on the old date. A date in the past is now refused, because saving it would bill at once.
-* Fixed: Renew now could charge twice on a second press and reported a declined payment as done.
+* Fixed: Renew now could charge twice on a second press and reported a declined payment as done. Renew now or Pay early on the last paid period ended the subscription at once; both now refuse instead.
 * Fixed: customers who pay by link (cash on delivery, bank transfer) were told a card would be charged, or that their bank needed them to confirm.
 * Fixed: with customer cancellation off, the terms and emails still promised it. Pay early now says the next payment moves on by one period, as it does.
 * Fixed: the setup checklist ticked "Connect a payment method" with nothing working. Sorting by next payment works. Payments made no longer counts a free trial.

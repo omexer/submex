@@ -8,7 +8,9 @@
 * **Block cart and checkout terms.** The extension data is read from the Fill's child, where it actually arrives. The consent names a sign-up fee.
 * **Products.** The checklist creates the Subscription type; saving a legacy simple product no longer clears its meta.
 * **Schedule.** Moving `next_payment` reschedules the charge and reminder; past dates are refused; an end date can be cleared; unchanged fields in the form are ignored.
-* **Renew now.** Refused for 60 seconds after running, returns the decline reason as a 402, refused for gateway-managed subscriptions.
+* **Renew now.** Refused for 60 seconds after running (shared with Pay early), returns the decline reason as a 402, reports each outcome as `renewal_result`, refused for gateway-managed subscriptions and on the last paid period. `Renewal_Processor::process` no longer finishes a subscription early when asked ahead of its due date.
+* **Tax.** When amounts are shown excluding tax, the terms and consent say so.
+* **Filter.** `submex_reactivate_subscription` lets an extension handle Reactivate.
 * **Pay by link.** Reminder, renewal, failed-payment emails, the Renew now dialog and its help text branch on `Gateway_Model::Manual`.
 * **Cancellation off.** Disclosure lines, consent and emails follow `Cancellation_Policy`. Merchant cancel email is neutral on who cancelled and gives no access date once cancelled.
 * **Admin.** Checklist asks what is really offered at checkout; list sorts by next payment; `payments_made` excludes a $0 checkout; Reactivate refuses running subscriptions and emails on hold to active; test renewal leaves nothing queued; schedule inputs say UTC.
