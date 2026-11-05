@@ -1,6 +1,19 @@
 # Changelog
 
-## 1.2.1
+## 1.2.2
+
+1.2.1 was a test build and was never released; everything in it ships here.
+
+* **Variable subscriptions.** `woocommerce_add_to_cart_handler` routes the type as variable, so the chosen variation reaches the cart. The product screen keeps its General tab with taxes off.
+* **Block cart and checkout terms.** The extension data is read from the Fill's child, where it actually arrives. The consent names a sign-up fee.
+* **Products.** The checklist creates the Subscription type; saving a legacy simple product no longer clears its meta.
+* **Schedule.** Moving `next_payment` reschedules the charge and reminder; past dates are refused; an end date can be cleared; unchanged fields in the form are ignored.
+* **Renew now.** Refused for 60 seconds after running, returns the decline reason as a 402, refused for gateway-managed subscriptions.
+* **Pay by link.** Reminder, renewal, failed-payment emails, the Renew now dialog and its help text branch on `Gateway_Model::Manual`.
+* **Cancellation off.** Disclosure lines, consent and emails follow `Cancellation_Policy`. Merchant cancel email is neutral on who cancelled and gives no access date once cancelled.
+* **Admin.** Checklist asks what is really offered at checkout; list sorts by next payment; `payments_made` excludes a $0 checkout; Reactivate refuses running subscriptions and emails on hold to active; test renewal leaves nothing queued; schedule inputs say UTC.
+* **Pay early.** Copy matches the result, and a double press pays once.
+* **Order summary.** New `Checkout\Order_Summary` on the thank-you page and customer order emails.
 
 * **PayPal bills what the order costs.** A PayPal plan is cached per product, so quantity, one-off items, tax and shipping never reached PayPal while the whole order was marked paid. Each subscription now overrides the plan with the order's recurring total per cycle and the rest of today's total as the setup fee; an order costing less than one renewal (beyond a cent of rounding) is refused. The pay-for-order page offers PayPal only for orders with a subscription.
 * **Provider amounts in the currency's own units.** `Currency::decimals()` / `Currency::minor_units()` give ISO 4217 minor units; Stripe uses them (with its own zero-decimal list, and three-decimal currencies rounded to 10) instead of WooCommerce's display decimals.

@@ -5,7 +5,7 @@ Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
 Requires Plugins: woocommerce
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -141,7 +141,17 @@ WordPress.org privacy policy: https://wordpress.org/about/privacy/
 
 == Changelog ==
 
-= 1.2.1 =
+= 1.2.2 =
+* Fixed: a variable subscription sold the parent product instead of the option the customer picked.
+* Fixed: the block cart and checkout showed no subscription terms or consent. They now show the price, what is paid today and when it renews, and a sign-up fee is named in the consent.
+* Fixed: saving a product made from the setup checklist ended its subscription. Products already billing as simple products keep billing when saved.
+* Fixed: moving a subscription's next payment left the charge and the reminder on the old date. A date in the past is now refused, because saving it would bill at once.
+* Fixed: Renew now could charge twice on a second press and reported a declined payment as done.
+* Fixed: customers who pay by link (cash on delivery, bank transfer) were told a card would be charged, or that their bank needed them to confirm.
+* Fixed: with customer cancellation off, the terms and emails still promised it. Pay early now says the next payment moves on by one period, as it does.
+* Fixed: the setup checklist ticked "Connect a payment method" with nothing working. Sorting by next payment works. Payments made no longer counts a free trial.
+* Reactivate is only offered on a subscription that is not running, tells the customer, and no longer ends a trial early. Renew now and moving the date are refused where PayPal bills on its own schedule.
+* New: the thank-you page and the order email say what was signed up for, the next payment date and where to manage it.
 * Fixed: PayPal charged only the plan's price while the whole order was marked paid. A second unit, a one-off item, tax and shipping now reach PayPal, and an order that costs less than one renewal is not sent to PayPal.
 * Fixed: a store set to show prices with no decimals sent Stripe a hundredth of the price, and a store in yen showing two decimals charged a hundred times it at checkout. Stripe is now sent each currency's own units.
 * Fixed: PayPal's first payment was also recorded as a renewal, with a receipt minutes after signup. A cancellation or failed payment at PayPal now emails the customer and the store.
@@ -186,7 +196,7 @@ WordPress.org privacy policy: https://wordpress.org/about/privacy/
 
 == Upgrade Notice ==
 
-= 1.2.1 =
+= 1.2.2 =
 Fixes PayPal and Stripe charging the wrong amount in some stores, and trials giving access before payment. Recommended for every store. If you use Submex Pro, update it as well.
 
 = 1.2.0 =
