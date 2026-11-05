@@ -21,6 +21,8 @@ class Subscription_Factory {
 
 	private const META_ACTIVATED = '_submex_activated';
 
+	public const ACTION_ABANDON = 'submex_abandon_unpaid_subscription';
+
 	public function __construct(
 		private readonly Charge_Slot_Repository $slots,
 		private readonly Activity_Repository $activity,
@@ -33,6 +35,8 @@ class Subscription_Factory {
 		// the order object rather than an ID. Without this, blocks create no subscription.
 		add_action( 'woocommerce_store_api_checkout_order_processed', array( $this, 'from_store_api' ), 10, 1 );
 		add_action( 'woocommerce_order_status_changed', array( $this, 'on_order_status_changed' ), 20, 3 );
+		add_action( 'woocommerce_order_status_cancelled', array( $this, 'schedule_abandon' ), 20, 1 );
+		add_action( self::ACTION_ABANDON, array( $this, 'abandon' ), 10, 1 );
 	}
 
 	/**
@@ -147,6 +151,7 @@ class Subscription_Factory {
 
 		// Pending until the order is paid, trial or not: a trial's access is granted by a completed checkout, not a started one.
 		$subscription->transition_to( Subscription_Status::Pending );
+		$subscription->update_meta_data( self::META_ACTIVATED, 'no' );
 		// WooCommerce's own flag, which calculate_taxes() reads; checkout set it for an exempt customer.
 		$subscription->update_meta_data( 'is_vat_exempt', 'yes' === $order->get_meta( 'is_vat_exempt' ) ? 'yes' : 'no' );
 
@@ -241,8 +246,14 @@ class Subscription_Factory {
 		$status = $subscription->get_status_enum();
 		$target = $subscription->get_trial_end() ? Subscription_Status::Trialling : Subscription_Status::Active;
 
-		// Already active is fine: PayPal's activation webhook can arrive before its order is paid.
-		if ( 'yes' === $subscription->get_meta( self::META_ACTIVATED ) || ! $status || $status->is_terminal() ) {
+		$activated = (string) $subscription->get_meta( self::META_ACTIVATED );
+
+		if ( 'yes' === $activated || ! $status || $status->is_terminal() ) {
+			return;
+		}
+
+		// Active is fine for this version's: PayPal's activation webhook can arrive before its order is paid. One from before it, with no flag, has already started.
+		if ( '' === $activated && ! in_array( $status, array( Subscription_Status::Pending, Subscription_Status::Trialling ), true ) ) {
 			return;
 		}
 
@@ -256,6 +267,30 @@ class Subscription_Factory {
 		$this->scheduler->schedule_next( $subscription );
 
 		do_action( 'submex_subscription_activated', $subscription );
+	}
+
+	/**
+	 * Not at once: a Stripe page stays payable for a day after WooCommerce cancels an unpaid order, and paying it still starts the subscription.
+	 *
+	 * @param int $order_id
+	 */
+	public function schedule_abandon( $order_id ): void {
+		if ( function_exists( 'as_schedule_single_action' ) ) {
+			as_schedule_single_action( time() + 3 * DAY_IN_SECONDS, self::ACTION_ABANDON, array( 'order_id' => (int) $order_id ), Renewal_Scheduler::GROUP );
+		}
+	}
+
+	/**
+	 * @param int $order_id
+	 */
+	public function abandon( $order_id ): void {
+		$order        = wc_get_order( (int) $order_id );
+		$subscription = $order instanceof \WC_Order && ! $order->is_paid() ? $this->existing_for_order( $order ) : null;
+
+		if ( $subscription && $order->get_id() === $subscription->get_parent_order_id() && Subscription_Status::Pending === $subscription->get_status_enum() ) {
+			$subscription->transition_to( Subscription_Status::Cancelled, sprintf( 'Its order #%s was cancelled and never paid.', $order->get_order_number() ) );
+			$subscription->save();
+		}
 	}
 
 	private function existing_for_order( \WC_Order $order ): ?Subscription {

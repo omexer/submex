@@ -8,6 +8,7 @@
  */
 
 use Submex\Checkout\Guest_Checkout;
+use Submex\Checkout\Subscription_Factory;
 use Submex\Domain\Subscription_Status;
 use Submex\Product\Subscription_Product;
 
@@ -79,6 +80,26 @@ $order->update_status( 'cancelled', 'Unpaid order cancelled - time limit reached
 $check( 'the subscription waits, granting nothing', Subscription_Status::Pending === wc_get_order( $s->get_id() )->get_status_enum(), wc_get_order( $s->get_id() )->get_status() );
 wc_get_order( $order->get_id() )->payment_complete( 'paid-late' );
 $check( 'and starts when the payment lands', Subscription_Status::Trialling === wc_get_order( $s->get_id() )->get_status_enum(), wc_get_order( $s->get_id() )->get_status() );
+
+$unpaid = $checkout( $trial );
+$unpaid[0]->update_status( 'cancelled', 'Unpaid order cancelled - time limit reached.' );
+$check( 'an abandoned checkout is scheduled to be ended later', (bool) as_next_scheduled_action( Subscription_Factory::ACTION_ABANDON, array( 'order_id' => $unpaid[0]->get_id() ) ) );
+$factory->abandon( $unpaid[0]->get_id() );
+$check( 'and then ends, instead of waiting for ever', Subscription_Status::Cancelled === wc_get_order( $unpaid[1]->get_id() )->get_status_enum(), wc_get_order( $unpaid[1]->get_id() )->get_status() );
+as_unschedule_all_actions( Subscription_Factory::ACTION_ABANDON );
+
+echo "\n2b. A subscription from before this version\n";
+$started        = 0;
+[ $order, $s ]  = $checkout( submex_test_product() );
+$order->payment_complete( 'paid' );
+$s = wc_get_order( $s->get_id() );
+$s->delete_meta_data( '_submex_activated' );
+$s->save();
+$started = 0;
+$order   = wc_get_order( $order->get_id() );
+$order->update_status( 'on-hold' );
+wc_get_order( $order->get_id() )->update_status( 'completed' );
+$check( 'is not started again when its old order is paid again', 0 === $started, $started );
 
 echo "\n3. The gateway activates it before the order is paid\n";
 $started = 0;

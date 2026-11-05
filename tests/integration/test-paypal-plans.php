@@ -150,7 +150,7 @@ foreach ( $made as $order ) {
 	$order->delete( true );
 }
 $product->delete( true );
-delete_transient( 'submex_paypal_token_' . md5( $client_id . $client->base() ) );
+delete_transient( 'submex_paypal_token_' . md5( $client_id . 'secret' . $client->base() ) );
 null === $saved_decimals ? delete_option( 'woocommerce_price_num_decimals' ) : update_option( 'woocommerce_price_num_decimals', $saved_decimals );
 
 submex_test_done( $fail );

@@ -4,7 +4,7 @@ namespace Submex\Gateways\PayPal;
 
 use Submex\Admin\Gateway_Refusals;
 use Submex\Admin\Settings_Page;
-use Submex\Domain\Currency;
+use Submex\Domain\Money;
 use Submex\Product\Line_Terms;
 use Submex\Product\Subscription_Product;
 
@@ -132,7 +132,7 @@ class PayPal_Checkout_Gateway extends \WC_Payment_Gateway {
 
 		$plan = $this->plans->plan_for( $product, $terms );
 		if ( ! $plan['ok'] ) {
-			Gateway_Refusals::record( self::ID, 'PayPal', $plan['error'], 'paypal' );
+			Gateway_Refusals::note( self::ID, 'PayPal', $plan, 'paypal' );
 
 			return $this->abort( $order, $plan['error'] );
 		}
@@ -161,7 +161,7 @@ class PayPal_Checkout_Gateway extends \WC_Payment_Gateway {
 		);
 
 		if ( ! $response['ok'] || empty( $response['body']['id'] ) ) {
-			Gateway_Refusals::record( self::ID, 'PayPal', $response['error'], 'paypal' );
+			Gateway_Refusals::note( self::ID, 'PayPal', $response, 'paypal' );
 
 			return $this->abort( $order, $response['error'] );
 		}
@@ -279,11 +279,12 @@ class PayPal_Checkout_Gateway extends \WC_Payment_Gateway {
 	private function pricing_for( \WC_Order $order, \WC_Order_Item_Product $item, Line_Terms $terms ): ?array {
 		$currency     = $order->get_currency();
 		$subscription = $this->subscription_for( $order );
+		$decimals     = PayPal_Plans::decimals( $currency );
 		$recurring    = $subscription
-			? Currency::minor_units( $subscription->get_total(), $currency )
-			: Currency::minor_units( $terms->recurring_price()->decimal(), $currency ) * max( 1, (int) $item->get_quantity() );
+			? Money::from_decimal( $subscription->get_total(), $currency, $decimals )->minor()
+			: Money::from_decimal( $terms->recurring_price()->decimal(), $currency, $decimals )->minor() * max( 1, (int) $item->get_quantity() );
 		$has_trial    = $terms->schedule()->has_trial();
-		$setup        = Currency::minor_units( $order->get_total(), $currency ) - ( $has_trial ? 0 : $recurring );
+		$setup        = Money::from_decimal( $order->get_total(), $currency, $decimals )->minor() - ( $has_trial ? 0 : $recurring );
 
 		// A cent either way is tax rounding between the cart and the subscription, not a discount.
 		if ( $setup < -1 || $recurring <= 0 ) {
@@ -293,7 +294,7 @@ class PayPal_Checkout_Gateway extends \WC_Payment_Gateway {
 		$setup = max( 0, $setup );
 
 		$money = static fn( int $minor ): array => array(
-			'value'         => wc_format_decimal( $minor / ( 10 ** Currency::decimals( $currency ) ), Currency::decimals( $currency ) ),
+			'value'         => wc_format_decimal( $minor / ( 10 ** $decimals ), $decimals ),
 			'currency_code' => $currency,
 		);
 

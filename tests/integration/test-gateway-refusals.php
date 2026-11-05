@@ -42,6 +42,11 @@ wc_clear_notices();
 $refusal = Gateway_Refusals::all()[ Stripe_Checkout_Gateway::ID ] ?? array();
 $check( 'the provider\'s reason is kept for the merchant', 'Invalid API Key provided' === ( $refusal['reason'] ?? '' ), $refusal );
 
+// current() shows only a gateway that is switched on.
+$stripe_settings            = (array) get_option( 'woocommerce_submex_stripe_settings', array() );
+$stripe_settings['enabled'] = 'yes';
+update_option( 'woocommerce_submex_stripe_settings', $stripe_settings );
+WC()->payment_gateways()->init();
 set_current_screen( 'woocommerce_page_wc-settings' );
 ob_start();
 ( new Gateway_Notice() )->render();
@@ -60,19 +65,38 @@ $answer = array( 401, array( 'error' => array( 'message' => 'Invalid API Key pro
 $asked  = 0;
 update_option( 'submex_stripe_test_secret', 'sk_test_' . wp_generate_password( 8, false ) );
 $check( 'nothing is asked until the save has finished', 0 === $asked, $asked );
-$checker->run();
+$checker->queue();
+$check( 'and then in the background, so saving never waits', 0 === $asked && (bool) as_next_scheduled_action( Gateway_Key_Check::ACTION, array( 'gateway_id' => Stripe_Checkout_Gateway::ID ) ), $asked );
+as_unschedule_all_actions( Gateway_Key_Check::ACTION );
+$checker->check( Stripe_Checkout_Gateway::ID );
 $check( 'a key the provider refuses is reported', 'Invalid API Key provided' === ( Gateway_Refusals::all()[ Stripe_Checkout_Gateway::ID ]['reason'] ?? '' ) );
 
 $answer = array( 200, array( 'object' => 'balance' ) );
 update_option( 'submex_stripe_test_secret', 'sk_test_' . wp_generate_password( 8, false ) );
-$checker->run();
+$checker->check( Stripe_Checkout_Gateway::ID );
 $check( 'a key that works clears the report', ! isset( Gateway_Refusals::all()[ Stripe_Checkout_Gateway::ID ] ) );
 
-$asked = 0;
+$checker->queue();
+as_unschedule_all_actions( Gateway_Key_Check::ACTION );
 update_option( 'blogdescription', get_option( 'blogdescription' ) . ' ' );
-$checker->run();
-$check( 'other settings ask nothing', 0 === $asked, $asked );
+$checker->queue();
+$check( 'other settings ask nothing', ! as_next_scheduled_action( Gateway_Key_Check::ACTION ) );
 update_option( 'blogdescription', rtrim( get_option( 'blogdescription' ) ) );
+
+echo "\n3. What counts as the store being refused\n";
+Gateway_Refusals::note( 'sk_gateway', 'SK', array( 'status' => 402, 'error' => 'Your card was declined.' ), 'stripe' );
+Gateway_Refusals::note( 'sk_gateway', 'SK', array( 'status' => 500, 'error' => 'Server error' ), 'stripe' );
+Gateway_Refusals::note( 'sk_gateway', 'SK', array( 'status' => 0, 'error' => 'Could not connect' ), 'stripe' );
+$check( 'a declined card, an outage or a dropped connection is not', ! isset( Gateway_Refusals::all()['sk_gateway'] ) );
+Gateway_Refusals::note( 'sk_gateway', 'SK', array( 'status' => 403, 'error' => 'Insufficient permissions' ), 'stripe' );
+$check( 'a refused key is', isset( Gateway_Refusals::all()['sk_gateway'] ) );
+$check( 'but a gateway that is not there is not shown', ! isset( Gateway_Refusals::current()['sk_gateway'] ) );
+$first = Gateway_Refusals::all()['sk_gateway']['since'];
+Gateway_Refusals::clear( 'sk_gateway' );
+sleep( 1 );
+Gateway_Refusals::note( 'sk_gateway', 'SK', array( 'status' => 403, 'error' => 'Insufficient permissions' ), 'stripe' );
+$check( 'the same words later count as a new refusal, so a dismissal does not hide them', Gateway_Refusals::all()['sk_gateway']['since'] > $first );
+Gateway_Refusals::clear( 'sk_gateway' );
 
 remove_filter( 'pre_http_request', $stripe, 10 );
 $order->delete( true );

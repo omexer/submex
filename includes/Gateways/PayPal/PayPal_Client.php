@@ -19,6 +19,9 @@ class PayPal_Client {
 
 	private const TOKEN_TRANSIENT = 'submex_paypal_token';
 
+	/** What PayPal answered when it gave no token; 0 when it could not be reached at all. */
+	private int $token_status = 0;
+
 	public function __construct(
 		private readonly string $client_id,
 		private readonly string $secret,
@@ -60,7 +63,7 @@ class PayPal_Client {
 		$token = $this->access_token();
 
 		if ( '' === $token ) {
-			return $this->fail( 0, 'Could not authenticate with PayPal. Check the API credentials.' );
+			return $this->fail( $this->token_status, 'Could not authenticate with PayPal. Check the API credentials.' );
 		}
 
 		$args = array(
@@ -134,7 +137,7 @@ class PayPal_Client {
 	 * Cached OAuth token. PayPal tokens last ~9 hours; we re-fetch a minute early.
 	 */
 	private function access_token(): string {
-		$cached = get_transient( self::TOKEN_TRANSIENT . '_' . md5( $this->client_id . $this->base() ) );
+		$cached = get_transient( self::TOKEN_TRANSIENT . '_' . md5( $this->client_id . $this->secret . $this->base() ) );
 
 		if ( is_string( $cached ) && '' !== $cached ) {
 			return $cached;
@@ -159,11 +162,13 @@ class PayPal_Client {
 		$body = json_decode( wp_remote_retrieve_body( $response ), true );
 
 		if ( empty( $body['access_token'] ) ) {
+			$this->token_status = (int) wp_remote_retrieve_response_code( $response );
+
 			return '';
 		}
 
 		$ttl = max( 60, (int) ( $body['expires_in'] ?? 300 ) - 60 );
-		set_transient( self::TOKEN_TRANSIENT . '_' . md5( $this->client_id . $this->base() ), $body['access_token'], $ttl );
+		set_transient( self::TOKEN_TRANSIENT . '_' . md5( $this->client_id . $this->secret . $this->base() ), $body['access_token'], $ttl );
 
 		return (string) $body['access_token'];
 	}

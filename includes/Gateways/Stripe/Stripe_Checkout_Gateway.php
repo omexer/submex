@@ -128,7 +128,7 @@ class Stripe_Checkout_Gateway extends \WC_Payment_Gateway {
 
 		if ( ! $response['ok'] || empty( $response['body']['url'] ) ) {
 			$order->add_order_note( sprintf( 'Stripe: %s', $response['error'] ) );
-			Gateway_Refusals::record( self::ID, 'Stripe', $response['error'], 'stripe' );
+			Gateway_Refusals::note( self::ID, 'Stripe', $response, 'stripe' );
 			wc_add_notice( __( 'We could not start the card payment. Please try again or use another method.', 'submex' ), 'error' );
 
 			return array( 'result' => 'failure' );

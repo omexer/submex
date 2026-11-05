@@ -137,6 +137,9 @@ $result = $gateway->process_payment( $order->get_id() );
 $check( 'is not sent to PayPal, which could not bill it correctly', 'failure' === ( $result['result'] ?? '' ) && array() === $sent(), $result );
 wc_clear_notices();
 
+echo "\n3b. Currencies PayPal takes in whole units\n";
+$check( 'HUF, TWD and JPY have no decimals at PayPal, whatever ISO says', array( 0, 0, 0, 2 ) === array_map( array( PayPal_Plans::class, 'decimals' ), array( 'HUF', 'TWD', 'JPY', 'USD' ) ) );
+
 echo "\n4. The pay-for-order page\n";
 $gateway->enabled = 'yes';
 $pay_page         = static function ( WC_Order $order ) use ( $gateway ): bool {
@@ -159,6 +162,6 @@ remove_filter( 'pre_http_request', $paypal, 10 );
 foreach ( array_reverse( array_filter( $made ) ) as $thing ) {
 	$thing->delete( true );
 }
-delete_transient( 'submex_paypal_token_' . md5( $client_id . $client->base() ) );
+delete_transient( 'submex_paypal_token_' . md5( $client_id . 'secret' . $client->base() ) );
 
 submex_test_done( $fail );

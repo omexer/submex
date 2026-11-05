@@ -45,8 +45,8 @@ class Assets {
 		.submex-badge--warning{color:#8a6100}
 		.submex-badge--muted{color:#666}
 		.submex-card__actions{margin-top:.75rem;display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center}
-		/* The theme colours buttons; block themes through wp-element-button. Their size and layout are set here so they hold on any theme. 44px: cancel must be reachable on a phone. */
-		.submex-btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:44px;padding:.5rem 1.25rem;line-height:1.3;text-align:center;text-decoration:none;cursor:pointer}
+		/* The theme colours buttons; block themes through wp-element-button. Their size and layout are set here, specific enough to beat the button rules from WooCommerce. 44px: cancel must be reachable on a phone. */
+		.woocommerce-account .woocommerce-MyAccount-content .submex-btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:44px;padding:.5rem 1.25rem;line-height:1.3;text-align:center;text-decoration:none;cursor:pointer}
 		.submex-items{margin:.5rem 0 1rem;padding-left:1.1rem}
 		.submex-back{margin:0 0 1rem}
 		.submex-detail .submex-card__head h2{margin:0;font-size:1.5rem}

@@ -223,19 +223,26 @@ class Webhook_Controller {
 	/**
 	 * PayPal reports what it takes at approval like any other payment, but checkout's order already holds it.
 	 *
-	 * Told apart by time, not by PayPal's billing dates: approval is within hours of checkout,
-	 * and the first renewal is at least a day away.
+	 * A checkout still unpaid is being paid by this, however late it comes from a pay link. One already
+	 * paid may have this as the setup fee or first cycle reported separately, within hours; the first
+	 * renewal is at least a day away.
 	 */
 	private function is_initial_payment( Subscription $subscription, array $event ): bool {
 		$parent = $subscription->get_parent_order_id() ? wc_get_order( $subscription->get_parent_order_id() ) : null;
 
-		if ( ! $parent instanceof \WC_Order || $parent->get_total() <= 0 || ! $parent->get_date_created() || 1 !== $this->slots->next_index( $subscription->get_id() ) ) {
+		if ( ! $parent instanceof \WC_Order || $parent->get_total() <= 0 || 1 !== $this->slots->next_index( $subscription->get_id() ) ) {
 			return false;
+		}
+
+		$paid_at = $parent->get_date_paid() ?: $parent->get_date_created();
+
+		if ( ! $parent->is_paid() || ! $paid_at ) {
+			return true;
 		}
 
 		$taken = strtotime( (string) ( $event['resource']['create_time'] ?? '' ) ) ?: time();
 
-		return $taken - $parent->get_date_created()->getTimestamp() < 12 * HOUR_IN_SECONDS;
+		return $taken - $paid_at->getTimestamp() < 12 * HOUR_IN_SECONDS;
 	}
 
 	private function record_initial_payment( Subscription $subscription, string $txn_id ): void {

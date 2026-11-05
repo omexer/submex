@@ -3,6 +3,7 @@
 namespace Submex\Gateways\PayPal;
 
 use Submex\Domain\Billing_Schedule;
+use Submex\Domain\Currency;
 use Submex\Product\Line_Terms;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -41,12 +42,12 @@ class PayPal_Plans {
 
 		$paypal_product = $this->paypal_product_for( $product );
 		if ( ! $paypal_product['ok'] ) {
-			return $this->fail( $paypal_product['error'] );
+			return $this->fail( $paypal_product['error'], $paypal_product['status'] );
 		}
 
 		$plan = $this->create_plan( $product, $terms, $cycles, $paypal_product['id'] );
 		if ( ! $plan['ok'] ) {
-			return $this->fail( $plan['error'] );
+			return $this->fail( $plan['error'], $plan['status'] );
 		}
 
 		$product->update_meta_data( self::META_PLANS, array( $hash => $plan['id'] ) + $this->cached_plans( $product ) );
@@ -110,9 +111,10 @@ class PayPal_Plans {
 		$existing = (string) $product->get_meta( self::META_PRODUCT );
 		if ( '' !== $existing ) {
 			return array(
-				'ok'    => true,
-				'id'    => $existing,
-				'error' => '',
+				'ok'     => true,
+				'id'     => $existing,
+				'error'  => '',
+				'status' => 200,
 			);
 		}
 
@@ -127,9 +129,10 @@ class PayPal_Plans {
 
 		if ( ! $response['ok'] || empty( $response['body']['id'] ) ) {
 			return array(
-				'ok'    => false,
-				'id'    => '',
-				'error' => $response['error'],
+				'ok'     => false,
+				'id'     => '',
+				'error'  => $response['error'],
+				'status' => $response['status'],
 			);
 		}
 
@@ -137,9 +140,10 @@ class PayPal_Plans {
 		$product->save();
 
 		return array(
-			'ok'    => true,
-			'id'    => (string) $response['body']['id'],
-			'error' => '',
+			'ok'     => true,
+			'id'     => (string) $response['body']['id'],
+			'error'  => '',
+			'status' => 200,
 		);
 	}
 
@@ -181,7 +185,7 @@ class PayPal_Plans {
 			),
 			'pricing_scheme' => array(
 				'fixed_price' => array(
-					'value'         => $terms->recurring_price()->decimal(),
+					'value'         => wc_format_decimal( $terms->recurring_price()->decimal(), self::decimals( $currency ) ),
 					'currency_code' => $currency,
 				),
 			),
@@ -201,7 +205,7 @@ class PayPal_Plans {
 		$fee = $terms->signup_fee();
 		if ( ! $fee->is_zero() ) {
 			$payload['payment_preferences']['setup_fee'] = array(
-				'value'         => $fee->decimal(),
+				'value'         => wc_format_decimal( $fee->decimal(), self::decimals( $currency ) ),
 				'currency_code' => $currency,
 			);
 		}
@@ -210,17 +214,26 @@ class PayPal_Plans {
 
 		if ( ! $response['ok'] || empty( $response['body']['id'] ) ) {
 			return array(
-				'ok'    => false,
-				'id'    => '',
-				'error' => $response['error'],
+				'ok'     => false,
+				'id'     => '',
+				'error'  => $response['error'],
+				'status' => $response['status'],
 			);
 		}
 
 		return array(
-			'ok'    => true,
-			'id'    => (string) $response['body']['id'],
-			'error' => '',
+			'ok'     => true,
+			'id'     => (string) $response['body']['id'],
+			'error'  => '',
+			'status' => 200,
 		);
+	}
+
+	/**
+	 * PayPal's own rule, which differs from ISO 4217: it takes HUF and TWD in whole units too.
+	 */
+	public static function decimals( string $currency ): int {
+		return in_array( strtoupper( $currency ), array( 'HUF', 'JPY', 'TWD' ), true ) ? 0 : Currency::decimals( $currency );
 	}
 
 	private function interval_unit( Billing_Schedule $schedule ): string {
@@ -244,11 +257,12 @@ class PayPal_Plans {
 		);
 	}
 
-	private function fail( string $error ): array {
+	private function fail( string $error, int $status ): array {
 		return array(
 			'ok'      => false,
 			'plan_id' => '',
 			'error'   => $error,
+			'status'  => $status,
 		);
 	}
 }

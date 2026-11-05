@@ -97,6 +97,23 @@ $check( 'the payment PayPal reports marks the order paid', wc_get_order( $order-
 $check( 'and starts the subscription', Subscription_Status::Active === wc_get_order( $closed->get_id() )->get_status_enum(), wc_get_order( $closed->get_id() )->get_status() );
 $check( 'without a renewal', array() === $renewals( $closed ) );
 
+echo "\n3b. Paid late, from a pay link\n";
+$order = wc_create_order( array( 'customer_id' => 1 ) );
+$order->add_product( $product, 1 );
+$order->set_billing_email( 'sb-paypal-webhook@example.test' );
+$order->set_payment_method( PayPal_Checkout_Gateway::ID );
+$order->calculate_totals( false );
+$order->set_date_created( time() - DAY_IN_SECONDS );
+$order->save();
+$made[] = $order;
+$factory->from_checkout( $order->get_id() );
+$late = wc_get_order( (int) wc_get_order( $order->get_id() )->get_meta( '_submex_subscription_id' ) );
+$late->update_meta_data( PayPal_Gateway::META_SUBSCRIPTION_ID, 'I-' . $late->get_id() );
+$late->save();
+$made[] = $late;
+$deliver( 'PAYMENT.SALE.COMPLETED', array( 'id' => 'SALE-LATE', 'billing_agreement_id' => 'I-' . $late->get_id() ) );
+$check( 'a day after checkout it is still the first payment, not a renewal', wc_get_order( $order->get_id() )->is_paid() && array() === $renewals( $late ), count( $renewals( $late ) ) );
+
 echo "\n4. Cancelled and failed at PayPal\n";
 $sent = array();
 $deliver( 'BILLING.SUBSCRIPTION.PAYMENT.FAILED', array( 'id' => 'I-' . $s->get_id() ) );

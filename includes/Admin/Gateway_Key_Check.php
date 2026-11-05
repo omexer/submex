@@ -2,6 +2,7 @@
 
 namespace Submex\Admin;
 
+use Submex\Billing\Renewal_Scheduler;
 use Submex\Gateways\PayPal\PayPal_Checkout_Gateway;
 use Submex\Gateways\PayPal\PayPal_Client;
 use Submex\Gateways\Stripe\Stripe_Checkout_Gateway;
@@ -16,13 +17,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 final class Gateway_Key_Check {
 
+	public const ACTION = 'submex_gateway_key_check';
+
 	/** @var array<string, bool> Gateways whose settings changed in this request. */
 	private array $changed = array();
 
 	public function register(): void {
 		add_action( 'updated_option', array( $this, 'note_change' ), 10, 1 );
 		add_action( 'added_option', array( $this, 'note_change' ), 10, 1 );
-		add_action( 'shutdown', array( $this, 'run' ) );
+		add_action( 'shutdown', array( $this, 'queue' ) );
+		add_action( self::ACTION, array( $this, 'check' ) );
 	}
 
 	/**
@@ -43,7 +47,7 @@ final class Gateway_Key_Check {
 
 					$response = $client->get( '/v1/notifications/webhooks-event-types' );
 
-					return $response['ok'] ? null : $response['error'];
+					return in_array( $response['status'], array( 401, 403 ), true ) ? $response['error'] : null;
 				},
 			),
 		);
@@ -60,9 +64,10 @@ final class Gateway_Key_Check {
 						return null;
 					}
 
-					$response = $client->get( '/v1/balance' );
+					// What checkout itself needs, so a restricted key without Balance access is not called broken.
+					$response = $client->get( '/v1/checkout/sessions?limit=1' );
 
-					return $response['ok'] || 0 === $response['status'] ? null : $response['error'];
+					return in_array( $response['status'], array( 401, 403 ), true ) ? $response['error'] : null;
 				},
 			);
 		}
@@ -91,19 +96,36 @@ final class Gateway_Key_Check {
 	}
 
 	/**
-	 * After the request, so one save of several keys asks once, with all of them in place.
+	 * After the request, so one save of several keys asks once, with all of them in place; in the background, so saving never waits on a provider.
 	 */
-	public function run(): void {
-		foreach ( array_intersect_key( $this->checks(), $this->changed ) as $id => $check ) {
-			$problem = $check['check']();
-
-			if ( null === $problem ) {
-				Gateway_Refusals::clear( $id );
+	public function queue(): void {
+		foreach ( array_keys( $this->changed ) as $id ) {
+			if ( function_exists( 'as_enqueue_async_action' ) ) {
+				as_enqueue_async_action( self::ACTION, array( 'gateway_id' => $id ), Renewal_Scheduler::GROUP );
 			} else {
-				Gateway_Refusals::record( $id, $check['title'], $problem, $check['section'] );
+				$this->check( $id );
 			}
 		}
 
 		$this->changed = array();
+	}
+
+	/**
+	 * @param string $gateway_id
+	 */
+	public function check( $gateway_id ): void {
+		$check = $this->checks()[ (string) $gateway_id ] ?? null;
+
+		if ( ! $check ) {
+			return;
+		}
+
+		$problem = $check['check']();
+
+		if ( null === $problem ) {
+			Gateway_Refusals::clear( (string) $gateway_id );
+		} else {
+			Gateway_Refusals::record( (string) $gateway_id, $check['title'], $problem, $check['section'] );
+		}
 	}
 }

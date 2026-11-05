@@ -45,13 +45,14 @@ class Gateway_Notice {
 			'stripe'
 		);
 
-		foreach ( Gateway_Refusals::all() as $submex_id => $submex_refusal ) {
+		foreach ( Gateway_Refusals::current() as $submex_id => $submex_refusal ) {
 			$this->notice(
 				'submex_refused_' . $submex_id,
 				/* translators: %s: payment provider name */
 				sprintf( __( '%s refused this store, so customers cannot pay with it.', 'submex' ), $submex_refusal['title'] ),
 				array( $submex_refusal['reason'] ),
-				md5( $submex_refusal['reason'] ),
+				// With when it began: dismissing one refusal must not hide the same words next year.
+				md5( $submex_refusal['reason'] . $submex_refusal['since'] ),
 				$submex_refusal['section']
 			);
 		}
