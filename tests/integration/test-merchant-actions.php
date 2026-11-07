@@ -384,6 +384,10 @@ $act( $held, 'reactivate' );
 $check( 'one on hold becomes active', Subscription_Status::Active === wc_get_order( $held->get_id() )->get_status_enum() );
 $check( 'and the customer is told', (bool) as_next_scheduled_action( \Submex\Emails\Mailer::ACTION_REACTIVATED, null, Renewal_Scheduler::GROUP ) );
 as_unschedule_all_actions( \Submex\Emails\Mailer::ACTION_REACTIVATED );
+$history = static fn( Subscription $s ): array => array_map( static fn( $row ) => $row->type . ': ' . $row->message, $plugin->get( 'activity' )->for_subscription( $s->get_id() ) );
+$check( 'the activity log records the reactivation', (bool) array_filter( $history( $held ), static fn( $line ) => str_starts_with( $line, 'status_change:' ) && str_contains( $line, 'Active' ) ), $history( $held ) );
+$act( wc_get_order( $held->get_id() ), 'cancel' );
+$check( 'and a cancellation from the store', (bool) array_filter( $history( $held ), static fn( $line ) => str_starts_with( $line, 'status_change:' ) && str_contains( $line, 'Cancelled' ) ), $history( $held ) );
 
 echo "\n11. What the customer sees on their order\n";
 $summary = new \Submex\Checkout\Order_Summary();

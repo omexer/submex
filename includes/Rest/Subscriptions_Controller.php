@@ -753,6 +753,15 @@ class Subscriptions_Controller {
 		$subscription->transition_to( $to, $reason );
 		$subscription->save();
 
+		$this->activity->log(
+			$subscription->get_id(),
+			Activity_Repository::TYPE_STATUS_CHANGE,
+			// Status lines show on Pro's public QR page, so no staff name here.
+			sprintf( 'Status changed from %s to %s by the store.', $from ? $from->label() : 'none', $to->label() ),
+			array(),
+			'api'
+		);
+
 		// Only the My Account route announced a cancellation, so a store cancelling for a
 		// customer sent them nothing at all.
 		if ( Subscription_Status::Cancelled === $to || Subscription_Status::PendingCancel === $to ) {
