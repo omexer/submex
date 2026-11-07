@@ -94,7 +94,7 @@ class Renewal_Scheduler {
 	 * than none at all.
 	 */
 	private function schedule_reminder( Subscription $subscription, int $due ): void {
-		$last = null !== self::ends_at( $subscription );
+		$last = self::stops_billing( $subscription );
 
 		$this->queue( self::ACTION_REMINDER, $subscription->get_id(), $last ? 0 : $due - self::hours( self::OPTION_REMINDER_HOURS ) * HOUR_IN_SECONDS );
 	}
@@ -133,6 +133,16 @@ class Renewal_Scheduler {
 	}
 
 	/**
+	 * Whether the next due date ends the subscription instead of charging it, an instalment plan paid off included.
+	 */
+	private static function stops_billing( Subscription $subscription ): bool {
+		/** This filter is documented in includes/Billing/Renewal_Processor.php */
+		$stop = apply_filters( 'submex_stop_billing', null !== self::ends_at( $subscription ) ? 'Subscription reached its end date.' : false, $subscription );
+
+		return is_string( $stop ) && '' !== $stop;
+	}
+
+	/**
 	 * @param int|string $subscription_id
 	 */
 	public function remind( $subscription_id ): void {
@@ -147,7 +157,7 @@ class Renewal_Scheduler {
 
 		// The date can have moved since this was queued — a payment taken early, a plan
 		// switched — and warning about a charge that is no longer coming is a support call.
-		if ( empty( $next ) || strtotime( $next . ' UTC' ) <= time() || null !== self::ends_at( $subscription ) ) {
+		if ( empty( $next ) || strtotime( $next . ' UTC' ) <= time() || self::stops_billing( $subscription ) ) {
 			return;
 		}
 

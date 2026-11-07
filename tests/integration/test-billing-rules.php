@@ -75,6 +75,16 @@ $check( 'switched off after it was queued, it sends nothing', array() === $sent,
 $set( $reminder->get_option_key(), array( 'enabled' => 'yes' ) );
 WC()->mailer()->init();
 
+// An instalment plan paid in full stops billing through this filter, not an end date.
+$paid_off = static fn( $stop, $subscription ) => $subscription->get_id() === $r->get_id() ? 'Paid in full.' : $stop;
+add_filter( 'submex_stop_billing', $paid_off, 10, 2 );
+$sent = array();
+$scheduler->remind( $r->get_id() );
+$check( 'a subscription whose billing has stopped is not told a renewal is due', array() === $sent, count( $sent ) );
+$scheduler->schedule_next( $r );
+$check( 'nor is a reminder queued for it', ! as_next_scheduled_action( Renewal_Scheduler::ACTION_REMINDER, array( 'subscription_id' => $r->get_id() ), Renewal_Scheduler::GROUP ) );
+remove_filter( 'submex_stop_billing', $paid_off, 10 );
+
 echo "\nWhere the settings sit\n";
 global $wp_actions;
 $page = null;
