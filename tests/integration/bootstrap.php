@@ -16,14 +16,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 wp_set_current_user( 1 );
 
-// Deterministic regardless of what the site was set to: amounts are asserted as text.
-update_option( 'woocommerce_currency', 'USD' );
-
 if ( ! function_exists( 'submex_test_site_snapshot' ) ) {
 	/**
-	 * Gateway switches, store and tax settings, and the newest order id, so a test file leaves the site as it found it.
+	 * Gateway switches and store and tax settings, so a test file leaves the site as it found it. Orders are each test's own to remove: deleting by id range would take real ones made meanwhile.
 	 *
-	 * @return array{switches: array<string, array{0: string, 1: string}>, last_order: int, store: array<string, mixed>, tax_rates: int[]}
+	 * @return array{switches: array<string, array{0: string, 1: string}>, store: array<string, mixed>, tax_rates: int[]}
 	 */
 	function submex_test_site_snapshot(): array {
 		global $wpdb;
@@ -35,16 +32,6 @@ if ( ! function_exists( 'submex_test_site_snapshot' ) ) {
 			$switches[ $row->option_name ] = array( $row->option_value, $row->autoload );
 		}
 
-		$last = wc_get_orders(
-			array(
-				'limit'   => 1,
-				'orderby' => 'ID',
-				'order'   => 'DESC',
-				'return'  => 'ids',
-				'type'    => array_keys( wc_get_order_types() ),
-			)
-		);
-
 		$store = array();
 
 		foreach ( array( 'woocommerce_calc_taxes', 'woocommerce_prices_include_tax', 'woocommerce_tax_based_on', 'woocommerce_default_country', 'woocommerce_tax_display_shop', 'woocommerce_tax_display_cart', 'woocommerce_currency' ) as $name ) {
@@ -53,7 +40,6 @@ if ( ! function_exists( 'submex_test_site_snapshot' ) ) {
 
 		return array(
 			'switches'   => $switches,
-			'last_order' => (int) ( $last[0] ?? 0 ),
 			'store'      => $store,
 			'tax_rates'  => array_map( 'intval', $wpdb->get_col( "SELECT tax_rate_id FROM {$wpdb->prefix}woocommerce_tax_rates" ) ), // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		);
@@ -93,20 +79,6 @@ if ( ! function_exists( 'submex_test_site_snapshot' ) ) {
 		foreach ( array_diff( $now['tax_rates'], $before['tax_rates'] ) as $rate ) {
 			WC_Tax::_delete_tax_rate( $rate );
 		}
-
-		$made = wc_get_orders(
-			array(
-				'limit'  => -1,
-				'return' => 'ids',
-				'type'   => array_keys( wc_get_order_types() ),
-			)
-		);
-
-		foreach ( $made as $id ) {
-			if ( (int) $id > $before['last_order'] ) {
-				( wc_get_order( $id ) ?: null )?->delete( true );
-			}
-		}
 	}
 
 	$submex_test_site_before = submex_test_site_snapshot();
@@ -117,6 +89,9 @@ if ( ! function_exists( 'submex_test_site_snapshot' ) ) {
 		}
 	);
 }
+
+// Deterministic regardless of what the site was set to: amounts are asserted as text. Set after the snapshot, so the store's own comes back.
+update_option( 'woocommerce_currency', 'USD' );
 
 $fail = 0;
 
