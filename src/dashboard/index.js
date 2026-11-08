@@ -306,7 +306,7 @@ export function Dashboard( { onFail } ) {
 
 			<div className="sb-mb-6 sb-grid sb-gap-4 sb-grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
 				<Stat
-					label={ __( 'Monthly recurring revenue', 'submex' ) }
+					label={ __( 'Expected monthly revenue', 'submex' ) }
 					value={ stats.mrr }
 				/>
 				<Stat

@@ -492,7 +492,7 @@ class Menu {
 
 		printf(
 			'<div class="submex-stat"><span class="submex-stat__label">%s</span><span class="submex-stat__value">%s</span>%s</div>',
-			esc_html__( 'Monthly recurring revenue', 'submex' ),
+			esc_html__( 'Expected monthly revenue', 'submex' ),
 			wp_kses_post( $mrr->format() ),
 			null === $change
 				? '<span class="submex-stat__meta">' . esc_html__( 'Tracking starts today', 'submex' ) . '</span>'
