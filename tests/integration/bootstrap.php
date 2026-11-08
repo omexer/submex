@@ -19,6 +19,105 @@ wp_set_current_user( 1 );
 // Deterministic regardless of what the site was set to: amounts are asserted as text.
 update_option( 'woocommerce_currency', 'USD' );
 
+if ( ! function_exists( 'submex_test_site_snapshot' ) ) {
+	/**
+	 * Gateway switches, store and tax settings, and the newest order id, so a test file leaves the site as it found it.
+	 *
+	 * @return array{switches: array<string, array{0: string, 1: string}>, last_order: int, store: array<string, mixed>, tax_rates: int[]}
+	 */
+	function submex_test_site_snapshot(): array {
+		global $wpdb;
+
+		$switches = array();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- read raw, so restoring never runs the switches' mirroring hooks.
+		foreach ( $wpdb->get_results( "SELECT option_name, option_value, autoload FROM {$wpdb->options} WHERE option_name LIKE 'submex\\_submex\\_%\\_enabled' OR option_name LIKE 'woocommerce\\_submex\\_%\\_settings'" ) as $row ) {
+			$switches[ $row->option_name ] = array( $row->option_value, $row->autoload );
+		}
+
+		$last = wc_get_orders(
+			array(
+				'limit'   => 1,
+				'orderby' => 'ID',
+				'order'   => 'DESC',
+				'return'  => 'ids',
+				'type'    => array_keys( wc_get_order_types() ),
+			)
+		);
+
+		$store = array();
+
+		foreach ( array( 'woocommerce_calc_taxes', 'woocommerce_prices_include_tax', 'woocommerce_tax_based_on', 'woocommerce_default_country', 'woocommerce_tax_display_shop', 'woocommerce_tax_display_cart', 'woocommerce_currency' ) as $name ) {
+			$store[ $name ] = get_option( $name, null );
+		}
+
+		return array(
+			'switches'   => $switches,
+			'last_order' => (int) ( $last[0] ?? 0 ),
+			'store'      => $store,
+			'tax_rates'  => array_map( 'intval', $wpdb->get_col( "SELECT tax_rate_id FROM {$wpdb->prefix}woocommerce_tax_rates" ) ), // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		);
+	}
+
+	/**
+	 * A gateway's two switches mirror each other, so restoring one through update_option left the other on for every later test.
+	 */
+	function submex_test_site_restore( array $before ): void {
+		global $wpdb;
+
+		$now = submex_test_site_snapshot();
+
+		foreach ( array_diff_key( $now['switches'], $before['switches'] ) as $name => $unused ) {
+			$wpdb->delete( $wpdb->options, array( 'option_name' => $name ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		}
+
+		foreach ( $before['switches'] as $name => list( $value, $autoload ) ) {
+			$wpdb->replace(
+				$wpdb->options,
+				array(
+					'option_name'  => $name,
+					'option_value' => $value,
+					'autoload'     => $autoload,
+				)
+			); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		}
+
+		wp_cache_delete( 'alloptions', 'options' );
+		wp_cache_delete( 'notoptions', 'options' );
+
+		// A test that stops part way skips its own restore, and every later test would then price with its tax.
+		foreach ( $before['store'] as $name => $value ) {
+			null === $value ? delete_option( $name ) : update_option( $name, $value );
+		}
+
+		foreach ( array_diff( $now['tax_rates'], $before['tax_rates'] ) as $rate ) {
+			WC_Tax::_delete_tax_rate( $rate );
+		}
+
+		$made = wc_get_orders(
+			array(
+				'limit'  => -1,
+				'return' => 'ids',
+				'type'   => array_keys( wc_get_order_types() ),
+			)
+		);
+
+		foreach ( $made as $id ) {
+			if ( (int) $id > $before['last_order'] ) {
+				( wc_get_order( $id ) ?: null )?->delete( true );
+			}
+		}
+	}
+
+	$submex_test_site_before = submex_test_site_snapshot();
+	// Registered from a shutdown function so it runs after each test's own cleanup, not before it.
+	register_shutdown_function(
+		static function () use ( $submex_test_site_before ): void {
+			register_shutdown_function( 'submex_test_site_restore', $submex_test_site_before );
+		}
+	);
+}
+
 $fail = 0;
 
 $check = static function ( string $label, bool $ok, $detail = '' ) use ( &$fail ): void {
