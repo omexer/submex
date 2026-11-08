@@ -94,7 +94,8 @@ class Renewal_Scheduler {
 	 * than none at all.
 	 */
 	private function schedule_reminder( Subscription $subscription, int $due ): void {
-		$last = self::stops_billing( $subscription );
+		// Only the end date is final here: auto-renew can be switched back on, so remind() checks the rest when it is due.
+		$last = null !== self::ends_at( $subscription );
 
 		$this->queue( self::ACTION_REMINDER, $subscription->get_id(), $last ? 0 : $due - self::hours( self::OPTION_REMINDER_HOURS ) * HOUR_IN_SECONDS );
 	}

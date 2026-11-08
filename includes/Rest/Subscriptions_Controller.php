@@ -757,9 +757,7 @@ class Subscriptions_Controller {
 			$subscription->get_id(),
 			Activity_Repository::TYPE_STATUS_CHANGE,
 			// Status lines show on Pro's public QR page, so no staff name here.
-			sprintf( 'Status changed from %s to %s by the store.', $from ? $from->label() : 'none', $to->label() ),
-			array(),
-			'api'
+			sprintf( 'Status changed from %s to %s by the store.', $from ? $from->label() : 'none', $to->label() )
 		);
 
 		// Only the My Account route announced a cancellation, so a store cancelling for a

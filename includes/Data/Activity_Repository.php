@@ -63,7 +63,8 @@ class Activity_Repository {
 			return 'system';
 		}
 
-		return ( is_admin() ? 'admin:' : 'customer:' ) . $user_id;
+		// REST requests are never is_admin(), so staff are told apart by what they may do.
+		return ( is_admin() || user_can( $user_id, 'manage_woocommerce' ) ? 'admin:' : 'customer:' ) . $user_id;
 	}
 
 	/**

@@ -388,6 +388,8 @@ $history = static fn( Subscription $s ): array => array_map( static fn( $row ) =
 $check( 'the activity log records the reactivation', (bool) array_filter( $history( $held ), static fn( $line ) => str_starts_with( $line, 'status_change:' ) && str_contains( $line, 'Active' ) ), $history( $held ) );
 $act( wc_get_order( $held->get_id() ), 'cancel' );
 $check( 'and a cancellation from the store', (bool) array_filter( $history( $held ), static fn( $line ) => str_starts_with( $line, 'status_change:' ) && str_contains( $line, 'Cancelled' ) ), $history( $held ) );
+$actors = array_column( array_filter( $plugin->get( 'activity' )->for_subscription( $held->get_id() ), static fn( $row ) => 'status_change' === $row->type && str_contains( $row->message, 'by the store' ) ), 'actor' );
+$check( 'and says which staff member made it, though the line itself names nobody', $actors && array( 'admin:' . get_current_user_id() ) === array_values( array_unique( $actors ) ), $actors );
 
 echo "\n11. What the customer sees on their order\n";
 $summary = new \Submex\Checkout\Order_Summary();

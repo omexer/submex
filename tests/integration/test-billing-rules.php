@@ -82,8 +82,11 @@ $sent = array();
 $scheduler->remind( $r->get_id() );
 $check( 'a subscription whose billing has stopped is not told a renewal is due', array() === $sent, count( $sent ) );
 $scheduler->schedule_next( $r );
-$check( 'nor is a reminder queued for it', ! as_next_scheduled_action( Renewal_Scheduler::ACTION_REMINDER, array( 'subscription_id' => $r->get_id() ), Renewal_Scheduler::GROUP ) );
+$check( 'its reminder stays queued, decided when it is due, so billing switched back on is still warned', (bool) as_next_scheduled_action( Renewal_Scheduler::ACTION_REMINDER, array( 'subscription_id' => $r->get_id() ), Renewal_Scheduler::GROUP ) );
 remove_filter( 'submex_stop_billing', $paid_off, 10 );
+$sent = array();
+$scheduler->remind( $r->get_id() );
+$check( 'and once billing resumes, the reminder goes out', 1 === count( $sent ), count( $sent ) );
 
 echo "\nWhere the settings sit\n";
 global $wp_actions;

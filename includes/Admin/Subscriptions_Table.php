@@ -245,42 +245,30 @@ class Subscriptions_Table extends \WP_List_Table {
 			return;
 		}
 
-		$target = match ( $action ) {
-			'cancel' => Subscription_Status::Cancelled,
-			'hold'   => Subscription_Status::OnHold,
-			'resume' => Subscription_Status::Active,
+		$request = match ( $action ) {
+			'cancel' => array( 'action' => 'cancel' ),
+			'hold'   => array(
+				'action' => 'change_status',
+				'status' => Subscription_Status::OnHold->value,
+			),
+			'resume' => array( 'action' => 'reactivate' ),
 			default  => null,
 		};
 
-		if ( ! $target ) {
+		if ( ! $request ) {
 			return;
 		}
 
-		$changed = 0;
-
-		foreach ( $ids as $id ) {
-			$subscription = wc_get_order( $id );
-
-			if ( ! $subscription instanceof Subscription ) {
-				continue;
-			}
-
-			$from = $subscription->get_status_enum();
-
-			// Skipped rather than forced: the state machine decides what is legal, and a
-			// bulk action must not be a way around it.
-			if ( ! $from || ! $from->can_transition_to( $target ) ) {
-				continue;
-			}
-
-			if ( Subscription_Status::Active === $target && \Submex\Rest\Subscriptions_Controller::waiting_renewal( $subscription ) ) {
-				continue;
-			}
-
-			$subscription->transition_to( $target, __( 'Changed in bulk from the subscriptions list.', 'submex' ) );
-			$subscription->save();
-			++$changed;
-		}
+		// The list screen's own route, so a bulk change is checked, logged and announced exactly like a single one.
+		$bulk = new \WP_REST_Request( 'POST', '/' . \Submex\Rest\Subscriptions_Controller::NAMESPACE . '/subscriptions/actions' );
+		$bulk->set_body_params(
+			$request + array(
+				'ids'    => $ids,
+				'reason' => __( 'Changed in bulk from the subscriptions list.', 'submex' ),
+			)
+		);
+		$result  = rest_do_request( $bulk );
+		$changed = $result->is_error() ? 0 : count( (array) ( $result->get_data()['changed'] ?? array() ) );
 
 		wp_safe_redirect(
 			add_query_arg(
