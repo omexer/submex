@@ -35,6 +35,23 @@ $p->update_meta_data( '_submex_trial_period', 'day' );
 $p->save();
 $p = wc_get_product( $id );
 
+$order   = null;
+$sub     = null;
+$renewal = null;
+
+// Made afresh each run, so each run removes it, and what was bought with it, however it ends.
+register_shutdown_function(
+	static function () use ( $id, &$order, &$sub, &$renewal ): void {
+		foreach ( array( $renewal, $sub, $order ) as $record ) {
+			if ( $record instanceof \WC_Order ) {
+				as_unschedule_all_actions( '', array( 'subscription_id' => $record->get_id() ) );
+				( wc_get_order( $record->get_id() ) ?: null )?->delete( true );
+			}
+		}
+		( wc_get_product( $id ) ?: null )?->delete( true );
+	}
+);
+
 $addr = array( 'first_name' => 'Trial', 'last_name' => 'Buyer', 'address_1' => '1 Test St', 'city' => 'Los Angeles', 'state' => 'CA', 'postcode' => '90001', 'country' => 'US', 'email' => 'trial@example.test' );
 
 // The cart is what prices a checkout, so go through it.
