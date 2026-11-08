@@ -359,6 +359,7 @@ $equals( 'and none from the order', $sub, null );
 // ------------------------------------------------------------------ clean up
 
 WC()->cart->empty_cart();
+submex_test_remove_renewals( $orders );
 foreach ( array_unique( $orders ) as $id ) {
 	$o = wc_get_order( $id );
 	if ( $o ) {

@@ -84,5 +84,6 @@ $paypal->save();
 $check( 'never offered for a gateway that bills on its own plan', ! Early_Renewal::is_available_for( $paypal ) );
 
 delete_option( Early_Renewal::OPTION );
+submex_test_remove_renewals( array( $s->get_id(), $decline->get_id(), $paypal->get_id() ) );
 foreach ( array( $s, $decline, $paypal ) as $x ) { $x->delete( true ); }
 submex_test_done( $fail );

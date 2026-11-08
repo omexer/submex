@@ -182,6 +182,7 @@ $held->transition_to( Subscription_Status::Active, 'Retrying the failed payment.
 $held->save();
 $check( 'no reactivated email for a trial converting, a renewal, or a retry after a failed payment', array() === $reactivations( $trial ) && array() === $reactivations( $active ) && array() === $reactivations( $held ) );
 
+submex_test_remove_renewals( $made );
 foreach ( $made as $id ) {
 	$scheduler->unschedule( $id );
 	foreach ( $pending( Mailer::ACTION_REACTIVATED, $id ) as $action_id => $action ) {

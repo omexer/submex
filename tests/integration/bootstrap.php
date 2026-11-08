@@ -124,6 +124,21 @@ if ( ! function_exists( 'submex_test_abort' ) ) {
 	}
 }
 
+if ( ! function_exists( 'submex_test_remove_renewals' ) ) {
+	/**
+	 * Deleting a subscription leaves the renewal orders a processor run made for it.
+	 *
+	 * @param int[] $subscription_ids
+	 */
+	function submex_test_remove_renewals( array $subscription_ids ): void {
+		foreach ( array_filter( array_map( 'intval', $subscription_ids ) ) as $id ) {
+			foreach ( wc_get_orders( array( 'created_via' => 'submex_renewal', 'limit' => -1, 'meta_key' => '_submex_subscription_id', 'meta_value' => $id ) ) as $renewal ) { // phpcs:ignore WordPress.DB.SlowDBQuery
+				$renewal->delete( true );
+			}
+		}
+	}
+}
+
 if ( ! function_exists( 'submex_test_product' ) ) {
 	/**
 	 * A plain monthly subscription product, found or made.
