@@ -4,6 +4,7 @@ namespace Submex\Rest;
 
 use Submex\Admin\Menu;
 use Submex\Admin\Settings_Page;
+use Submex\Admin\Setup_Card;
 use Submex\Emails\Notification_Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -212,10 +213,13 @@ final class Settings_Controller {
 		$field = $row['field'];
 
 		if ( null !== $row['html'] || ! in_array( $field['type'] ?? '', self::EDITABLE, true ) ) {
-			return array(
-				'type' => (string) ( $field['type'] ?? '' ),
-				'html' => $row['html'] ?? $this->page->woo_markup( $field ),
+			$wide = array(
+				'type'             => (string) ( $field['type'] ?? '' ),
+				'html'             => $row['html'] ?? $this->page->woo_markup( $field ),
+				'submex_show_when' => (object) Settings_Page::when_of( $field ),
 			);
+
+			return Setup_Card::TYPE === $wide['type'] ? $wide + array( 'setup' => Setup_Card::describe( $field ) ) : $wide;
 		}
 
 		return $this->field( $field ) + array( 'joined' => array_map( array( $this, 'field' ), $row['joined'] ) );
@@ -249,6 +253,7 @@ final class Settings_Controller {
 			'placeholder'       => (string) ( $field['placeholder'] ?? '' ),
 			'custom_attributes' => (object) array_map( 'strval', (array) ( $field['custom_attributes'] ?? array() ) ),
 			'submex_show_if'    => (string) ( $field['submex_show_if'] ?? '' ),
+			'submex_show_when'  => (object) Settings_Page::when_of( $field ),
 			'submex_joins'      => (string) ( $field['submex_joins'] ?? '' ),
 			'submex_email'      => (string) ( $field['submex_email'] ?? '' ),
 			'preview_url'       => Notification_Settings::preview_url( (string) ( $field['submex_email'] ?? '' ) ),

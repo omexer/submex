@@ -4,7 +4,8 @@ import apiFetch from '@wordpress/api-fetch';
 import { Skeleton, cn } from '@submex/ui';
 import { Row } from './field';
 import { getEmailEditor } from './extend';
-import { fieldsOf, isShown } from './visibility';
+import { SetupCard } from './setup';
+import { fieldsOf, isShown, matchesWhen } from './visibility';
 
 export const PAGE = 'submex-settings';
 
@@ -150,6 +151,24 @@ function Cards( { page, valueOf, onChange, onEdit } ) {
 			<div className="submex-settings__rows">
 				{ card.rows.map( ( row, at ) => {
 					if ( ! row.id ) {
+						if ( ! matchesWhen( row.submex_show_when, valueOf ) ) {
+							return null;
+						}
+
+						if ( row.setup ) {
+							return (
+								<div
+									key={ `setup-${ at }` }
+									className="submex-settings__row submex-settings__row--wide"
+								>
+									<SetupCard
+										setup={ row.setup }
+										valueOf={ valueOf }
+									/>
+								</div>
+							);
+						}
+
 						return (
 							<div
 								key={ `html-${ at }` }
@@ -341,6 +360,20 @@ export function Settings( { params, setParams } ) {
 					} else {
 						setToast( __( 'Settings saved.', 'submex' ) );
 					}
+
+					// Rows PHP draws, such as a setup card's ticks, are redrawn from what was saved.
+					apiFetch( {
+						path: `/submex/v1/settings/${ encodeURIComponent(
+							section
+						) }`,
+					} ).then(
+						( fresh ) =>
+							setPages( ( was ) => ( {
+								...was,
+								[ section ]: fresh,
+							} ) ),
+						() => {}
+					);
 				},
 				( error ) => setErrors( [ messageOf( error ) ] )
 			)

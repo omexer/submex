@@ -468,6 +468,7 @@ class Settings_Page {
 	public function cards( array $by_section ): array {
 		$all    = $by_section ? array_merge( ...array_values( $by_section ) ) : array();
 		$joined = $this->joined_fields( $all );
+		$values = $this->values_of( $all );
 		$cards  = array();
 
 		foreach ( $by_section as $section => $fields ) {
@@ -495,7 +496,7 @@ class Settings_Page {
 					continue;
 				}
 
-				$html = '' === (string) ( $field['id'] ?? '' ) ? $this->wide_markup( $field ) : null;
+				$html = '' === (string) ( $field['id'] ?? '' ) ? $this->wide_markup( $field, $values ) : null;
 
 				// A custom row with nothing to say, such as the tax repair with nothing to repair, draws nothing.
 				if ( '' === $html ) {
@@ -531,7 +532,9 @@ class Settings_Page {
 	 * @param array<string, array<int, array<string, mixed>>> $by_section
 	 */
 	private function render_cards( array $by_section ): void {
-		$toggles = $this->toggle_states( $by_section ? array_merge( ...array_values( $by_section ) ) : array() );
+		$all     = $by_section ? array_merge( ...array_values( $by_section ) ) : array();
+		$toggles = $this->toggle_states( $all );
+		$values  = $this->values_of( $all );
 
 		foreach ( $this->cards( $by_section ) as $card ) {
 			printf( '<section class="submex-settings__card"%s>', null === $card['anchor'] ? '' : ' id="' . esc_attr( 'submex-section-' . ( '' === $card['anchor'] ? 'general' : $card['anchor'] ) ) . '"' );
@@ -551,9 +554,14 @@ class Settings_Page {
 
 			foreach ( $card['rows'] as $row ) {
 				if ( null === $row['html'] ) {
-					$this->render_row( $row['field'], $toggles, $row['joined'] );
+					$this->render_row( $row['field'], $toggles, $row['joined'], $values );
 				} else {
-					echo '<div class="submex-settings__row submex-settings__row--wide">' . wp_kses( $row['html'], Allowed_Html::form() ) . '</div>';
+					printf(
+						'<div class="submex-settings__row submex-settings__row--wide%s"%s>%s</div>',
+						self::shown_when( self::when_of( $row['field'] ), $values ) ? '' : ' is-hidden',
+						self::when_attribute( $row['field'] ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped where built.
+						wp_kses( $row['html'], Allowed_Html::form() )
+					);
 				}
 			}
 
@@ -581,6 +589,68 @@ class Settings_Page {
 		}
 
 		return $toggles;
+	}
+
+	/**
+	 * What every field on the page holds now, by option id: what a row's condition and a setup card read.
+	 *
+	 * @param array<int, array<string, mixed>> $fields
+	 * @return array<string, string>
+	 */
+	private function values_of( array $fields ): array {
+		$values = array();
+
+		foreach ( $fields as $field ) {
+			$id = (string) ( $field['id'] ?? '' );
+
+			if ( '' === $id || in_array( $field['type'] ?? '', array( 'title', 'sectionend' ), true ) ) {
+				continue;
+			}
+
+			$value         = $this->field_value( $field );
+			$values[ $id ] = is_scalar( $value ) ? (string) $value : '';
+		}
+
+		return $values;
+	}
+
+	/**
+	 * A field's `submex_show_when`, as option id => the values it shows for.
+	 *
+	 * @param array<string, mixed> $field
+	 * @return array<string, string[]>
+	 */
+	public static function when_of( array $field ): array {
+		$when = array();
+
+		foreach ( (array) ( $field['submex_show_when'] ?? array() ) as $id => $shown ) {
+			$when[ (string) $id ] = array_values( array_map( 'strval', (array) $shown ) );
+		}
+
+		return $when;
+	}
+
+	/**
+	 * @param array<string, string[]> $when
+	 * @param array<string, string>   $values
+	 */
+	public static function shown_when( array $when, array $values ): bool {
+		foreach ( $when as $id => $shown ) {
+			if ( ! in_array( (string) ( $values[ $id ] ?? '' ), $shown, true ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * @param array<string, mixed> $field
+	 */
+	private static function when_attribute( array $field ): string {
+		$when = self::when_of( $field );
+
+		return $when ? ' data-submex-show-when="' . esc_attr( (string) wp_json_encode( $when ) ) . '"' : '';
 	}
 
 	/**
@@ -617,16 +687,19 @@ class Settings_Page {
 	 * @param array<string, mixed>                            $field
 	 * @param array<string, array{on: bool, parent: string}> $toggles
 	 * @param array<int, array<string, mixed>>                $joined
+	 * @param array<string, string>                           $values
 	 */
-	private function render_row( array $field, array $toggles, array $joined ): void {
+	private function render_row( array $field, array $toggles, array $joined, array $values ): void {
 		$id     = (string) ( $field['id'] ?? '' );
 		$help   = $this->help_text( $field );
 		$parent = (string) ( $field['submex_show_if'] ?? '' );
+		$shown  = $this->is_shown( $parent, $toggles ) && self::shown_when( self::when_of( $field ), $values );
 
 		printf(
-			'<div class="submex-settings__row%s"%s>',
-			$this->is_shown( $parent, $toggles ) ? '' : ' is-hidden',
-			'' === $parent ? '' : ' data-submex-show-if="' . esc_attr( $parent ) . '"'
+			'<div class="submex-settings__row%s"%s%s>',
+			$shown ? '' : ' is-hidden',
+			'' === $parent ? '' : ' data-submex-show-if="' . esc_attr( $parent ) . '"',
+			self::when_attribute( $field ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped where built.
 		);
 		printf( '<div class="submex-settings__label"><label class="submex-settings__title" for="%s">%s</label>', esc_attr( $id ), esc_html( (string) ( $field['title'] ?? '' ) ) );
 		if ( '' !== $help ) {
@@ -740,9 +813,14 @@ class Settings_Page {
 	/**
 	 * A row with no option of its own, such as the health checks, drawn whole by PHP.
 	 *
-	 * @param array<string, mixed> $field
+	 * @param array<string, mixed>  $field
+	 * @param array<string, string> $values What the page's fields hold, which a setup card ticks its steps by.
 	 */
-	public function wide_markup( array $field ): string {
+	public function wide_markup( array $field, array $values = array() ): string {
+		if ( Setup_Card::TYPE === ( $field['type'] ?? '' ) ) {
+			return Setup_Card::markup( $field, $values );
+		}
+
 		if ( 'submex_status' !== ( $field['type'] ?? '' ) ) {
 			return $this->woo_markup( $field );
 		}

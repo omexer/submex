@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* **Stripe and PayPal settings.** Each opens with a numbered setup card that ticks a step once its keys or switch are filled in, with one button on the step to do now. Stripe shows only the test key in Test mode and only the live key in Live; the hidden key keeps its saved value through every save. PayPal's webhook URL sits in a read-only box with a Copy button and its six events listed under it. Every key says where to find it and links that page of the provider's dashboard in a new tab.
+* **Settings renderer.** A field can declare `submex_show_when` (option id => value or values) to show only while a select holds one of them; the page draws it hidden from the saved value, so nothing flashes, and the app switches it as the select changes. Hidden rows stay in the form and keep their values. A `submex_setup` field draws a setup card (`Submex\Admin\Setup_Card`). After a save the app reloads the section, so rows drawn on the server reflect it.
 * **Product screen.** WooCommerce's General, Shipping, Linked Products, Attributes and Advanced tabs, and with them a simple product's price fields, were hidden on WooCommerce's own product types since 0.18.3. Submex's types are now added only to tabs WooCommerce already limits to some types.
 * **Renewal reminder.** Not sent while `submex_stop_billing` stops billing (an instalment plan paid in full, a payment cap reached, auto-renew off). It stays queued and is decided when due, so switching auto-renew back on still sends it.
 * **Activity log.** Store-side status changes from the Subscriptions screen, single or bulk, write a status line; the no-JavaScript list's bulk actions now go through the REST route. Staff are recorded as `admin:<id>` over REST too, where `is_admin()` is false.

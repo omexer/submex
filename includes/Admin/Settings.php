@@ -218,12 +218,77 @@ class Settings extends \WC_Settings_Page {
 	}
 
 	public function get_settings_for_paypal_section(): array {
+		$apps = array(
+			'no'  => 'https://developer.paypal.com/dashboard/applications/sandbox',
+			'yes' => 'https://developer.paypal.com/dashboard/applications/live',
+		);
+
+		$steps = array();
+
+		foreach ( $apps as $live => $url ) {
+			$steps[] = array(
+				'label'            => __( 'Create a PayPal app and paste its client ID and secret below', 'submex' ),
+				'detail'           => 'no' === $live
+					? __( 'In PayPal Developer → Apps & Credentials, with Sandbox chosen.', 'submex' )
+					: __( 'In PayPal Developer → Apps & Credentials, with Live chosen.', 'submex' ),
+				'filled'           => array( 'submex_paypal_client_id', 'submex_paypal_secret' ),
+				'submex_show_when' => array( 'submex_paypal_live' => $live ),
+				'action'           => array(
+					'url'      => $url,
+					'text'     => __( 'Open PayPal apps', 'submex' ),
+					'external' => true,
+				),
+			);
+		}
+
+		foreach ( $apps as $live => $url ) {
+			$steps[] = array(
+				'label'            => __( 'Add the webhook to your app', 'submex' ),
+				'detail'           => __( 'Under the app\'s Webhooks, add this URL with these events, then paste the webhook ID PayPal shows into Webhook ID below.', 'submex' ),
+				'filled'           => array( 'submex_paypal_webhook_id' ),
+				'submex_show_when' => array( 'submex_paypal_live' => $live ),
+				'copy'             => array(
+					'label' => __( 'Webhook URL', 'submex' ),
+					'value' => rest_url( 'submex/v1/webhook/paypal' ),
+				),
+				'list'             => array(
+					/* translators: %d: number of events */
+					'summary' => sprintf( __( 'Events to send (%d)', 'submex' ), 6 ),
+					'items'   => array( 'PAYMENT.SALE.COMPLETED', 'BILLING.SUBSCRIPTION.ACTIVATED', 'BILLING.SUBSCRIPTION.SUSPENDED', 'BILLING.SUBSCRIPTION.PAYMENT.FAILED', 'BILLING.SUBSCRIPTION.CANCELLED', 'BILLING.SUBSCRIPTION.EXPIRED' ),
+				),
+				'action'           => array(
+					'url'      => $url,
+					'text'     => __( 'Open PayPal apps', 'submex' ),
+					'external' => true,
+				),
+			);
+		}
+
+		$steps[] = array(
+			'label'  => __( 'Turn on PayPal below', 'submex' ),
+			'detail' => __( 'Customers can then start a subscription with PayPal.', 'submex' ),
+			'filled' => array( 'submex_paypal_enabled' ),
+		);
+
+		$app_pages = sprintf(
+			/* translators: 1: link to PayPal's sandbox apps, 2: link to PayPal's live apps */
+			__( 'From your app in PayPal Developer → Apps & Credentials: %1$s or %2$s, to match the environment.', 'submex' ),
+			Setup_Card::external_link( $apps['no'], __( 'sandbox', 'submex' ) ),
+			Setup_Card::external_link( $apps['yes'], __( 'live', 'submex' ) )
+		);
+
 		return array(
 			array(
 				'title' => __( 'PayPal Subscriptions', 'submex' ),
 				'type'  => 'title',
-				'desc'  => __( 'PayPal manages the billing schedule itself and tells Submex about each payment by webhook. Add the webhook URL below to your PayPal app before going live, or renewals will not be recorded.', 'submex' ),
+				'desc'  => __( 'PayPal runs the billing schedule and tells Submex about each payment by webhook.', 'submex' ),
 				'id'    => 'submex_paypal_title',
+			),
+			array(
+				'type'  => Setup_Card::TYPE,
+				'title' => __( 'Set up PayPal', 'submex' ),
+				'done'  => __( 'PayPal is set up', 'submex' ),
+				'steps' => $steps,
 			),
 			array(
 				'title'   => __( 'Enable PayPal', 'submex' ),
@@ -244,35 +309,25 @@ class Settings extends \WC_Settings_Page {
 			),
 			array(
 				'title' => __( 'Client ID', 'submex' ),
+				'desc'  => $app_pages,
 				'id'    => 'submex_paypal_client_id',
 				'type'  => 'text',
 				'css'   => 'width:26rem',
 			),
 			array(
 				'title' => __( 'Secret', 'submex' ),
+				'desc'  => __( 'Shown beside the client ID on the same app page.', 'submex' ),
 				'id'    => 'submex_paypal_secret',
 				'type'  => 'password',
 				'css'   => 'width:26rem',
 			),
 			array(
 				'title'    => __( 'Webhook ID', 'submex' ),
-				'desc'     => __( 'From your PayPal app, after you add the webhook URL below. Without it Submex cannot verify that a webhook really came from PayPal, and will reject every one.', 'submex' ),
+				'desc'     => __( 'Shown under the app\'s Webhooks once you add the webhook URL. Without it Submex cannot verify PayPal\'s webhooks, and rejects every one.', 'submex' ),
 				'id'       => 'submex_paypal_webhook_id',
 				'type'     => 'text',
 				'css'      => 'width:26rem',
 				'desc_tip' => false,
-			),
-			array(
-				'title'             => __( 'Webhook URL', 'submex' ),
-				'desc'              => __( 'Add this URL to your PayPal app and subscribe it to the billing subscription and payment sale events.', 'submex' ),
-				'id'                => 'submex_paypal_webhook_url',
-				'type'              => 'text',
-				'value'             => rest_url( 'submex/v1/webhook/paypal' ),
-				'custom_attributes' => array(
-					'readonly' => 'readonly',
-					'onclick'  => 'this.select()',
-				),
-				'css'               => 'width:26rem',
 			),
 			array(
 				'type' => 'sectionend',
@@ -282,12 +337,44 @@ class Settings extends \WC_Settings_Page {
 	}
 
 	public function get_settings_for_stripe_section(): array {
+		$keys  = 'https://dashboard.stripe.com/apikeys';
+		$steps = array();
+
+		foreach ( array(
+			'no'  => array( 'submex_stripe_test_secret', __( 'Copy your test secret key from Stripe', 'submex' ), __( 'Turn on test mode in Stripe, then paste the secret key below.', 'submex' ) ),
+			'yes' => array( 'submex_stripe_secret', __( 'Copy your live secret key from Stripe', 'submex' ), __( 'With test mode off in Stripe, paste the secret key below.', 'submex' ) ),
+		) as $live => list( $option, $label, $detail ) ) {
+			$steps[] = array(
+				'label'            => $label,
+				'detail'           => $detail,
+				'filled'           => array( $option ),
+				'submex_show_when' => array( 'submex_stripe_live' => $live ),
+				'action'           => array(
+					'url'      => $keys,
+					'text'     => __( 'Open Stripe API keys', 'submex' ),
+					'external' => true,
+				),
+			);
+		}
+
+		$steps[] = array(
+			'label'  => __( 'Turn on Stripe below', 'submex' ),
+			'detail' => __( 'Customers can then pay for subscriptions by card.', 'submex' ),
+			'filled' => array( 'submex_stripe_enabled' ),
+		);
+
 		return array(
 			array(
 				'title' => __( 'Stripe', 'submex' ),
 				'type'  => 'title',
 				'desc'  => __( 'Cards are collected by Stripe and charged again automatically when a renewal falls due. Submex keeps the schedule; Stripe only stores the card.', 'submex' ),
 				'id'    => 'submex_stripe_title',
+			),
+			array(
+				'type'  => Setup_Card::TYPE,
+				'title' => __( 'Set up Stripe', 'submex' ),
+				'done'  => __( 'Stripe is set up', 'submex' ),
+				'steps' => $steps,
 			),
 			array(
 				'title'    => __( 'Enable Stripe', 'submex' ),
@@ -308,16 +395,22 @@ class Settings extends \WC_Settings_Page {
 				),
 			),
 			array(
-				'title' => __( 'Test secret key', 'submex' ),
-				'id'    => 'submex_stripe_test_secret',
-				'type'  => 'password',
-				'css'   => 'width:26rem',
+				'title'            => __( 'Test secret key', 'submex' ),
+				/* translators: %s: link to Stripe's API keys page */
+				'desc'             => sprintf( __( 'From %s in Stripe, with test mode on.', 'submex' ), Setup_Card::external_link( $keys, __( 'Developers → API keys', 'submex' ) ) ),
+				'id'               => 'submex_stripe_test_secret',
+				'type'             => 'password',
+				'css'              => 'width:26rem',
+				'submex_show_when' => array( 'submex_stripe_live' => 'no' ),
 			),
 			array(
-				'title' => __( 'Live secret key', 'submex' ),
-				'id'    => 'submex_stripe_secret',
-				'type'  => 'password',
-				'css'   => 'width:26rem',
+				'title'            => __( 'Live secret key', 'submex' ),
+				/* translators: %s: link to Stripe's API keys page */
+				'desc'             => sprintf( __( 'From %s in Stripe, with test mode off.', 'submex' ), Setup_Card::external_link( $keys, __( 'Developers → API keys', 'submex' ) ) ),
+				'id'               => 'submex_stripe_secret',
+				'type'             => 'password',
+				'css'              => 'width:26rem',
+				'submex_show_when' => array( 'submex_stripe_live' => 'yes' ),
 			),
 			array(
 				'type' => 'sectionend',

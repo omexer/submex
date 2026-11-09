@@ -69,7 +69,7 @@ if ( ! $woo ) {
 	submex_test_abort( 'the settings page is not registered' );
 }
 $check( 'Payments has a Stripe section', 'Stripe' === ( $woo->get_sections()['stripe'] ?? '' ) );
-$fields = array_column( array_filter( $woo->get_settings_for_section( 'stripe' ), static fn( $f ) => ! in_array( $f['type'], array( 'title', 'sectionend' ), true ) ), 'type', 'id' );
+$fields = array_column( array_filter( $woo->get_settings_for_section( 'stripe' ), static fn( $f ) => ! empty( $f['id'] ) && ! in_array( $f['type'], array( 'title', 'sectionend' ), true ) ), 'type', 'id' );
 $check(
 	'with the same four options',
 	array(

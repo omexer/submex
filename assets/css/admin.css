@@ -855,6 +855,239 @@ body.submex-admin #wpcontent { padding-left: 0; }
 	font-size: 12px;
 }
 
+.submex-settings__help a,
+.submex-setup__desc a,
+.submex-setup__detail a {
+	color: var(--submex-accent);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.submex-settings__help a:focus-visible,
+.submex-setup__desc a:focus-visible,
+.submex-setup__detail a:focus-visible {
+	outline: 2px solid var(--submex-accent);
+	outline-offset: 1px;
+	box-shadow: none;
+}
+
+/* A gateway's setup guide: numbered steps that turn into ticks, one primary button on the step to do now. */
+.submex-setup {
+	margin: 4px 0;
+	border: 1px solid var(--submex-line);
+	border-radius: var(--submex-radius-sm);
+	background: var(--submex-bg);
+}
+
+.submex-setup__head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 14px 16px;
+	border-bottom: 1px solid var(--submex-line);
+}
+
+.submex-setup__intro {
+	min-width: 0;
+}
+
+.submex-settings .submex-setup__title {
+	margin: 0;
+	padding: 0;
+	color: var(--submex-ink);
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.5;
+}
+
+.submex-setup__desc {
+	margin: 2px 0 0;
+	color: var(--submex-ink-soft);
+	font-size: 13px;
+	line-height: 1.6;
+}
+
+.submex-setup__count {
+	flex: none;
+	padding: 2px 8px;
+	border-radius: 999px;
+	background: var(--submex-line-soft);
+	color: var(--submex-ink-soft);
+	font-size: 12px;
+	line-height: 1.6;
+	white-space: nowrap;
+}
+
+.submex-setup.is-complete .submex-setup__count {
+	background: #ecfdf5;
+	color: var(--submex-good);
+}
+
+.submex-setup__steps {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.submex-setup__step {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	margin: 0;
+	padding: 14px 16px;
+	border-top: 1px solid var(--submex-line-soft);
+}
+
+.submex-setup__step:first-child {
+	border-top: 0;
+}
+
+.submex-setup__marker {
+	display: inline-flex;
+	flex: 0 0 26px;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	border: 1px solid var(--submex-line);
+	border-radius: 50%;
+	color: var(--submex-ink-soft);
+	font-size: 12px;
+	font-weight: 600;
+	box-sizing: border-box;
+}
+
+.submex-setup__step.is-done .submex-setup__marker {
+	border-color: var(--submex-good);
+	background: var(--submex-good);
+	color: #fff;
+}
+
+.submex-setup__step.is-current .submex-setup__marker {
+	border-color: var(--submex-accent);
+	color: var(--submex-accent);
+}
+
+.submex-setup__text {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+	padding-top: 3px;
+}
+
+.submex-setup__label {
+	color: var(--submex-ink);
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.5;
+}
+
+.submex-setup__detail {
+	color: var(--submex-ink-soft);
+	font-size: 12px;
+	line-height: 1.6;
+}
+
+.submex-setup__step.is-done .submex-setup__label {
+	color: var(--submex-ink-soft);
+}
+
+.submex-setup__step.is-next {
+	opacity: .55;
+}
+
+.submex-setup__step > .submex-btn {
+	flex: none;
+}
+
+.submex-setup__copy {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-top: 8px;
+}
+
+.submex-setup__copy-label {
+	color: var(--submex-ink);
+	font-size: 12px;
+	font-weight: 500;
+}
+
+.submex-setup__copy-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	max-width: 560px;
+}
+
+.submex-settings .submex-setup__copy-input {
+	flex: 1 1 auto;
+	width: auto;
+	min-width: 0;
+	min-height: 32px;
+	background: var(--submex-line-soft);
+	font-family: Menlo, Consolas, monospace;
+	font-size: 12px;
+}
+
+/* Without scripts the button cannot copy, and the box can still be selected. */
+.no-js .submex-setup__copy-button {
+	display: none;
+}
+
+.submex-setup__list {
+	margin-top: 8px;
+	font-size: 12px;
+}
+
+.submex-setup__list summary {
+	width: fit-content;
+	color: var(--submex-accent);
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.submex-setup__list summary:focus-visible {
+	outline: 2px solid var(--submex-accent);
+	outline-offset: 2px;
+}
+
+.submex-setup__list ul {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin: 8px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.submex-setup__list li {
+	margin: 0;
+}
+
+.submex-setup__list code {
+	display: inline-block;
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: var(--submex-line-soft);
+	color: var(--submex-ink);
+	font-size: 11px;
+}
+
+@media screen and (max-width: 600px) {
+	.submex-setup__head,
+	.submex-setup__step {
+		flex-wrap: wrap;
+	}
+
+	.submex-setup__step > .submex-btn {
+		margin-left: 38px;
+	}
+}
+
 @media screen and (max-width: 960px) {
 	.submex-settings {
 		grid-template-columns: minmax(0, 1fr);

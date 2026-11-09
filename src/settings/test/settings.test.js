@@ -663,3 +663,271 @@ describe( 'with an email editor registered', () => {
 		confirm.mockRestore();
 	} );
 } );
+
+describe( 'a gateway with an environment select', () => {
+	const when = ( live ) => ( { pay_live: [ live ] } );
+
+	beforeEach( () => {
+		PAGES.testpay = {
+			section: 'testpay',
+			group: 'payments',
+			sections: [ 'testpay' ],
+			cards: [
+				{
+					title: '',
+					desc: '',
+					anchor: 'testpay',
+					rows: [
+						{
+							type: 'submex_setup',
+							html: '<div class="submex-setup">PHP</div>',
+							submex_show_when: {},
+							setup: {
+								id: 'testpay-setup',
+								title: 'Set up Testpay',
+								done: 'Testpay is set up',
+								desc: 'Renews <strong>cards</strong>.',
+								steps: [
+									{
+										label: 'Add the webhook',
+										detail: 'Paste this into Testpay.',
+										done: null,
+										filled: [],
+										submex_show_when: {},
+										action: {
+											url: 'https://example.com/hooks',
+											text: 'Open webhooks',
+											external: true,
+										},
+										copy: {
+											label: 'Webhook URL',
+											value: 'https://shop.test/hook',
+										},
+										list: {
+											summary: 'Events to send (2)',
+											items: [ 'paid', 'failed' ],
+										},
+									},
+									{
+										label: 'Paste your sandbox key',
+										detail: '',
+										done: null,
+										filled: [ 'pay_sandbox_key' ],
+										submex_show_when: when( 'no' ),
+										action: {
+											url: 'https://sandbox.example.com/keys',
+											text: 'Open sandbox keys',
+											external: true,
+										},
+										copy: null,
+										list: null,
+									},
+									{
+										label: 'Paste your live key',
+										detail: '',
+										done: null,
+										filled: [ 'pay_live_key' ],
+										submex_show_when: when( 'yes' ),
+										action: {
+											url: 'https://example.com/keys',
+											text: 'Open live keys',
+											external: true,
+										},
+										copy: null,
+										list: null,
+									},
+									{
+										label: 'Turn on Testpay below',
+										detail: '',
+										done: null,
+										filled: [ 'pay_on' ],
+										submex_show_when: {},
+										action: null,
+										copy: null,
+										list: null,
+									},
+								],
+							},
+						},
+						field( 'pay_on', 'checkbox', 'no' ),
+						field( 'pay_live', 'select', 'no', {
+							options: [
+								{ value: 'no', label: 'Sandbox' },
+								{ value: 'yes', label: 'Live' },
+							],
+						} ),
+						field( 'pay_sandbox_key', 'password', 'sb-key', {
+							submex_show_when: when( 'no' ),
+						} ),
+						field( 'pay_live_key', 'password', '', {
+							submex_show_when: when( 'yes' ),
+						} ),
+						field( 'pay_account', 'text', 'acct' ),
+					],
+				},
+			],
+		};
+	} );
+
+	afterEach( () => delete PAGES.testpay );
+
+	function steps() {
+		return Array.from(
+			container.querySelectorAll( '.submex-setup__step' )
+		).map( ( li ) => [
+			li.querySelector( '.submex-setup__label' ).firstChild.textContent,
+			li.className.replace( 'submex-setup__step ', '' ),
+		] );
+	}
+
+	test( 'shows only the chosen environment, switching as the select changes', async () => {
+		await render( 'section=testpay' );
+
+		expect( el( '#pay_sandbox_key' ).value ).toBe( 'sb-key' );
+		expect( el( '#pay_live_key' ) ).toBeNull();
+		expect( el( '#pay_account' ) ).not.toBeNull();
+
+		await type( el( '#pay_live' ), 'yes' );
+
+		expect( el( '#pay_sandbox_key' ) ).toBeNull();
+		expect( el( '#pay_live_key' ) ).not.toBeNull();
+		expect( el( '#pay_account' ) ).not.toBeNull();
+
+		await type( el( '#pay_live_key' ), 'live-key' );
+		await type( el( '#pay_live' ), 'no' );
+
+		expect( el( '#pay_sandbox_key' ).value ).toBe( 'sb-key' );
+
+		await type( el( '#pay_live' ), 'yes' );
+
+		expect( el( '#pay_live_key' ).value ).toBe( 'live-key' );
+	} );
+
+	test( 'saving after a switch sends the switch and what was typed, never the hidden keys', async () => {
+		await render( 'section=testpay' );
+		await type( el( '#pay_live' ), 'yes' );
+		await type( el( '#pay_live_key' ), 'live-key' );
+		await save();
+
+		const post = apiFetch.mock.calls.find(
+			( [ options ] ) => options.method === 'POST'
+		);
+
+		expect( post[ 0 ].data ).toEqual( {
+			values: { pay_live: 'yes', pay_live_key: 'live-key' },
+		} );
+	} );
+
+	test( 'a setup card ticks its steps as the fields fill in', async () => {
+		await render( 'section=testpay' );
+
+		expect( el( '.submex-setup__title' ).textContent ).toBe(
+			'Set up Testpay'
+		);
+		expect( el( '.submex-setup__desc' ).innerHTML ).toBe(
+			'Renews <strong>cards</strong>.'
+		);
+		expect( steps() ).toEqual( [
+			[ 'Add the webhook', 'is-manual' ],
+			[ 'Paste your sandbox key', 'is-done' ],
+			[ 'Turn on Testpay below', 'is-current' ],
+		] );
+		expect( el( '.submex-setup__count' ).textContent ).toBe(
+			'1 of 2 done'
+		);
+
+		await type( el( '#pay_live' ), 'yes' );
+
+		expect( steps() ).toEqual( [
+			[ 'Add the webhook', 'is-manual' ],
+			[ 'Paste your live key', 'is-current' ],
+			[ 'Turn on Testpay below', 'is-next' ],
+		] );
+
+		const primary = container.querySelectorAll( '.submex-setup .submex-btn--primary' );
+
+		expect( primary ).toHaveLength( 1 );
+		expect( primary[ 0 ].getAttribute( 'href' ) ).toBe(
+			'https://example.com/keys'
+		);
+		expect( primary[ 0 ].getAttribute( 'target' ) ).toBe( '_blank' );
+		expect( primary[ 0 ].textContent ).toBe(
+			'Open live keys (opens in a new tab)'
+		);
+
+		await type( el( '#pay_live_key' ), 'live-key' );
+		await click( el( '#pay_on' ) );
+
+		expect( el( '.submex-setup__title' ).textContent ).toBe(
+			'Testpay is set up'
+		);
+		expect( el( '.submex-setup__count' ).textContent ).toBe(
+			'2 of 2 done'
+		);
+		expect( el( '.submex-setup .submex-btn--primary' ) ).toBeNull();
+	} );
+
+	test( 'a step done in the provider keeps its link, its address and its events', async () => {
+		await render( 'section=testpay' );
+
+		const manual = el( '.submex-setup__step.is-manual' );
+		const box = manual.querySelector( 'input' );
+
+		expect( box.readOnly ).toBe( true );
+		expect( box.value ).toBe( 'https://shop.test/hook' );
+		expect( box.hasAttribute( 'name' ) ).toBe( false );
+		expect(
+			manual.querySelector( `label[for="${ box.id }"]` ).textContent
+		).toBe( 'Webhook URL' );
+		expect( manual.querySelector( 'summary' ).textContent ).toBe(
+			'Events to send (2)'
+		);
+		expect(
+			Array.from( manual.querySelectorAll( 'li code' ) ).map(
+				( c ) => c.textContent
+			)
+		).toEqual( [ 'paid', 'failed' ] );
+		expect(
+			manual.querySelector( 'a.submex-btn' ).classList.contains(
+				'submex-btn--primary'
+			)
+		).toBe( false );
+	} );
+
+	test( 'the copy button copies the address and says so', async () => {
+		const writeText = jest.fn( () => Promise.resolve() );
+
+		Object.defineProperty( window.navigator, 'clipboard', {
+			value: { writeText },
+			configurable: true,
+		} );
+
+		await render( 'section=testpay' );
+		await click( el( '.submex-setup__copy-button' ) );
+
+		expect( writeText ).toHaveBeenCalledWith( 'https://shop.test/hook' );
+		expect( el( '.submex-setup__copy-button' ).textContent ).toBe(
+			'Copied'
+		);
+		expect( el( '.submex-setup__copy [role="status"]' ).textContent ).toBe(
+			'Copied'
+		);
+
+		delete window.navigator.clipboard;
+	} );
+
+	test( 'after a save, the page is fetched again so rows PHP draws are current', async () => {
+		await render( 'section=testpay' );
+		await type( el( '#pay_account' ), 'acct-2' );
+		await save();
+
+		const reads = apiFetch.mock.calls.filter(
+			( [ options ] ) =>
+				! options.method &&
+				options.path.startsWith( '/submex/v1/settings/testpay' )
+		);
+
+		expect( reads ).toHaveLength( 2 );
+		expect( el( '#pay_account' ).value ).toBe( 'acct-2' );
+	} );
+} );

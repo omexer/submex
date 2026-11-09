@@ -1,5 +1,16 @@
+// Shown while every select it names holds one of its values, as the PHP page decides it.
+export function matchesWhen( when, valueOf ) {
+	return Object.entries( when || {} ).every( ( [ id, values ] ) =>
+		[].concat( values ).includes( valueOf( id ) )
+	);
+}
+
 // Shown while its switch is on, and that switch's own switch, as the PHP page decides it.
 export function isShown( field, byId, valueOf, depth = 0 ) {
+	if ( ! matchesWhen( field.submex_show_when, valueOf ) ) {
+		return false;
+	}
+
 	const parent = byId[ field.submex_show_if ];
 
 	if ( ! parent || parent.type !== 'checkbox' || depth > 10 ) {
