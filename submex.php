@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Submex Subscription Billing for WooCommerce
+ * Plugin Name: Submex - Subscription for WooCommerce
  * Plugin URI:  https://github.com/omexer/submex
  * Description: Turn any WooCommerce product into a subscription and let it bill itself.
  * Version:     1.2.2
