@@ -162,7 +162,7 @@ $check( 'Payments lists its gateways under the menu entry', in_array( 'PayPal', 
 $check( 'with the one on screen marked', 'PayPal' === trim( (string) $paypal->query( '//ul[contains(@class,"submex-settings__subnav")]//a[@aria-current="page"]' )->item( 0 )?->textContent ) );
 $listed = array_column( array_filter( $woo->get_settings_for_section( 'mollie' ), static fn( $f ) => ! empty( $f['id'] ) && in_array( $f['type'] ?? '', array( 'checkbox', 'select', 'text', 'password' ), true ) ), 'id' );
 $shown  = array_filter( $listed, static fn( $id ) => $paypal->query( '//form//*[@id="' . $id . '"]' )->length > 0 );
-$check( 'and only its own fields in the form', $listed && array() === $shown && 1 === $paypal->query( '//form//*[@id="submex_paypal_client_id"]' )->length, $shown );
+$check( 'and only its own fields in the form', $listed && array() === $shown && 1 === $paypal->query( '//form//*[@id="submex_paypal_sandbox_client_id"]' )->length, $shown );
 
 $renewal = $render( 'recovery' );
 $check( 'a stacked group draws its sections together', str_contains( $renewal, 'id="submex_catch_up_policy"' ) && str_contains( $renewal, 'id="submex_test_stacked_option"' ) );

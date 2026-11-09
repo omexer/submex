@@ -269,7 +269,10 @@ update_option( $p . 'live_secret', 'live-secret-2' );
 
 $field = $fields[1];
 $raw   = Setup_Card::markup( $field, array( $p . 'live' => 'yes', $p . 'live_id' => 'a', $p . 'live_secret' => 'b', $p . 'on' => 'yes' ) );
-$check( 'everything checkable done, it says it is set up', str_contains( $raw, 'Testpay is set up' ) && str_contains( $raw, '2 of 2 done' ) && ! str_contains( $raw, 'is-current' ) );
+$check( 'everything checkable done, but steps only the provider can confirm remain, so it does not claim to be set up', ! str_contains( $raw, 'Testpay is set up' ) && str_contains( $raw, 'Set up Testpay' ) && str_contains( $raw, '2 of 2 done' ) && ! str_contains( $raw, 'is-current' ) );
+$no_manual = $field;
+$no_manual['steps'] = array_values( array_filter( $field['steps'], static fn( $s ) => ! empty( $s['filled'] ) || isset( $s['done'] ) ) );
+$check( 'with every step checkable and done, it says it is set up', str_contains( Setup_Card::markup( $no_manual, array( $p . 'live' => 'yes', $p . 'live_id' => 'a', $p . 'live_secret' => 'b', $p . 'on' => 'yes' ) ), 'Testpay is set up' ) );
 $check( 'and the screen\'s HTML filter keeps all of it', wp_kses( $raw, Allowed_Html::form() ) === $raw );
 
 echo "\n5. Stripe and PayPal\n";
@@ -289,8 +292,34 @@ $save( $post );
 $check( 'saving Stripe live keeps its test key', 'sk_test_keep' === get_option( 'submex_stripe_test_secret' ) && 'sk_live_new' === get_option( 'submex_stripe_secret' ) );
 
 $paypal = $fields_of( 'paypal' );
-$check( 'PayPal has one set of credentials for either environment, so both stay visible', empty( $paypal['submex_paypal_client_id']['submex_show_when'] ) && empty( $paypal['submex_paypal_secret']['submex_show_when'] ) );
-$check( 'and its hints link the sandbox and live app pages', str_contains( $screen->help_text( $paypal['submex_paypal_client_id'] ), 'developer.paypal.com/dashboard/applications/sandbox' ) && str_contains( $screen->help_text( $paypal['submex_paypal_client_id'] ), 'developer.paypal.com/dashboard/applications/live' ) );
+$check( 'PayPal has its own credentials for each environment, each shown only while it is chosen', array( 'submex_paypal_live' => 'no' ) === ( $paypal['submex_paypal_sandbox_client_id']['submex_show_when'] ?? null ) && array( 'submex_paypal_live' => 'yes' ) === ( $paypal['submex_paypal_live_client_id']['submex_show_when'] ?? null ) && isset( $paypal['submex_paypal_sandbox_webhook_id'], $paypal['submex_paypal_live_webhook_id'], $paypal['submex_paypal_live_secret'] ) );
+$check( 'and each hint links that environment\'s app page', str_contains( $screen->help_text( $paypal['submex_paypal_sandbox_client_id'] ), 'developer.paypal.com/dashboard/applications/sandbox' ) && str_contains( $screen->help_text( $paypal['submex_paypal_live_client_id'] ), 'developer.paypal.com/dashboard/applications/live' ) );
+
+$paypal_was = array();
+foreach ( array( 'live', 'sandbox_client_id', 'sandbox_secret', 'sandbox_webhook_id', 'live_client_id', 'live_secret', 'live_webhook_id', 'client_id', 'secret', 'webhook_id', 'enabled' ) as $key ) {
+	$paypal_was[ 'submex_paypal_' . $key ] = get_option( 'submex_paypal_' . $key, null );
+	delete_option( 'submex_paypal_' . $key );
+}
+update_option( 'submex_paypal_sandbox_client_id', 'sb-id' );
+update_option( 'submex_paypal_sandbox_secret', 'sb-secret' );
+update_option( 'submex_paypal_sandbox_webhook_id', 'sb-hook' );
+update_option( 'submex_paypal_enabled', 'yes' );
+update_option( 'submex_paypal_live', 'yes' );
+$paypal_card = (string) $screen->wide_markup( $screen->settings_for( 'paypal' )[1], array( 'submex_paypal_live' => 'yes', 'submex_paypal_sandbox_client_id' => 'sb-id', 'submex_paypal_sandbox_secret' => 'sb-secret', 'submex_paypal_sandbox_webhook_id' => 'sb-hook', 'submex_paypal_enabled' => 'yes' ) );
+$check( 'switched to Live with only sandbox credentials, PayPal is not set up and asks for the live app', ! str_contains( $paypal_card, 'PayPal is set up' ) && str_contains( $paypal_card, 'is-current' ), $paypal_card );
+$check( 'and live calls never use the sandbox credentials', '' === \Submex\Gateways\PayPal\PayPal_Client::credential( 'client_id' ) && ! \Submex\Gateways\PayPal\PayPal_Client::from_settings()->is_configured() );
+update_option( 'submex_paypal_client_id', 'old-shared' );
+$check( 'credentials saved before the split still work until replaced', 'old-shared' === \Submex\Gateways\PayPal\PayPal_Client::credential( 'client_id' ) );
+\Submex\Gateways\PayPal\PayPal_Client::adopt_shared_credentials();
+$check( 'and move to the environment chosen, leaving the other untouched', 'old-shared' === get_option( 'submex_paypal_live_client_id' ) && false === get_option( 'submex_paypal_client_id' ) && 'sb-id' === get_option( 'submex_paypal_sandbox_client_id' ) );
+foreach ( $paypal_was as $name => $value ) {
+	null === $value ? delete_option( $name ) : update_option( $name, $value );
+}
+
+update_option( 'submex_stripe_live', 'live' );
+$stripe_now = $fields_of( 'stripe' );
+$check( 'a stored environment outside the select\'s options reads as its default, so a key field still shows', 'no' === $screen->field_value( $stripe_now['submex_stripe_live'] ) );
+update_option( 'submex_stripe_live', 'no' );
 $card_html = (string) $screen->wide_markup( $screen->settings_for( 'paypal' )[1], array( 'submex_paypal_live' => 'no' ) );
 $check( 'the webhook address moved into the setup card, with its six events', str_contains( $card_html, esc_attr( rest_url( 'submex/v1/webhook/paypal' ) ) ) && str_contains( $card_html, 'Events to send (6)' ) && str_contains( $card_html, 'PAYMENT.SALE.COMPLETED' ) );
 

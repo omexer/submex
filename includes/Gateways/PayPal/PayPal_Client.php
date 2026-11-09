@@ -30,10 +30,51 @@ class PayPal_Client {
 
 	public static function from_settings(): self {
 		return new self(
-			(string) get_option( 'submex_paypal_client_id', '' ),
-			(string) get_option( 'submex_paypal_secret', '' ),
+			self::credential( 'client_id' ),
+			self::credential( 'secret' ),
 			'yes' !== get_option( 'submex_paypal_live', 'no' )
 		);
+	}
+
+	/**
+	 * The option holding a credential for the environment chosen now: sandbox and live apps have their own.
+	 *
+	 * @param string $key client_id, secret or webhook_id.
+	 */
+	public static function option( string $key, ?bool $live = null ): string {
+		$live ??= 'yes' === get_option( 'submex_paypal_live', 'no' );
+
+		return 'submex_paypal_' . ( $live ? 'live' : 'sandbox' ) . '_' . $key;
+	}
+
+	/**
+	 * One saved before each environment had its own still works until it is replaced.
+	 *
+	 * @param string $key client_id, secret or webhook_id.
+	 */
+	public static function credential( string $key ): string {
+		$own = (string) get_option( self::option( $key ), '' );
+
+		return '' !== $own ? $own : (string) get_option( 'submex_paypal_' . $key, '' );
+	}
+
+	/**
+	 * Credentials saved before the split belong to the environment chosen when they were saved, the best record there is.
+	 */
+	public static function adopt_shared_credentials(): void {
+		foreach ( array( 'client_id', 'secret', 'webhook_id' ) as $key ) {
+			$shared = (string) get_option( 'submex_paypal_' . $key, '' );
+
+			if ( '' === $shared ) {
+				continue;
+			}
+
+			if ( '' === (string) get_option( self::option( $key ), '' ) ) {
+				update_option( self::option( $key ), $shared );
+			}
+
+			delete_option( 'submex_paypal_' . $key );
+		}
 	}
 
 	public function is_configured(): bool {

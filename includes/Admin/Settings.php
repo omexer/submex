@@ -7,6 +7,7 @@ use Submex\Billing\Renewal_Tax_Repair;
 use Submex\Data\Charge_Slot_Repository;
 use Submex\Data\Migrator;
 use Submex\Emails\Notification_Settings;
+use Submex\Gateways\PayPal\PayPal_Client;
 use Submex\Lifecycle\Cancellation_Policy;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -231,7 +232,7 @@ class Settings extends \WC_Settings_Page {
 				'detail'           => 'no' === $live
 					? __( 'In PayPal Developer → Apps & Credentials, with Sandbox chosen.', 'submex' )
 					: __( 'In PayPal Developer → Apps & Credentials, with Live chosen.', 'submex' ),
-				'filled'           => array( 'submex_paypal_client_id', 'submex_paypal_secret' ),
+				'filled'           => array( PayPal_Client::option( 'client_id', 'yes' === $live ), PayPal_Client::option( 'secret', 'yes' === $live ) ),
 				'submex_show_when' => array( 'submex_paypal_live' => $live ),
 				'action'           => array(
 					'url'      => $url,
@@ -245,7 +246,7 @@ class Settings extends \WC_Settings_Page {
 			$steps[] = array(
 				'label'            => __( 'Add the webhook to your app', 'submex' ),
 				'detail'           => __( 'Under the app\'s Webhooks, add this URL with these events, then paste the webhook ID PayPal shows into Webhook ID below.', 'submex' ),
-				'filled'           => array( 'submex_paypal_webhook_id' ),
+				'filled'           => array( PayPal_Client::option( 'webhook_id', 'yes' === $live ) ),
 				'submex_show_when' => array( 'submex_paypal_live' => $live ),
 				'copy'             => array(
 					'label' => __( 'Webhook URL', 'submex' ),
@@ -253,7 +254,7 @@ class Settings extends \WC_Settings_Page {
 				),
 				'list'             => array(
 					/* translators: %d: number of events */
-					'summary' => sprintf( __( 'Events to send (%d)', 'submex' ), 6 ),
+					'summary' => sprintf( _n( 'Events to send (%d)', 'Events to send (%d)', 6, 'submex' ), 6 ),
 					'items'   => array( 'PAYMENT.SALE.COMPLETED', 'BILLING.SUBSCRIPTION.ACTIVATED', 'BILLING.SUBSCRIPTION.SUSPENDED', 'BILLING.SUBSCRIPTION.PAYMENT.FAILED', 'BILLING.SUBSCRIPTION.CANCELLED', 'BILLING.SUBSCRIPTION.EXPIRED' ),
 				),
 				'action'           => array(
@@ -268,13 +269,6 @@ class Settings extends \WC_Settings_Page {
 			'label'  => __( 'Turn on PayPal below', 'submex' ),
 			'detail' => __( 'Customers can then start a subscription with PayPal.', 'submex' ),
 			'filled' => array( 'submex_paypal_enabled' ),
-		);
-
-		$app_pages = sprintf(
-			/* translators: 1: link to PayPal's sandbox apps, 2: link to PayPal's live apps */
-			__( 'From your app in PayPal Developer → Apps & Credentials: %1$s or %2$s, to match the environment.', 'submex' ),
-			Setup_Card::external_link( $apps['no'], __( 'sandbox', 'submex' ) ),
-			Setup_Card::external_link( $apps['yes'], __( 'live', 'submex' ) )
 		);
 
 		return array(
@@ -308,26 +302,56 @@ class Settings extends \WC_Settings_Page {
 				),
 			),
 			array(
-				'title' => __( 'Client ID', 'submex' ),
-				'desc'  => $app_pages,
-				'id'    => 'submex_paypal_client_id',
-				'type'  => 'text',
-				'css'   => 'width:26rem',
+				'title'            => __( 'Sandbox client ID', 'submex' ),
+				/* translators: %s: link to PayPal's apps for this environment */
+				'desc'             => sprintf( __( 'From your sandbox app in %s.', 'submex' ), Setup_Card::external_link( $apps['no'], __( 'PayPal Developer → Apps & Credentials', 'submex' ) ) ),
+				'id'               => PayPal_Client::option( 'client_id', false ),
+				'type'             => 'text',
+				'css'              => 'width:26rem',
+				'submex_show_when' => array( 'submex_paypal_live' => 'no' ),
 			),
 			array(
-				'title' => __( 'Secret', 'submex' ),
-				'desc'  => __( 'Shown beside the client ID on the same app page.', 'submex' ),
-				'id'    => 'submex_paypal_secret',
-				'type'  => 'password',
-				'css'   => 'width:26rem',
+				'title'            => __( 'Sandbox secret', 'submex' ),
+				'desc'             => __( 'Shown beside the client ID on the same app page.', 'submex' ),
+				'id'               => PayPal_Client::option( 'secret', false ),
+				'type'             => 'password',
+				'css'              => 'width:26rem',
+				'submex_show_when' => array( 'submex_paypal_live' => 'no' ),
 			),
 			array(
-				'title'    => __( 'Webhook ID', 'submex' ),
-				'desc'     => __( 'Shown under the app\'s Webhooks once you add the webhook URL. Without it Submex cannot verify PayPal\'s webhooks, and rejects every one.', 'submex' ),
-				'id'       => 'submex_paypal_webhook_id',
-				'type'     => 'text',
-				'css'      => 'width:26rem',
-				'desc_tip' => false,
+				'title'            => __( 'Sandbox webhook ID', 'submex' ),
+				'desc'             => __( 'Shown under the sandbox app\'s Webhooks once you add the webhook URL. Without it Submex cannot verify PayPal\'s webhooks, and rejects every one.', 'submex' ),
+				'id'               => PayPal_Client::option( 'webhook_id', false ),
+				'type'             => 'text',
+				'css'              => 'width:26rem',
+				'desc_tip'         => false,
+				'submex_show_when' => array( 'submex_paypal_live' => 'no' ),
+			),
+			array(
+				'title'            => __( 'Live client ID', 'submex' ),
+				/* translators: %s: link to PayPal's apps for this environment */
+				'desc'             => sprintf( __( 'From your live app in %s.', 'submex' ), Setup_Card::external_link( $apps['yes'], __( 'PayPal Developer → Apps & Credentials', 'submex' ) ) ),
+				'id'               => PayPal_Client::option( 'client_id', true ),
+				'type'             => 'text',
+				'css'              => 'width:26rem',
+				'submex_show_when' => array( 'submex_paypal_live' => 'yes' ),
+			),
+			array(
+				'title'            => __( 'Live secret', 'submex' ),
+				'desc'             => __( 'Shown beside the client ID on the same app page.', 'submex' ),
+				'id'               => PayPal_Client::option( 'secret', true ),
+				'type'             => 'password',
+				'css'              => 'width:26rem',
+				'submex_show_when' => array( 'submex_paypal_live' => 'yes' ),
+			),
+			array(
+				'title'            => __( 'Live webhook ID', 'submex' ),
+				'desc'             => __( 'Shown under the live app\'s Webhooks once you add the webhook URL. Without it Submex cannot verify PayPal\'s webhooks, and rejects every one.', 'submex' ),
+				'id'               => PayPal_Client::option( 'webhook_id', true ),
+				'type'             => 'text',
+				'css'              => 'width:26rem',
+				'desc_tip'         => false,
+				'submex_show_when' => array( 'submex_paypal_live' => 'yes' ),
 			),
 			array(
 				'type' => 'sectionend',

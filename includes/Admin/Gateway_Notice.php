@@ -2,6 +2,7 @@
 
 namespace Submex\Admin;
 
+use Submex\Gateways\PayPal\PayPal_Client;
 use Submex\Gateways\Stripe\Stripe_Gateway;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -157,11 +158,11 @@ class Gateway_Notice {
 		$missing = array();
 
 		foreach ( array(
-			'submex_paypal_client_id' => __( 'client ID', 'submex' ),
-			'submex_paypal_secret'    => __( 'secret', 'submex' ),
-		) as $option => $label ) {
-			if ( '' === (string) get_option( $option, '' ) ) {
-				$missing[ $option ] = $label;
+			'client_id' => __( 'client ID', 'submex' ),
+			'secret'    => __( 'secret', 'submex' ),
+		) as $key => $label ) {
+			if ( '' === PayPal_Client::credential( $key ) ) {
+				$missing[ PayPal_Client::option( $key ) ] = $label;
 			}
 		}
 
@@ -176,7 +177,7 @@ class Gateway_Notice {
 	 * @return string[]
 	 */
 	private function paypal_webhook(): array {
-		if ( 'yes' !== get_option( 'submex_paypal_enabled', 'no' ) || '' !== (string) get_option( 'submex_paypal_webhook_id', '' ) ) {
+		if ( 'yes' !== get_option( 'submex_paypal_enabled', 'no' ) || '' !== PayPal_Client::credential( 'webhook_id' ) ) {
 			return array();
 		}
 

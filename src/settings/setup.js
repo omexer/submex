@@ -81,7 +81,10 @@ function CopyBox( { id, label, value } ) {
 
 	const said = {
 		copied: __( 'Copied', 'submex' ),
-		selected: __( 'Selected. Press Ctrl+C or Command+C to copy.', 'submex' ),
+		selected: __(
+			'Selected. Press Ctrl+C or Command+C to copy.',
+			'submex'
+		),
 	}[ status ];
 
 	return (
@@ -161,7 +164,10 @@ export function SetupCard( { setup, valueOf } ) {
 
 	const checked = steps.filter( ( step ) => step.state !== 'manual' );
 	const done = checked.filter( ( step ) => step.state === 'done' ).length;
-	const complete = checked.length > 0 && done === checked.length;
+	const complete =
+		checked.length > 0 &&
+		done === checked.length &&
+		checked.length === steps.length;
 
 	return (
 		<div className={ cn( 'submex-setup', complete && 'is-complete' ) }>

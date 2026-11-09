@@ -844,7 +844,9 @@ describe( 'a gateway with an environment select', () => {
 			[ 'Turn on Testpay below', 'is-next' ],
 		] );
 
-		const primary = container.querySelectorAll( '.submex-setup .submex-btn--primary' );
+		const primary = container.querySelectorAll(
+			'.submex-setup .submex-btn--primary'
+		);
 
 		expect( primary ).toHaveLength( 1 );
 		expect( primary[ 0 ].getAttribute( 'href' ) ).toBe(
@@ -858,8 +860,9 @@ describe( 'a gateway with an environment select', () => {
 		await type( el( '#pay_live_key' ), 'live-key' );
 		await click( el( '#pay_on' ) );
 
+		// The webhook is confirmed only in the provider, so the card does not claim to be set up.
 		expect( el( '.submex-setup__title' ).textContent ).toBe(
-			'Testpay is set up'
+			'Set up Testpay'
 		);
 		expect( el( '.submex-setup__count' ).textContent ).toBe(
 			'2 of 2 done'
@@ -888,9 +891,9 @@ describe( 'a gateway with an environment select', () => {
 			)
 		).toEqual( [ 'paid', 'failed' ] );
 		expect(
-			manual.querySelector( 'a.submex-btn' ).classList.contains(
-				'submex-btn--primary'
-			)
+			manual
+				.querySelector( 'a.submex-btn' )
+				.classList.contains( 'submex-btn--primary' )
 		).toBe( false );
 	} );
 

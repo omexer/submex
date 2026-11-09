@@ -83,9 +83,10 @@ final class Setup_Card {
 			return '';
 		}
 
-		$checked  = array_filter( $steps, static fn( array $step ): bool => 'manual' !== $step['state'] );
-		$done     = count( array_filter( $checked, static fn( array $step ): bool => 'done' === $step['state'] ) );
-		$complete = $checked && count( $checked ) === $done;
+		$checked = array_filter( $steps, static fn( array $step ): bool => 'manual' !== $step['state'] );
+		$done    = count( array_filter( $checked, static fn( array $step ): bool => 'done' === $step['state'] ) );
+		// A step only the provider's dashboard can confirm keeps the card from claiming it is set up.
+		$complete = $checked && count( $checked ) === $done && count( $checked ) === count( $steps );
 		$title    = $complete && ! empty( $field['done'] ) ? (string) $field['done'] : (string) ( $field['title'] ?? '' );
 		$desc     = (string) ( $field['desc'] ?? '' );
 

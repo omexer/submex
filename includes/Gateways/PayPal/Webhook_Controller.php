@@ -91,7 +91,7 @@ class Webhook_Controller {
 	 * Ask PayPal whether the signature is genuine. Never trust the payload otherwise.
 	 */
 	private function verify( \WP_REST_Request $request, array $event ): bool {
-		$webhook_id = (string) get_option( 'submex_paypal_webhook_id', '' );
+		$webhook_id = PayPal_Client::credential( 'webhook_id' );
 
 		if ( '' === $webhook_id ) {
 			return false;

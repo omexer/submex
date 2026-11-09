@@ -37,7 +37,7 @@ final class Gateway_Key_Check {
 			PayPal_Checkout_Gateway::ID => array(
 				'title'   => 'PayPal',
 				'section' => 'paypal',
-				'options' => array( 'submex_paypal_enabled', 'submex_paypal_live', 'submex_paypal_client_id', 'submex_paypal_secret' ),
+				'options' => array( 'submex_paypal_enabled', 'submex_paypal_live', 'submex_paypal_sandbox_client_id', 'submex_paypal_sandbox_secret', 'submex_paypal_live_client_id', 'submex_paypal_live_secret', 'submex_paypal_client_id', 'submex_paypal_secret' ),
 				'check'   => static function (): ?string {
 					$client = PayPal_Client::from_settings();
 

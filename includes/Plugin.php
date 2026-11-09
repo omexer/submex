@@ -196,6 +196,7 @@ final class Plugin {
 
 		Gateway_Switch::link( PayPal_Checkout_Gateway::ID, 'submex_paypal_enabled' );
 
+		PayPal_Client::adopt_shared_credentials();
 		$this->services['paypal_client'] = PayPal_Client::from_settings();
 		$this->services['paypal_plans']  = new PayPal_Plans( $this->services['paypal_client'] );
 

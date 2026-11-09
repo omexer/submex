@@ -498,8 +498,8 @@ class Settings_Page {
 
 				$html = '' === (string) ( $field['id'] ?? '' ) ? $this->wide_markup( $field, $values ) : null;
 
-				// A custom row with nothing to say, such as the tax repair with nothing to repair, draws nothing.
-				if ( '' === $html ) {
+				// A custom row with nothing to say draws nothing; a setup card stays, as switching the environment can give it steps.
+				if ( '' === $html && Setup_Card::TYPE !== ( $field['type'] ?? '' ) ) {
 					continue;
 				}
 
@@ -553,6 +553,10 @@ class Settings_Page {
 			echo '<div class="submex-settings__rows">';
 
 			foreach ( $card['rows'] as $row ) {
+				if ( '' === $row['html'] ) {
+					continue;
+				}
+
 				if ( null === $row['html'] ) {
 					$this->render_row( $row['field'], $toggles, $row['joined'], $values );
 				} else {
@@ -805,9 +809,19 @@ class Settings_Page {
 	 * @return mixed
 	 */
 	public function field_value( array $field ) {
-		return array_key_exists( 'value', $field )
-			? $field['value']
-			: \WC_Admin_Settings::get_option( (string) ( $field['id'] ?? '' ), $field['default'] ?? '' );
+		if ( array_key_exists( 'value', $field ) ) {
+			return $field['value'];
+		}
+
+		$value   = \WC_Admin_Settings::get_option( (string) ( $field['id'] ?? '' ), $field['default'] ?? '' );
+		$options = $field['options'] ?? null;
+
+		// A value outside a select's options would hide both environments' keys; WooCommerce saves it as the default anyway.
+		if ( 'select' === ( $field['type'] ?? '' ) && is_array( $options ) && is_scalar( $value ) && ! array_key_exists( (string) $value, $options ) ) {
+			return $field['default'] ?? (string) array_key_first( $options );
+		}
+
+		return $value;
 	}
 
 	/**

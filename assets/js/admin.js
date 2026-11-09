@@ -141,15 +141,19 @@ document.addEventListener( 'click', function ( event ) {
 		}, 1600 );
 	};
 
+	// Plain http admin screens have no clipboard API, and it can be refused; selecting is the next best thing.
+	var select = function () {
+		field.select();
+		document.execCommand( 'copy' );
+		done();
+	};
+
 	if ( navigator.clipboard && window.isSecureContext ) {
-		navigator.clipboard.writeText( field.value ).then( done );
+		navigator.clipboard.writeText( field.value ).then( done, select );
 		return;
 	}
 
-	// Plain http admin screens have no clipboard API; selecting is the next best thing.
-	field.select();
-	document.execCommand( 'copy' );
-	done();
+	select();
 } );
 
 // The server header's notification centre opens without script; this only closes it like a menu.
@@ -177,15 +181,40 @@ document.addEventListener( 'click', function ( event ) {
 	} );
 } )();
 
-// Settings rows marked data-submex-show-if="<switch id>" show only while that switch, and its own parent, is on.
+// Settings rows marked data-submex-show-if="<switch id>" show only while that switch, and its own parent, is on;
+// data-submex-show-when='{"<select id>":["value"]}' only while each select holds one of its values.
 ( function () {
-	var rows = document.querySelectorAll( '[data-submex-show-if]' );
+	var rows = document.querySelectorAll( '[data-submex-show-if], [data-submex-show-when]' );
 
 	if ( ! rows.length ) {
 		return;
 	}
 
+	function matches( row ) {
+		var when;
+
+		try {
+			when = JSON.parse( row.getAttribute( 'data-submex-show-when' ) || '{}' );
+		} catch ( e ) {
+			return true;
+		}
+
+		return Object.keys( when ).every( function ( id ) {
+			var field = document.getElementById( id );
+
+			return ! field || when[ id ].indexOf( String( field.value ) ) !== -1;
+		} );
+	}
+
 	function shown( row, depth ) {
+		if ( ! matches( row ) ) {
+			return false;
+		}
+
+		if ( ! row.hasAttribute( 'data-submex-show-if' ) ) {
+			return true;
+		}
+
 		var parent = document.getElementById( row.getAttribute( 'data-submex-show-if' ) );
 
 		if ( ! parent || 'checkbox' !== parent.type || depth > 10 ) {
@@ -204,7 +233,7 @@ document.addEventListener( 'click', function ( event ) {
 	}
 
 	document.addEventListener( 'change', function ( event ) {
-		if ( event.target && 'checkbox' === event.target.type ) {
+		if ( event.target && ( 'checkbox' === event.target.type || 'SELECT' === event.target.tagName ) ) {
 			sync();
 		}
 	} );

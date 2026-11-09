@@ -1084,7 +1084,7 @@ body.submex-admin #wpcontent { padding-left: 0; }
 	}
 
 	.submex-setup__step > .submex-btn {
-		margin-left: 38px;
+		margin-inline-start: 38px;
 	}
 }
 
