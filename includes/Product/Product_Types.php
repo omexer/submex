@@ -179,8 +179,11 @@ class Product_Types {
 		$classes = array_map( static fn( string $type ): string => 'show_if_' . $type, self::all() );
 
 		foreach ( array( 'general', 'inventory', 'shipping', 'linked_product', 'attribute', 'advanced' ) as $tab ) {
-			if ( isset( $tabs[ $tab ]['class'] ) ) {
-				$tabs[ $tab ]['class'] = array_merge( (array) $tabs[ $tab ]['class'], $classes );
+			$current = (array) ( $tabs[ $tab ]['class'] ?? array() );
+
+			// A tab with no show_if_ class shows for every type; adding one would hide it from WooCommerce's own.
+			if ( array_filter( $current, static fn( $class ): bool => str_starts_with( (string) $class, 'show_if_' ) ) ) {
+				$tabs[ $tab ]['class'] = array_merge( $current, $classes );
 			}
 		}
 

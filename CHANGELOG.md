@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+* **Product screen.** WooCommerce's General, Shipping, Linked Products, Attributes and Advanced tabs, and with them a simple product's price fields, were hidden on WooCommerce's own product types since 0.18.3. Submex's types are now added only to tabs WooCommerce already limits to some types.
 * **Renewal reminder.** Not sent while `submex_stop_billing` stops billing (an instalment plan paid in full, a payment cap reached, auto-renew off). It stays queued and is decided when due, so switching auto-renew back on still sends it.
 * **Activity log.** Store-side status changes from the Subscriptions screen, single or bulk, write a status line; the no-JavaScript list's bulk actions now go through the REST route. Staff are recorded as `admin:<id>` over REST too, where `is_admin()` is false.
 * **Overview.** The forecast tile is called Expected monthly revenue, since Submex Pro's Reports now show monthly recurring revenue as money collected.
