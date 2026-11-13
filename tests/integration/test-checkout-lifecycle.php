@@ -181,6 +181,38 @@ $second->delete( true );
 require_once ABSPATH . 'wp-admin/includes/user.php';
 wp_delete_user( $account );
 
+echo "\n6. The customer comes back and pays with another method\n";
+$pay_with = static function ( WC_Order $order, string $id, string $title ): WC_Order {
+	$order = wc_get_order( $order->get_id() );
+	$order->set_payment_method( $id );
+	$order->set_payment_method_title( $title );
+	$order->save();
+
+	return $order;
+};
+$order = wc_create_order( array( 'customer_id' => 1 ) );
+$order->add_product( $trial, 1 );
+$order->calculate_totals( false );
+$order->save();
+$made[] = $order;
+$order  = $pay_with( $order, 'sk_first', 'First method' );
+$factory->from_checkout( $order->get_id() );
+$s      = wc_get_order( (int) wc_get_order( $order->get_id() )->get_meta( '_submex_subscription_id' ) );
+$made[] = $s;
+$check( 'the subscription starts on the method chosen first', 'sk_first' === $s->get_payment_method(), $s->get_payment_method() );
+$order = $pay_with( $order, 'sk_second', 'Second method' );
+$factory->from_checkout( $order->get_id() );
+$s = wc_get_order( $s->get_id() );
+$check( 'checking out again with another method moves it to that method', 'sk_second' === $s->get_payment_method() && 'Second method' === $s->get_payment_method_title(), array( $s->get_payment_method(), $s->get_payment_method_title() ) );
+$check( 'without making a second subscription', $s->get_id() === (int) wc_get_order( $order->get_id() )->get_meta( '_submex_subscription_id' ) );
+$order = $pay_with( $order, 'sk_third', 'Third method' );
+$order->payment_complete( 'paid-third' );
+$s = wc_get_order( $s->get_id() );
+$check( 'paid on its pay page with a third method, it renews through that one', 'sk_third' === $s->get_payment_method() && Subscription_Status::Trialling === $s->get_status_enum(), array( $s->get_payment_method(), $s->get_status() ) );
+$order = $pay_with( $order, 'sk_fourth', 'Fourth method' );
+$factory->from_checkout( $order->get_id() );
+$check( 'once started, its order no longer changes the method', 'sk_third' === wc_get_order( $s->get_id() )->get_payment_method(), wc_get_order( $s->get_id() )->get_payment_method() );
+
 foreach ( array_reverse( array_filter( $made ) ) as $thing ) {
 	$thing->delete( true );
 }

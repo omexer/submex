@@ -672,7 +672,7 @@ packing slip; the customer scans it and sees where their subscription stands.
 |---|---|---|
 | **Enable Live QR** | On | Show the code and serve its status page. |
 | **Show on the status page: what the subscription is for** | On | The product name. |
-| **…the billing schedule and recurring total** | On | What they pay and how often. |
+| **…the billing schedule and recurring amount** | On | What they pay and how often. |
 | **…a timeline of what has happened so far** | Off | Status changes over time. |
 
 Each code carries its own secret link. Nobody can reach a subscription they were not given the

@@ -24,7 +24,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '@submex/ui';
-import { daysAgo, describeSchedule, statusVariant, whenDue } from './format';
+import { daysAgo, describeTerm, statusVariant, whenDue } from './format';
 
 const PER_PAGE = 20;
 
@@ -467,7 +467,7 @@ export function List( {
 								/>
 								<SortHeader
 									column="total"
-									label={ __( 'Recurring total', 'submex' ) }
+									label={ __( 'Recurring amount', 'submex' ) }
 									sort={ query }
 									onSort={ set }
 									className="sb-text-right"
@@ -541,7 +541,7 @@ export function List( {
 												#{ row.id }
 											</span>
 											<div className="sb-text-xs sb-text-muted-foreground">
-												{ describeSchedule( row ) }
+												{ describeTerm( row ) }
 											</div>
 										</TableCell>
 										<TableCell>

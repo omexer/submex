@@ -409,7 +409,7 @@ class Menu {
 
 		echo '<table class="widefat striped submex-table submex-facts"><tbody>';
 		$this->row( __( 'Customer', 'submex' ), trim( $subscription->get_billing_first_name() . ' ' . $subscription->get_billing_last_name() ) ?: (string) $subscription->get_billing_email() );
-		$this->row( __( 'Recurring total', 'submex' ), wp_strip_all_tags( $subscription->get_formatted_order_total() ) );
+		$this->row( __( 'Recurring amount', 'submex' ), wp_strip_all_tags( $subscription->get_formatted_order_total() ) );
 		$this->row( __( 'Billing', 'submex' ), sprintf( '%d / %s', $subscription->get_billing_interval(), $subscription->get_billing_period() ) );
 		$this->row( __( 'Next payment', 'submex' ), (string) $subscription->get_next_payment() ?: '-' );
 		$this->pending_row( $subscription );

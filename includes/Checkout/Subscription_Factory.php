@@ -69,7 +69,15 @@ class Subscription_Factory {
 	public function from_checkout( $order_id ): void {
 		$order = wc_get_order( (int) $order_id );
 
-		if ( ! $order instanceof \WC_Order || $this->existing_for_order( $order ) ) {
+		if ( ! $order instanceof \WC_Order ) {
+			return;
+		}
+
+		$existing = $this->existing_for_order( $order );
+
+		// WooCommerce reuses an unpaid order when the customer checks out again, perhaps with another method.
+		if ( $existing ) {
+			$this->follow_payment_method( $existing, $order );
 			return;
 		}
 
@@ -257,6 +265,8 @@ class Subscription_Factory {
 			return;
 		}
 
+		$this->follow_payment_method( $subscription, $order );
+
 		if ( Subscription_Status::Pending === $status ) {
 			$subscription->transition_to( $target );
 		}
@@ -267,6 +277,30 @@ class Subscription_Factory {
 		$this->scheduler->schedule_next( $subscription );
 
 		do_action( 'submex_subscription_activated', $subscription );
+	}
+
+	/**
+	 * Before its first payment, a subscription renews through whatever method its order is paid with.
+	 */
+	private function follow_payment_method( Subscription $subscription, \WC_Order $order ): void {
+		$method = $order->get_payment_method();
+
+		if ( '' === $method || $method === $subscription->get_payment_method() || 'yes' === $subscription->get_meta( self::META_ACTIVATED )
+			|| $order->get_id() !== $subscription->get_parent_order_id() ) {
+			return;
+		}
+
+		$from = $subscription->get_payment_method_title() ?: $subscription->get_payment_method();
+
+		$subscription->set_payment_method( $method );
+		$subscription->set_payment_method_title( $order->get_payment_method_title() );
+		$subscription->save();
+
+		$this->activity->log(
+			$subscription->get_id(),
+			Activity_Repository::TYPE_NOTE,
+			sprintf( 'Payment method changed from %1$s to %2$s, the method chosen for order #%3$s.', $from, $order->get_payment_method_title() ?: $method, $order->get_order_number() )
+		);
 	}
 
 	/**

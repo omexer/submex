@@ -110,6 +110,24 @@ describe( 'the subscriptions list', () => {
 		expect( container.textContent ).not.toContain( 'Ended' );
 	} );
 
+	it( 'tells an installment plan by its number of parts, not how often they fall', async () => {
+		respond( {
+			rows: [
+				{
+					...ROWS[ 0 ],
+					billing_period: 'day',
+					billing_interval: 1,
+					installments: 3,
+				},
+				{ ...ROWS[ 1 ], billing_period: 'day', billing_interval: 1 },
+			],
+		} );
+		await render();
+
+		expect( container.textContent ).toContain( '3 installments' );
+		expect( container.textContent ).toContain( 'every day' );
+	} );
+
 	it( 'offers Renew now only on a subscription that can be billed', async () => {
 		respond();
 		await render();
@@ -170,7 +188,7 @@ describe( 'the subscriptions list', () => {
 		await render();
 
 		const header = [ ...container.querySelectorAll( 'button' ) ].find(
-			( node ) => node.textContent.startsWith( 'Recurring total' )
+			( node ) => node.textContent.startsWith( 'Recurring amount' )
 		);
 
 		await act( async () => {

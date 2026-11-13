@@ -95,10 +95,23 @@ add_action(
 		$unmet = submex_unmet_requirements();
 
 		if ( ! empty( $unmet ) ) {
+			$installer = ! class_exists( 'WooCommerce' ) && version_compare( PHP_VERSION, SUBMEX_MIN_PHP, '>=' );
+
+			if ( $installer ) {
+				require_once SUBMEX_PATH . 'includes/Admin/WooCommerce_Installer.php';
+				\Submex\Admin\WooCommerce_Installer::register();
+			}
+
 			add_action(
 				'admin_notices',
-				function () use ( $unmet ) {
-					echo '<div class="notice notice-error submex-notice--important"><p><strong>Submex</strong> needs ' . esc_html( implode( ', and ', $unmet ) ) . '. It has not been loaded.</p></div>';
+				function () use ( $unmet, $installer ) {
+					$button = $installer ? \Submex\Admin\WooCommerce_Installer::button() : '';
+					$error  = $installer ? \Submex\Admin\WooCommerce_Installer::last_error() : '';
+
+					echo '<div class="notice notice-error submex-notice--important"><p><strong>Submex</strong> needs ' . esc_html( implode( ', and ', $unmet ) ) . '. It has not been loaded.</p>';
+					echo '' !== $error ? '<p>' . esc_html( $error ) . '</p>' : '';
+					echo '' !== $button ? '<p>' . wp_kses_post( $button ) . '</p>' : '';
+					echo '</div>';
 				}
 			);
 			return;

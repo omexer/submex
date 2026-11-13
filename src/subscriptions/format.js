@@ -22,6 +22,24 @@ export function statusVariant( status ) {
  * @param {Object} row One subscription, as the REST API presents it.
  * @return {string} The interval in words.
  */
+/**
+ * An installment plan is told by how many parts it has, not how often they fall.
+ *
+ * @param {Object} row
+ * @return {string} The plan's length or its schedule.
+ */
+export function describeTerm( row ) {
+	const parts = Number( row.installments ) || 0;
+
+	return parts > 1
+		? sprintf(
+				/* translators: %d: number of installments. */
+				_n( '%d installment', '%d installments', parts, 'submex' ),
+				parts
+		  )
+		: describeSchedule( row );
+}
+
 export function describeSchedule( row ) {
 	const count = Number( row.billing_interval ) || 1;
 

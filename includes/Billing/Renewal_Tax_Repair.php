@@ -148,7 +148,7 @@ class Renewal_Tax_Repair {
 		$this->activity->log(
 			$subscription->get_id(),
 			Activity_Repository::TYPE_NOTE,
-			sprintf( 'Renewal tax repaired: the line is now stored without tax, so renewals stop adding tax twice. Recurring total %1$s before, %2$s now.', $before, $subscription->get_total() ),
+			sprintf( 'Renewal tax repaired: the line is now stored without tax, so renewals stop adding tax twice. Recurring amount %1$s before, %2$s now.', $before, $subscription->get_total() ),
 			array(),
 			'admin'
 		);

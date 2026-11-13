@@ -38,7 +38,7 @@ class Subscriptions_Table extends \WP_List_Table {
 			'customer'     => __( 'Customer', 'submex' ),
 			'status'       => __( 'Status', 'submex' ),
 			'next_payment' => __( 'Next payment', 'submex' ),
-			'total'        => __( 'Recurring total', 'submex' ),
+			'total'        => __( 'Recurring amount', 'submex' ),
 			'gateway'      => __( 'Payment method', 'submex' ),
 		);
 	}

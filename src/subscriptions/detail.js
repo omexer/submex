@@ -312,7 +312,7 @@ export function Detail( { id, onBack, onFail } ) {
 
 			<div className="sb-mb-4 sb-grid sb-gap-4 sb-grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
 				<Stat
-					label={ __( 'Recurring total', 'submex' ) }
+					label={ __( 'Recurring amount', 'submex' ) }
 					value={ data.total_formatted }
 					meta={ describeSchedule( data ) }
 				/>
