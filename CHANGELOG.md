@@ -2,7 +2,6 @@
 
 ## Unreleased
 
-* **A subscription renews through the method its order is paid with.** A customer who starts checkout with one payment method, comes back and pays the same order with another, kept the first method on the subscription, so renewals went to a gateway that never took the payment. While the subscription is still pending, it now follows the order's method, and its activity says when it changed. The gateway that takes the money marks the order as paid by itself, so a payment finished in an older tab counts for the method that took it. A subscription never leaves PayPal while PayPal can still bill it: an agreement the customer approved is kept, or cancelled at PayPal once another method has paid; if PayPal cannot be reached, the subscription stays put and its activity says so.
 * **One-click WooCommerce.** When WooCommerce is missing, Submex's notice offers Install and activate WooCommerce; when it is installed but off, Activate WooCommerce. Without direct file access it hands over to WordPress's own install screen, which asks for the credentials.
 * **"Recurring total" is now "Recurring amount"** on the subscriptions list, the subscription screen, My Account and the privacy export.
 * **The subscriptions list names an installment plan by its parts,** such as "3 installments", where it showed how often they fall.

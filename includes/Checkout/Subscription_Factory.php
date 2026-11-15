@@ -69,15 +69,7 @@ class Subscription_Factory {
 	public function from_checkout( $order_id ): void {
 		$order = wc_get_order( (int) $order_id );
 
-		if ( ! $order instanceof \WC_Order ) {
-			return;
-		}
-
-		$existing = $this->existing_for_order( $order );
-
-		// WooCommerce reuses an unpaid order when the customer checks out again, perhaps with another method.
-		if ( $existing ) {
-			$this->follow_payment_method( $existing, $order, false );
+		if ( ! $order instanceof \WC_Order || $this->existing_for_order( $order ) ) {
 			return;
 		}
 
@@ -265,8 +257,6 @@ class Subscription_Factory {
 			return;
 		}
 
-		$this->follow_payment_method( $subscription, $order, true );
-
 		if ( Subscription_Status::Pending === $status ) {
 			$subscription->transition_to( $target );
 		}
@@ -277,52 +267,6 @@ class Subscription_Factory {
 		$this->scheduler->schedule_next( $subscription );
 
 		do_action( 'submex_subscription_activated', $subscription );
-	}
-
-	/**
-	 * Before its first payment, a subscription renews through whatever method its order is paid with.
-	 *
-	 * @param bool $paid Whether the order has been paid, or the customer has only chosen the method again.
-	 */
-	private function follow_payment_method( Subscription $subscription, \WC_Order $order, bool $paid ): void {
-		$method = $order->get_payment_method();
-
-		if ( '' === $method || $method === $subscription->get_payment_method() || 'yes' === $subscription->get_meta( self::META_ACTIVATED )
-			|| $order->get_id() !== $subscription->get_parent_order_id() || Subscription_Status::Pending !== $subscription->get_status_enum() ) {
-			return;
-		}
-
-		$from = $subscription->get_payment_method_title() ?: $subscription->get_payment_method();
-
-		/**
-		 * Whether the subscription may leave its method: false while that provider still bills it on its own.
-		 *
-		 * @param bool         $can_leave
-		 * @param Subscription $subscription
-		 * @param \WC_Order    $order
-		 * @param bool         $paid
-		 */
-		if ( ! apply_filters( 'submex_subscription_can_leave_payment_method', true, $subscription, $order, $paid ) ) {
-			if ( $paid ) {
-				$this->activity->log(
-					$subscription->get_id(),
-					Activity_Repository::TYPE_NOTE,
-					sprintf( 'Order #%1$s was paid with %2$s, but the subscription stays on %3$s, which may still bill it. Check %3$s for a second payment.', $order->get_order_number(), $order->get_payment_method_title() ?: $method, $from )
-				);
-			}
-
-			return;
-		}
-
-		$subscription->set_payment_method( $method );
-		$subscription->set_payment_method_title( $order->get_payment_method_title() );
-		$subscription->save();
-
-		$this->activity->log(
-			$subscription->get_id(),
-			Activity_Repository::TYPE_NOTE,
-			sprintf( 'Payment method changed from %1$s to %2$s, the method chosen for order #%3$s.', $from, $order->get_payment_method_title() ?: $method, $order->get_order_number() )
-		);
 	}
 
 	/**

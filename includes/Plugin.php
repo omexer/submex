@@ -255,7 +255,6 @@ final class Plugin {
 			$this->services['order_factory']
 		);
 		$this->services['paypal_webhooks']->register();
-		add_filter( 'submex_subscription_can_leave_payment_method', array( new PayPal_Gateway( $this->services['paypal_client'] ), 'can_leave' ), 10, 4 );
 
 		$this->services['auto_renewal'] = new Auto_Renewal( $this->services['activity'] );
 		$this->services['auto_renewal']->register();

@@ -30,55 +30,6 @@ class PayPal_Gateway implements Recurring_Gateway {
 
 	public function __construct( private readonly PayPal_Client $client ) {}
 
-	/**
-	 * A subscription leaves PayPal only once PayPal can no longer bill it: never approved, or cancelled now that the order was paid another way.
-	 *
-	 * @param bool         $can_leave
-	 * @param Subscription $subscription
-	 * @param \WC_Order    $order
-	 * @param bool         $paid
-	 */
-	public function can_leave( $can_leave, $subscription, $order, $paid ): bool {
-		if ( ! $can_leave || ! $subscription instanceof Subscription || ! $order instanceof \WC_Order || PayPal_Checkout_Gateway::ID !== $subscription->get_payment_method() ) {
-			return (bool) $can_leave;
-		}
-
-		$paypal_id = (string) ( $subscription->get_meta( self::META_SUBSCRIPTION_ID ) ?: $order->get_meta( self::META_SUBSCRIPTION_ID ) );
-
-		if ( '' === $paypal_id ) {
-			return true;
-		}
-
-		$response = $this->client->get( '/v1/billing/subscriptions/' . rawurlencode( $paypal_id ) );
-		$status   = (string) ( $response['body']['status'] ?? '' );
-
-		if ( 404 !== $response['status'] && ! $response['ok'] ) {
-			return false;
-		}
-
-		// The customer agreed to PayPal billing; only a payment by another method outweighs that.
-		if ( in_array( $status, array( 'APPROVED', 'ACTIVE', 'SUSPENDED' ), true ) ) {
-			if ( ! $paid ) {
-				return false;
-			}
-
-			$cancelled = $this->client->post( '/v1/billing/subscriptions/' . rawurlencode( $paypal_id ) . '/cancel', array( 'reason' => 'Paid with another payment method.' ) );
-
-			if ( ! $cancelled['ok'] && 404 !== $cancelled['status'] ) {
-				return false;
-			}
-
-			/* translators: %s: PayPal subscription id */
-			$order->add_order_note( sprintf( __( 'PayPal subscription %s cancelled: this order was paid with another method.', 'submex' ), $paypal_id ) );
-		}
-
-		$subscription->delete_meta_data( self::META_SUBSCRIPTION_ID );
-		$order->delete_meta_data( self::META_SUBSCRIPTION_ID );
-		$order->save();
-
-		return true;
-	}
-
 	public function id(): string {
 		return self::ID;
 	}

@@ -273,7 +273,6 @@ class Stripe_Checkout_Gateway extends \WC_Payment_Gateway {
 			return;
 		}
 
-		\Submex\Checkout\Payment_Claim::claim( $order, self::ID );
 		$order->payment_complete( $reference );
 	}
 
