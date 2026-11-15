@@ -20,15 +20,21 @@ final class WooCommerce_Installer {
 	}
 
 	/**
-	 * The installed WooCommerce, found by its main file so a renamed folder still counts.
+	 * The installed WooCommerce: its usual folder first, else a renamed one that is WooCommerce by name, never just any woocommerce.php.
 	 */
 	public static function installed_file(): ?string {
 		if ( ! function_exists( 'get_plugins' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
 
-		foreach ( array_keys( get_plugins() ) as $file ) {
-			if ( 'woocommerce.php' === basename( $file ) ) {
+		$plugins = get_plugins();
+
+		if ( isset( $plugins['woocommerce/woocommerce.php'] ) ) {
+			return 'woocommerce/woocommerce.php';
+		}
+
+		foreach ( $plugins as $file => $data ) {
+			if ( 'woocommerce.php' === basename( $file ) && 'WooCommerce' === ( $data['Name'] ?? '' ) && 'woocommerce' === ( $data['TextDomain'] ?? '' ) ) {
 				return $file;
 			}
 		}

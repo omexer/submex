@@ -255,6 +255,7 @@ class Webhook_Controller {
 
 		// The customer approved and closed the tab, so no return ever marked it paid.
 		if ( $parent instanceof \WC_Order && ! $parent->is_paid() ) {
+			\Submex\Checkout\Payment_Claim::claim( $parent, PayPal_Checkout_Gateway::ID );
 			$parent->payment_complete( (string) $subscription->get_meta( PayPal_Gateway::META_SUBSCRIPTION_ID ) );
 		}
 

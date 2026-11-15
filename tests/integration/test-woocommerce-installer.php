@@ -38,6 +38,19 @@ $button = WooCommerce_Installer::button();
 $check( 'not installed, it offers to install and activate it', null === WooCommerce_Installer::installed_file() && str_contains( $button, 'Install and activate WooCommerce' ), $button );
 wp_cache_delete( 'plugins', 'plugins' );
 
+$real     = get_plugins()[ (string) $file ];
+$impostor = array(
+	'Name'       => 'Aaa woocommerce.php impostor',
+	'TextDomain' => 'aaa',
+);
+wp_cache_set( 'plugins', array( '' => array( 'aaa-copy/woocommerce.php' => $impostor ) + $hide( get_plugins() ) ), 'plugins' );
+$check( 'another plugin whose main file is woocommerce.php is never taken for WooCommerce', null === WooCommerce_Installer::installed_file() );
+wp_cache_set( 'plugins', array( '' => array( 'aaa-copy/woocommerce.php' => $impostor, 'renamed-wc/woocommerce.php' => $real ) + $hide( get_plugins() ) ), 'plugins' );
+$check( 'a renamed WooCommerce is still found by its name', 'renamed-wc/woocommerce.php' === WooCommerce_Installer::installed_file(), WooCommerce_Installer::installed_file() );
+wp_cache_set( 'plugins', array( '' => array( 'aaa-copy/woocommerce.php' => $real, 'woocommerce/woocommerce.php' => $real ) + $hide( get_plugins() ) ), 'plugins' );
+$check( 'and its usual folder wins over any copy', 'woocommerce/woocommerce.php' === WooCommerce_Installer::installed_file(), WooCommerce_Installer::installed_file() );
+wp_cache_delete( 'plugins', 'plugins' );
+
 set_transient( 'submex_woocommerce_install_error', 'Plugin file does not exist.', MINUTE_IN_SECONDS );
 $check( 'a failed activation is told once', 'Plugin file does not exist.' === WooCommerce_Installer::last_error() && '' === WooCommerce_Installer::last_error() );
 

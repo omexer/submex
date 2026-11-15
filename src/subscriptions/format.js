@@ -17,12 +17,6 @@ export function statusVariant( status ) {
 }
 
 /**
- * "every month", "every 2 weeks" - the same phrasing the customer is shown.
- *
- * @param {Object} row One subscription, as the REST API presents it.
- * @return {string} The interval in words.
- */
-/**
  * An installment plan is told by how many parts it has, not how often they fall.
  *
  * @param {Object} row
@@ -40,6 +34,12 @@ export function describeTerm( row ) {
 		: describeSchedule( row );
 }
 
+/**
+ * "every month", "every 2 weeks" - the same phrasing the customer is shown.
+ *
+ * @param {Object} row One subscription, as the REST API presents it.
+ * @return {string} The interval in words.
+ */
 export function describeSchedule( row ) {
 	const count = Number( row.billing_interval ) || 1;
 
