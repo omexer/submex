@@ -18,8 +18,22 @@ final class Gateway_Settings {
 	// WooCommerce prefixes a row_class with wc-settings-row-; the script and stylesheet use the prefixed name.
 	private const HIDDEN = 'submex-hidden';
 
+	// Marks a section's own on/off field, which the gateway's Enable already sets on this screen.
+	public const ENABLE = 'submex_gateway_enable';
+
 	public function register(): void {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
+		add_filter( 'woocommerce_get_sections_submex', array( $this, 'without_moved' ), PHP_INT_MAX );
+	}
+
+	/**
+	 * A section set up on its gateway's screen is no longer one of Submex → Settings.
+	 *
+	 * @param array<string, string>|mixed $sections
+	 * @return array<string, string>
+	 */
+	public function without_moved( $sections ): array {
+		return array_diff_key( (array) $sections, array_flip( self::sections() ) );
 	}
 
 	/**
@@ -76,7 +90,7 @@ final class Gateway_Settings {
 		return array_values(
 			array_filter(
 				$page->settings_for( $section ),
-				static fn( array $field ): bool => ! in_array( $field['type'] ?? '', array( 'title', 'sectionend' ), true ) && ( '' === $switch || ( $field['id'] ?? '' ) !== $switch )
+				static fn( array $field ): bool => ! in_array( $field['type'] ?? '', array( 'title', 'sectionend' ), true ) && empty( $field[ self::ENABLE ] ) && ( '' === $switch || ( $field['id'] ?? '' ) !== $switch )
 			)
 		);
 	}
@@ -229,11 +243,19 @@ final class Gateway_Settings {
 			}
 		}
 
-		$switch = Gateway_Switch::option( $gateway->id );
+		$enabled  = 'yes' === $gateway->get_option( 'enabled', 'no' ) ? 'yes' : 'no';
+		$switches = array( Gateway_Switch::option( $gateway->id ) );
+		$section  = self::sections()[ $gateway->id ] ?? '';
+
+		foreach ( $page instanceof Settings_Page && '' !== $section ? $page->settings_for( $section ) : array() as $field ) {
+			if ( ! empty( $field[ self::ENABLE ] ) && ! empty( $field['id'] ) ) {
+				$switches[] = (string) $field['id'];
+			}
+		}
 
 		// The saved setting, not $gateway->enabled, which WooCommerce's ?toggle_enabled leaves stale.
-		if ( '' !== $switch ) {
-			$values[ $switch ] = 'yes' === $gateway->get_option( 'enabled', 'no' ) ? 'yes' : 'no';
+		foreach ( array_filter( $switches ) as $switch ) {
+			$values[ $switch ] = $enabled;
 		}
 
 		return $values;
