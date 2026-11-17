@@ -73,7 +73,7 @@ class Personal_Data {
 						'value' => sprintf( '%d / %s', $subscription->get_billing_interval(), $subscription->get_billing_period() ),
 					),
 					array(
-						'name'  => __( 'Recurring total', 'submex' ),
+						'name'  => __( 'Recurring amount', 'submex' ),
 						'value' => wp_strip_all_tags( $subscription->get_formatted_order_total() ),
 					),
 					array(

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+* **One-click WooCommerce.** When WooCommerce is missing, Submex's notice offers Install and activate WooCommerce; when it is installed but off, Activate WooCommerce. Without direct file access it hands over to WordPress's own install screen, which asks for the credentials.
+* **"Recurring total" is now "Recurring amount"** on the subscriptions list, the subscription screen, My Account and the privacy export.
+* **The subscriptions list names an installment plan by its parts,** such as "3 installments", where it showed how often they fall.
 * **PayPal has its own sandbox and live credentials.** Client ID, secret and webhook ID are kept per environment, so going live asks for the live app and webhook instead of using the sandbox ones. Credentials saved before move to the environment chosen at the time, and keep working until then.
 * **Stripe and PayPal settings.** Each opens with a numbered setup card that ticks a step once its keys or switch are filled in, with one button on the step to do now. Stripe shows only the test key in Test mode and only the live key in Live; the hidden key keeps its saved value through every save. PayPal's webhook URL sits in a read-only box with a Copy button and its six events listed under it. Every key says where to find it and links that page of the provider's dashboard in a new tab.
 * **Settings renderer.** A field can declare `submex_show_when` (option id => value or values) to show only while a select holds one of them; the page draws it hidden from the saved value, so nothing flashes, and the app switches it as the select changes. Hidden rows stay in the form and keep their values. A `submex_setup` field draws a setup card (`Submex\Admin\Setup_Card`). After a save the app reloads the section, so rows drawn on the server reflect it.

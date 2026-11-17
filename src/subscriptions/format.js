@@ -17,6 +17,24 @@ export function statusVariant( status ) {
 }
 
 /**
+ * An installment plan is told by how many parts it has, not how often they fall.
+ *
+ * @param {Object} row
+ * @return {string} The plan's length or its schedule.
+ */
+export function describeTerm( row ) {
+	const parts = Number( row.installments ) || 0;
+
+	return parts > 1
+		? sprintf(
+				/* translators: %d: number of installments. */
+				_n( '%d installment', '%d installments', parts, 'submex' ),
+				parts
+		  )
+		: describeSchedule( row );
+}
+
+/**
  * "every month", "every 2 weeks" - the same phrasing the customer is shown.
  *
  * @param {Object} row One subscription, as the REST API presents it.

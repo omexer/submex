@@ -70,7 +70,7 @@ $submex_cancel_refused = $submex_live && ! $submex_can_cancel ? \Submex\Frontend
 	</ul>
 
 	<p class="submex-detail__total">
-		<strong><?php esc_html_e( 'Recurring total', 'submex' ); ?>:</strong>
+		<strong><?php esc_html_e( 'Recurring amount', 'submex' ); ?>:</strong>
 		<?php echo wp_kses_post( Status_Presenter::price( $subscription ) ); ?>
 	</p>
 
