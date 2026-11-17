@@ -151,9 +151,13 @@ final class Gateway_Settings {
 
 		$switch = Gateway_Switch::option( $gateway->id );
 
+		$on = 'yes' === $gateway->get_option( 'enabled', 'no' );
+
 		// Checkout off turns the gateway off too, unless subscriptions still bill through it and must keep renewing.
-		if ( '' !== $switch && 'yes' !== $gateway->get_option( 'enabled', 'no' ) && ! self::still_billing( $gateway->id ) ) {
+		if ( '' !== $switch && ! $on && ! self::still_billing( $gateway->id ) ) {
 			update_option( $switch, 'no' );
+		} elseif ( '' !== $switch && $on ) {
+			update_option( $switch, 'yes' );
 		}
 
 		$section = self::sections()[ $gateway->id ] ?? '';

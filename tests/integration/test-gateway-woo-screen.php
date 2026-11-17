@@ -52,6 +52,11 @@ $check( 'and so does PayPal\'s', str_contains( $paypal->get_settings_url(), 'sec
 $check( 'a gateway section links to that screen', admin_url( 'admin.php?page=wc-settings&tab=checkout&section=submex_stripe' ) === Gateway_Settings::url( 'stripe' ) );
 $check( 'a section with no screen of its own stays in Submex → Settings', Settings_Page::section_url( 'checkout' ) === Gateway_Settings::url( 'checkout' ) );
 $check( 'Submex → Settings no longer lists Stripe or PayPal', ! isset( $screen->sections()['stripe'] ) && ! isset( $screen->sections()['paypal'] ), array_keys( $screen->sections() ) );
+$moved = static fn( $sections ) => (array) $sections + array( 'submex_test_moved' => 'notifications' );
+add_filter( 'submex_gateway_settings_sections', $moved );
+$check( 'any section an extension moves to its gateway\'s screen leaves Submex → Settings', ! isset( $screen->sections()['notifications'] ) );
+remove_filter( 'submex_gateway_settings_sections', $moved );
+$check( '  and comes back when it no longer is', isset( $screen->sections()['notifications'] ) );
 
 $_GET = array( 'section' => 'paypal' );
 try {
