@@ -51,6 +51,13 @@ final class Gateway_Switch {
 		}
 	}
 
+	/**
+	 * The Submex switch joined to this gateway, or empty.
+	 */
+	public static function option( string $gateway_id ): string {
+		return self::$links[ $gateway_id ] ?? '';
+	}
+
 	public static function settings_name( string $gateway_id ): string {
 		return 'woocommerce_' . $gateway_id . '_settings';
 	}

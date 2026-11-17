@@ -216,7 +216,7 @@ final class Setup_Card {
 	 * @param array<string, mixed> $field
 	 */
 	private static function id_of( array $field ): string {
-		return 'submex-setup-' . sanitize_key( (string) ( $field['title'] ?? '' ) );
+		return 'submex-setup-' . sanitize_key( (string) ( ( $field['id'] ?? '' ) ?: ( $field['title'] ?? '' ) ) );
 	}
 
 	/**

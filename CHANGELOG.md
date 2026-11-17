@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* **Stripe and PayPal are set up in WooCommerce → Payments.** Manage beside each opens its full setup: the setup card, the switch, the environment and that environment's keys, saved with WooCommerce's own Save button. Unticking Enable there also switches the gateway off in Submex, unless subscriptions still pay through it; those keep renewing. They are no longer sections of Submex → Settings, and old links there open the WooCommerce screen. Saved keys stay where they are. The setup checklist's Choose a gateway and the "Finish setting it up" notices go there too.
+
 ## 1.2.3
 
 * **One-click WooCommerce.** When WooCommerce is missing, Submex's notice offers Install and activate WooCommerce; when it is installed but off, Activate WooCommerce. Without direct file access it hands over to WordPress's own install screen, which asks for the credentials.

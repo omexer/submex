@@ -1446,3 +1446,9 @@ body.submex-admin #wpbody-content > .notice + .notice {
 	color: var(--submex-ink-soft);
 	font-size: 13px;
 }
+
+/* A Submex gateway's setup on its WooCommerce → Payments screen. */
+.wc-settings-row-submex-hidden { display: none; }
+.submex-gateway-card { max-width: 760px; margin: 16px 0 8px; }
+.submex-gateway-card[hidden] { display: none; }
+.submex-gateway-card .submex-setup__title { margin: 0; padding: 0; color: var(--submex-ink); font-size: 14px; font-weight: 600; }

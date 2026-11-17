@@ -3,7 +3,7 @@
 namespace Submex\Gateways\Stripe;
 
 use Submex\Admin\Gateway_Refusals;
-use Submex\Admin\Settings_Page;
+use Submex\Admin\Gateway_Settings;
 use Submex\Product\Subscription_Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -26,7 +26,7 @@ class Stripe_Checkout_Gateway extends \WC_Payment_Gateway {
 	public function __construct( private readonly Stripe_Client $client ) {
 		$this->id                 = self::ID;
 		$this->method_title       = __( 'Stripe Subscriptions (Submex)', 'submex' );
-		$this->method_description = __( 'Take card payments for subscriptions. Renewals are charged automatically against the saved card. Configure keys under Submex → Settings → Stripe.', 'submex' );
+		$this->method_description = __( 'Take card payments for subscriptions. Renewals are charged automatically against the saved card.', 'submex' );
 		$this->has_fields         = false;
 		$this->supports           = array( 'products', 'refunds' );
 
@@ -41,10 +41,24 @@ class Stripe_Checkout_Gateway extends \WC_Payment_Gateway {
 	}
 
 	/**
-	 * Where WooCommerce → Payments → Manage goes: the credentials, not just the title.
+	 * Where WooCommerce → Payments → Manage goes: this gateway's own screen, which holds its whole setup.
 	 */
 	public function get_settings_url(): string {
-		return Settings_Page::section_url( 'stripe' );
+		return Gateway_Settings::url( 'stripe' );
+	}
+
+	public function admin_options(): void {
+		Gateway_Settings::render( $this, fn() => parent::admin_options() );
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function process_admin_options() {
+		$saved = parent::process_admin_options();
+		Gateway_Settings::save( $this );
+
+		return $saved;
 	}
 
 	public function init_form_fields(): void {

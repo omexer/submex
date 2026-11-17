@@ -27,7 +27,8 @@ foreach ( WC_Admin_Settings::get_settings_pages() as $candidate ) {
 		$page = $candidate;
 	}
 }
-$check( 'the settings are still defined for Submex → Settings to draw', null !== $page && isset( ( new Settings_Page() )->sections()['paypal'] ) );
+$check( 'the settings are still defined for Submex → Settings to draw', null !== $page && isset( ( new Settings_Page() )->sections()['checkout'] ) );
+$check( 'PayPal is no longer one of them, as its WooCommerce screen holds its setup', ! isset( ( new Settings_Page() )->sections()['paypal'] ) );
 
 $tabs = (array) apply_filters( 'woocommerce_settings_tabs_array', array() );
 $check( 'WooCommerce → Settings has no Subscriptions tab', ! isset( $tabs['submex'] ), array_keys( $tabs ) );
@@ -59,6 +60,6 @@ $check( '  keeping what else it carried', 'activated' === ( $query['submex_licen
 $check( 'another WooCommerce tab stays where it is', '' === $redirected( array( 'page' => 'wc-settings', 'tab' => 'checkout' ) ) );
 
 $gateway = WC()->payment_gateways()->payment_gateways()[ PayPal_Checkout_Gateway::ID ] ?? null;
-$check( 'Manage under WooCommerce → Payments opens Submex\'s PayPal settings', $gateway && Settings_Page::section_url( 'paypal' ) === $gateway->get_settings_url() );
+$check( 'Manage under WooCommerce → Payments opens PayPal\'s own WooCommerce screen', $gateway && str_contains( $gateway->get_settings_url(), 'page=wc-settings&tab=checkout&section=' . PayPal_Checkout_Gateway::ID ), $gateway ? $gateway->get_settings_url() : null );
 
 submex_test_done( $fail );

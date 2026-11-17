@@ -39,8 +39,6 @@ class Settings extends \WC_Settings_Page {
 			'renewal'           => __( 'Renewal & billing', 'submex' ),
 			'checkout'          => __( 'Cart & checkout', 'submex' ),
 			'notifications'     => __( 'Email notifications', 'submex' ),
-			'paypal'            => __( 'PayPal', 'submex' ),
-			'stripe'            => __( 'Stripe', 'submex' ),
 		);
 
 		// Core applies this in the method we are overriding; without it an extension can

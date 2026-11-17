@@ -51,6 +51,7 @@ use Submex\Product\Product_Meta_Fields;
 use Submex\Product\Product_Types;
 use Submex\Admin\App_Host;
 use Submex\Admin\Assets as Admin_Assets;
+use Submex\Admin\Gateway_Settings;
 use Submex\Admin\Help_Page;
 use Submex\Admin\Integration_Installer;
 use Submex\Admin\Integrations_Page;
@@ -335,6 +336,9 @@ final class Plugin {
 
 		$this->services['settings_page'] = new Settings_Page();
 		$this->services['settings_page']->register();
+
+		$this->services['gateway_settings'] = new Gateway_Settings();
+		$this->services['gateway_settings']->register();
 
 		$this->services['settings_api'] = new Settings_Controller( $this->services['settings_page'] );
 		$this->services['settings_api']->register();
