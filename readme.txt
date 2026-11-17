@@ -4,7 +4,7 @@ Tags: woocommerce, subscriptions, recurring payments, billing, memberships
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.2.0
+Stable tag: 1.2.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -302,6 +302,16 @@ Visit the support forum on WordPress.org or the plugin documentation. Replace th
 
 == Changelog ==
 
+= 1.2.3 =
+* New: when WooCommerce is missing or switched off, the notice installs or activates it in one click.
+* PayPal keeps its sandbox and live credentials apart, so going live asks for the live app and webhook. Credentials saved before stay with the environment selected when you update.
+* Stripe and PayPal settings open with a step-by-step setup card, show only the keys for the chosen environment, and say where to find each one.
+* Fixed: WooCommerce's own product types lost their General tab and price fields on the product screen.
+* Fixed: a renewal reminder could be sent for a subscription whose billing had stopped, such as an installment plan paid in full.
+* Status changes made from the Subscriptions screen, one at a time or in bulk, now appear in the subscription's activity log.
+* "Recurring total" is now "Recurring amount", and the subscriptions list names an installment plan by its number of payments.
+* The Overview's forecast is now called Expected monthly revenue.
+
 = 1.2.2 =
 * Fixed: a variable subscription sold the parent product instead of the option the customer picked.
 * Fixed: the block cart and checkout showed no subscription terms or consent. They now show the price, what is paid today and when it renews, and a sign-up fee is named in the consent.
@@ -356,6 +366,9 @@ Visit the support forum on WordPress.org or the plugin documentation. Replace th
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.2.3 =
+PayPal now keeps separate sandbox and live credentials, and WooCommerce product types get their price fields back. If you use Submex Pro, update it as well.
 
 = 1.2.2 =
 Fixes PayPal and Stripe charging the wrong amount in some stores, and trials giving access before payment. Recommended for every store. If you use Submex Pro, update it as well.

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.3
 
 * **One-click WooCommerce.** When WooCommerce is missing, Submex's notice offers Install and activate WooCommerce; when it is installed but off, Activate WooCommerce. Without direct file access it hands over to WordPress's own install screen, which asks for the credentials.
 * **"Recurring total" is now "Recurring amount"** on the subscriptions list, the subscription screen, My Account and the privacy export.
