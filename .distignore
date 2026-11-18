@@ -6,6 +6,7 @@
 /.gitignore
 /.wordpress-org
 /babel.config.js
+/CLAUDE.md
 /composer.json
 /composer.lock
 /docs

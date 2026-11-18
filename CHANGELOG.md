@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.4
+
+* **Link buttons keep their colours.** A `Button` rendered as a link (`asChild` with an `<a>`), such as New subscription product and All subscriptions on the Overview, took wp-admin's `a:hover` / `a:focus` / `a:active` colour, which outranks a single utility class, so the white label turned blue on hover. Each variant now restates its text colour for those states.
+
 ## 1.2.3
 
 * **One-click WooCommerce.** When WooCommerce is missing, Submex's notice offers Install and activate WooCommerce; when it is installed but off, Activate WooCommerce. Without direct file access it hands over to WordPress's own install screen, which asks for the credentials.
