@@ -4,7 +4,7 @@ Tags: woocommerce, subscriptions, recurring payments, billing, memberships
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.2.3
+Stable tag: 1.2.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -48,7 +48,7 @@ If you can create a regular WooCommerce product, you can create a subscription w
 
 **Sign-up fees.** Add a one-time setup or onboarding fee on top of the recurring price, set per product.
 
-**Custom renewal pricing.** Charge a different price on renewal than on the first payment, so you can reward loyal subscribers or adjust pricing as your product grows.
+**Custom renewal pricing (Pro).** Charge a different price on renewal than on the first payment, so you can reward loyal subscribers or adjust pricing as your product grows.
 
 **Multiple quantities.** Let customers subscribe to more than one unit of the same product.
 
@@ -56,7 +56,7 @@ If you can create a regular WooCommerce product, you can create a subscription w
 
 **Automatic billing with manual fallback.** Renewals are charged automatically through your connected gateway. For customers who prefer control, manual renewal sends an invoice they can pay on demand, and early renewal lets them renew before the due date.
 
-= Subscription boxes =
+= Subscription boxes (Pro) =
 
 Build-a-box and curated box products let customers choose what goes into each delivery. You set the box size, the products to choose from, and the box discount, and the price follows the contents.
 
@@ -68,7 +68,7 @@ Not every product suits an ongoing subscription. With installment plans, custome
 
 It is a practical way to sell higher-priced items and reduce cart abandonment without adding a third-party financing service.
 
-= Failed payment recovery =
+= Failed payment recovery (Pro) =
 
 Failed renewals are a leading cause of involuntary churn. Submex helps you win those payments back:
 
@@ -78,7 +78,7 @@ Failed renewals are a leading cause of involuntary churn. Submex helps you win t
 * **Secure card update links** so customers can update a payment method without logging in
 * **Last-retry urgency emails** and renewal reminders
 
-= Retention and win-back tools =
+= Retention and win-back tools (Pro)=
 
 * **Pause, skip, reschedule, and restart** options for subscribers
 * **Scheduled cancellation** so customers cancel at the end of the billing period and you still collect for the current cycle
@@ -86,7 +86,7 @@ Failed renewals are a leading cause of involuntary churn. Submex helps you win t
 * **Cancellation survey** to learn why subscribers leave
 * **Reactivate on-hold subscriptions** from the admin in a few steps
 
-= Upgrades, downgrades, and proration =
+= Upgrades, downgrades, and proration (Pro) =
 
 Let customers move between plans without contacting you. Submex calculates proration automatically for mid-cycle changes. Create upgrade groups with tier hierarchies, upgrade incentives, display conditions, and upgrade prompts, then track how they perform.
 
@@ -114,7 +114,7 @@ Manage every subscription from one dashboard. See who is active, who is about to
 
 Subscribers get a dashboard inside My Account where they can see upcoming payments and amounts, review payment history, update addresses and payment methods, renew early, pay off installments, change plans, pause or skip subscriptions, stop automatic renewals, and cancel their subscriptions. Giving customers greater control and flexibility means fewer emails and support requests for you to answer.
 
-= Analytics and subscription health monitoring =
+= Analytics and subscription health monitoring (Pro) =
 
 * Track **MRR and ARR**, **churn rate**, subscriber growth, new versus renewal revenue, and renewal performance
 * Spot **at-risk subscribers** and overdue renewals
@@ -133,22 +133,21 @@ Submex supports recurring billing through these gateways:
 
 * Stripe
 * PayPal
-* Paddle
-* Mollie
-* Razorpay
-* Xendit
-* Square
-* Authorize.Net
-* Braintree
-* Adyen
-* GoCardless
-* WooPayments
-* bKash
-* SSLCommerz
+* Paddle (Pro)
+* Mollie (Pro)
+* Razorpay (Pro)
+* Xendit (Pro)
+* Square (Pro)
+* Authorize.Net (Pro)
+* Braintree (Pro)
+* Adyen (Pro)
+* GoCardless (Pro)
+* WooPayments (Pro)
+* SSLCommerz (Pro)
 
 Card details are handled through your payment gateway using secure tokenization, so sensitive card data does not touch your server.
 
-= Integrations =
+= Integrations (Pro) =
 
 **Learning management systems:** Tutor LMS, Academy LMS, LearnPress, LearnDash. Enroll students when a subscription starts and remove access when it ends or payments fail.
 
@@ -162,7 +161,7 @@ Card details are handled through your payment gateway using secure tokenization,
 
 **Communication:** WhatsApp. Reach subscribers where they already are.
 
-= Built for developers and growing stores =
+= Built for developers and growing stores (Pro) =
 
 * REST API to retrieve subscription details by user
 * Action hooks and filters throughout
@@ -301,6 +300,9 @@ Visit the support forum on WordPress.org or the plugin documentation. Replace th
 10. Payment gateway settings.
 
 == Changelog ==
+
+= 1.2.4 =
+* Fixed: buttons that open another page, such as New subscription product on the Overview, no longer change text colour on hover, focus or click.
 
 = 1.2.3 =
 * New: when WooCommerce is missing or switched off, the notice installs or activates it in one click.
