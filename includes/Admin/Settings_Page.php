@@ -85,8 +85,24 @@ class Settings_Page {
 		// This screen's own load, not admin_init: the licence buttons post to admin-post.php
 		// carrying this form's fields, and an admin_init handler would answer for them.
 		if ( $hook ) {
+			add_action( 'load-' . $hook, array( $this, 'redirect_gateway_section' ) );
 			add_action( 'load-' . $hook, array( $this, 'maybe_save' ) );
 		}
+	}
+
+	/**
+	 * A gateway's settings are on its WooCommerce → Payments screen; old links to its section go there.
+	 */
+	public function redirect_gateway_section(): void {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only screen routing.
+		$section = isset( $_GET['section'] ) ? sanitize_key( wp_unslash( $_GET['section'] ) ) : '';
+
+		if ( '' === $section || '' === Gateway_Settings::gateway_of( $section ) ) {
+			return;
+		}
+
+		wp_safe_redirect( Gateway_Settings::url( $section ) );
+		exit;
 	}
 
 	/**

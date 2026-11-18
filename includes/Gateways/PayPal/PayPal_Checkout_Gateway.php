@@ -3,7 +3,7 @@
 namespace Submex\Gateways\PayPal;
 
 use Submex\Admin\Gateway_Refusals;
-use Submex\Admin\Settings_Page;
+use Submex\Admin\Gateway_Settings;
 use Submex\Domain\Money;
 use Submex\Product\Line_Terms;
 use Submex\Product\Subscription_Product;
@@ -30,7 +30,7 @@ class PayPal_Checkout_Gateway extends \WC_Payment_Gateway {
 	) {
 		$this->id                 = self::ID;
 		$this->method_title       = __( 'PayPal Subscriptions (Submex)', 'submex' );
-		$this->method_description = __( 'Lets customers start a subscription with PayPal. Configure the credentials under Submex → Settings → PayPal.', 'submex' );
+		$this->method_description = __( 'Lets customers start a subscription with PayPal. PayPal runs the billing schedule and tells Submex about each payment by webhook.', 'submex' );
 		$this->has_fields         = false;
 		$this->supports           = array( 'products' );
 
@@ -45,10 +45,24 @@ class PayPal_Checkout_Gateway extends \WC_Payment_Gateway {
 	}
 
 	/**
-	 * Where WooCommerce → Payments → Manage goes: the credentials, not just the title.
+	 * Where WooCommerce → Payments → Manage goes: this gateway's own screen, which holds its whole setup.
 	 */
 	public function get_settings_url(): string {
-		return Settings_Page::section_url( 'paypal' );
+		return Gateway_Settings::url( 'paypal' );
+	}
+
+	public function admin_options(): void {
+		Gateway_Settings::render( $this, fn() => parent::admin_options() );
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function process_admin_options() {
+		$saved = parent::process_admin_options();
+		Gateway_Settings::save( $this );
+
+		return $saved;
 	}
 
 	public function init_form_fields(): void {

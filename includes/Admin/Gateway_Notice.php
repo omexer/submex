@@ -97,7 +97,7 @@ class Gateway_Notice {
 
 		printf(
 			'</ul><p><a class="button" href="%s">%s</a> <a class="button-link" href="%s">%s</a></p></div>',
-			esc_url( Settings_Page::section_url( $section ) ),
+			esc_url( Gateway_Settings::url( $section ) ),
 			esc_html__( 'Finish setting it up', 'submex' ),
 			esc_url( Notice_Dismissals::problem_url( $id, $problem ) ),
 			esc_html__( 'Dismiss', 'submex' )

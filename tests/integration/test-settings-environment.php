@@ -285,11 +285,18 @@ $check( 'Stripe opens with a setup card', Setup_Card::TYPE === ( $screen->settin
 update_option( 'submex_stripe_live', 'no' );
 update_option( 'submex_stripe_test_secret', 'sk_test_keep' );
 update_option( 'submex_stripe_secret', '' );
-$post                         = $form_of( $render( 'stripe' ) );
+$stripe_gateway = WC()->payment_gateways()->payment_gateways()['submex_stripe'];
+ob_start();
+$stripe_gateway->admin_options();
+$post                         = $form_of( '<form class="submex-settings__main">' . ob_get_clean() . '</form>' );
 $post['submex_stripe_live']   = 'yes';
 $post['submex_stripe_secret'] = 'sk_live_new';
-$save( $post );
-$check( 'saving Stripe live keeps its test key', 'sk_test_keep' === get_option( 'submex_stripe_test_secret' ) && 'sk_live_new' === get_option( 'submex_stripe_secret' ) );
+$_POST                        = $post;
+$_REQUEST                     = $post;
+$stripe_gateway->process_admin_options();
+$_POST    = array();
+$_REQUEST = array();
+$check( 'saving Stripe live on its WooCommerce screen keeps its test key', 'sk_test_keep' === get_option( 'submex_stripe_test_secret' ) && 'sk_live_new' === get_option( 'submex_stripe_secret' ) );
 
 $paypal = $fields_of( 'paypal' );
 $check( 'PayPal has its own credentials for each environment, each shown only while it is chosen', array( 'submex_paypal_live' => 'no' ) === ( $paypal['submex_paypal_sandbox_client_id']['submex_show_when'] ?? null ) && array( 'submex_paypal_live' => 'yes' ) === ( $paypal['submex_paypal_live_client_id']['submex_show_when'] ?? null ) && isset( $paypal['submex_paypal_sandbox_webhook_id'], $paypal['submex_paypal_live_webhook_id'], $paypal['submex_paypal_live_secret'] ) );

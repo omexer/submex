@@ -48,6 +48,9 @@ $extra = static function ( $sections ) {
 	if ( ! isset( $sections['mollie'] ) ) {
 		$sections['mollie'] = 'Test gateway';
 	}
+	if ( ! isset( $sections['razorpay'] ) ) {
+		$sections['razorpay'] = 'Second test gateway';
+	}
 	return $sections;
 };
 $extra_fields = static function ( $settings, $section ) {
@@ -56,6 +59,9 @@ $extra_fields = static function ( $settings, $section ) {
 	}
 	if ( 'mollie' === $section && array() === (array) $settings ) {
 		return array( array( 'title' => 'Listed', 'type' => 'text', 'id' => 'submex_test_listed_option', 'default' => '' ) );
+	}
+	if ( 'razorpay' === $section && array() === (array) $settings ) {
+		return array( array( 'title' => 'Listed too', 'type' => 'text', 'id' => 'submex_test_listed_two', 'default' => '' ) );
 	}
 	if ( 'recovery' === $section ) {
 		return array_merge( (array) $settings, array( array( 'title' => 'Stacked', 'type' => 'text', 'id' => 'submex_test_stacked_option', 'default' => '' ) ) );
@@ -156,13 +162,14 @@ $check( 'a section no group names lands in Integrations', 'integrations' === Set
 $named = array_merge( ...array_values( array_column( $groups, 'sections' ) ) );
 $check( 'no group names Content Restriction, which moved to its own add-on', ! in_array( 'content', $named, true ), $named );
 
-$paypal = $xpath( $render( 'paypal' ) );
-$subnav = array_map( static fn( $a ) => trim( $a->textContent ), iterator_to_array( $paypal->query( '//ul[contains(@class,"submex-settings__subnav")]//a' ) ) );
-$check( 'Payments lists its gateways under the menu entry', in_array( 'PayPal', $subnav, true ) && in_array( $sections['mollie'], $subnav, true ), $subnav );
-$check( 'with the one on screen marked', 'PayPal' === trim( (string) $paypal->query( '//ul[contains(@class,"submex-settings__subnav")]//a[@aria-current="page"]' )->item( 0 )?->textContent ) );
+$mollie = $xpath( $render( 'mollie' ) );
+$subnav = array_map( static fn( $a ) => trim( $a->textContent ), iterator_to_array( $mollie->query( '//ul[contains(@class,"submex-settings__subnav")]//a' ) ) );
+$check( 'Payments lists its gateways under the menu entry', in_array( $sections['mollie'], $subnav, true ), $subnav );
+$check( '  but not Stripe or PayPal, which are set up in WooCommerce → Payments', ! in_array( 'PayPal', $subnav, true ) && ! in_array( 'Stripe', $subnav, true ), $subnav );
+$check( 'with the one on screen marked', $sections['mollie'] === trim( (string) $mollie->query( '//ul[contains(@class,"submex-settings__subnav")]//a[@aria-current="page"]' )->item( 0 )?->textContent ) );
 $listed = array_column( array_filter( $woo->get_settings_for_section( 'mollie' ), static fn( $f ) => ! empty( $f['id'] ) && in_array( $f['type'] ?? '', array( 'checkbox', 'select', 'text', 'password' ), true ) ), 'id' );
-$shown  = array_filter( $listed, static fn( $id ) => $paypal->query( '//form//*[@id="' . $id . '"]' )->length > 0 );
-$check( 'and only its own fields in the form', $listed && array() === $shown && 1 === $paypal->query( '//form//*[@id="submex_paypal_sandbox_client_id"]' )->length, $shown );
+$shown  = array_filter( $listed, static fn( $id ) => $mollie->query( '//form//*[@id="' . $id . '"]' )->length > 0 );
+$check( 'and only its own fields in the form', $listed && count( $listed ) === count( $shown ) && 0 === $mollie->query( '//form//*[@id="submex_paypal_sandbox_client_id"]' )->length, $shown );
 
 $renewal = $render( 'recovery' );
 $check( 'a stacked group draws its sections together', str_contains( $renewal, 'id="submex_catch_up_policy"' ) && str_contains( $renewal, 'id="submex_test_stacked_option"' ) );
