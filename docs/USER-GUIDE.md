@@ -398,8 +398,10 @@ payment agreement per order.
 
 ## Taking payment
 
-Submex adds its own payment methods under **Submex → Settings**. All are off until you enter
-credentials.
+Stripe and PayPal are set up where every WooCommerce payment method is: **WooCommerce →
+Settings → Payments**, then **Manage** beside the method. The screen opens with a setup card
+that ticks each step once done, then the switch, the environment and that environment's keys.
+All are off until you enter credentials.
 
 | Gateway | How renewals are paid | Tier |
 |---|---|---|

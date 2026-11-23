@@ -84,7 +84,7 @@ class Setup_Guide {
 					: __( 'Subscriptions renew by themselves once a gateway such as Stripe or PayPal is connected. Without one, renewals become invoices the customer pays by hand, which still works.', 'submex' ),
 				'action' => array(
 					'label' => $connected ? __( 'Change', 'submex' ) : __( 'Choose a gateway', 'submex' ),
-					'url'   => Settings_Page::section_url(),
+					'url'   => admin_url( 'admin.php?page=wc-settings&tab=checkout' ),
 				),
 			),
 			array(

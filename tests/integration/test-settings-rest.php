@@ -32,6 +32,9 @@ $extra = static function ( $sections ) {
 	if ( ! isset( $sections['mollie'] ) ) {
 		$sections['mollie'] = 'Test gateway';
 	}
+	if ( ! isset( $sections['razorpay'] ) ) {
+		$sections['razorpay'] = 'Second test gateway';
+	}
 	return $sections;
 };
 $extra_fields = static function ( $settings, $section ) {
@@ -45,6 +48,9 @@ $extra_fields = static function ( $settings, $section ) {
 	}
 	if ( 'mollie' === $section && array() === (array) $settings ) {
 		return array( array( 'title' => 'Listed', 'type' => 'text', 'id' => 'submex_test_listed_option', 'default' => '' ) );
+	}
+	if ( 'razorpay' === $section && array() === (array) $settings ) {
+		return array( array( 'title' => 'Listed too', 'type' => 'text', 'id' => 'submex_test_listed_two', 'default' => '' ) );
 	}
 	if ( 'recovery' === $section ) {
 		return array_merge( (array) $settings, array( array( 'title' => 'Stacked', 'type' => 'text', 'id' => 'submex_test_stacked_option', 'default' => '' ) ) );
@@ -119,7 +125,8 @@ $check( 'every section is in the menu once, in the group the PHP page puts it in
 $check( 'groups keep their labels and menu order', array_values( array_intersect( array_keys( Settings_Page::groups() ), array_column( $groups, 'id' ) ) ) === array_column( $groups, 'id' ) && 'Customer Controls' === ( array_column( $groups, 'label', 'id' )['customers'] ?? '' ) );
 $check( 'a section no group names lands in Integrations', array( 'integrations' ) === ( $listed['submex_test_extra'] ?? null ) );
 $payments = array_column( $groups, null, 'id' )['payments'] ?? array();
-$check( 'Payments lists its gateways', ! empty( $payments['list'] ) && in_array( 'paypal', array_column( $payments['sections'], 'id' ), true ) );
+$check( 'Payments lists its gateways', ! empty( $payments['list'] ) && in_array( 'mollie', array_column( $payments['sections'], 'id' ), true ) );
+$check( '  but not Stripe or PayPal, which are set up in WooCommerce → Payments', ! array_intersect( array( 'stripe', 'paypal' ), array_column( $payments['sections'] ?? array(), 'id' ) ) );
 $notices = $get( '', array( 'submex_license_notice' => 'activated' ) )->get_data()['notices'] ?? array();
 $check( 'a licence change that came back to the page is reported', array( array( 'type' => 'good', 'message' => 'Licence activated.' ) ) === $notices, $notices );
 

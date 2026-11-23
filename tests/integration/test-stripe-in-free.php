@@ -37,7 +37,7 @@ echo "\n2. Checkout\n";
 $listed = WC()->payment_gateways()->payment_gateways()[ Stripe_Checkout_Gateway::ID ] ?? null;
 $check( 'WooCommerce lists free\'s Stripe, under the ID stores already have', $listed instanceof Stripe_Checkout_Gateway && 'submex_stripe' === $listed->id, $listed ? get_class( $listed ) : null );
 $check( 'named for Submex, not Pro', $listed && ! str_contains( $listed->get_method_title(), 'Pro' ), $listed ? $listed->get_method_title() : null );
-$check( 'Manage under WooCommerce → Payments opens Submex → Settings → Stripe', $listed && \Submex\Admin\Settings_Page::section_url( 'stripe' ) === $listed->get_settings_url() );
+$check( 'Manage under WooCommerce → Payments opens Stripe\'s own WooCommerce screen', $listed && str_contains( $listed->get_settings_url(), 'page=wc-settings&tab=checkout&section=submex_stripe' ) );
 $check( 'Stripe\'s return link is answered', $listed && false !== has_action( 'woocommerce_api_submex_stripe_return', array( $listed, 'handle_return' ) ) );
 
 update_option( 'woocommerce_submex_stripe_settings', array( 'enabled' => 'yes' ) );
@@ -68,7 +68,7 @@ foreach ( WC_Admin_Settings::get_settings_pages() as $candidate ) {
 if ( ! $woo ) {
 	submex_test_abort( 'the settings page is not registered' );
 }
-$check( 'Payments has a Stripe section', 'Stripe' === ( $woo->get_sections()['stripe'] ?? '' ) );
+$check( 'Stripe is not a section of Submex → Settings, as its WooCommerce screen holds its setup', ! isset( $woo->get_sections()['stripe'] ) );
 $fields = array_column( array_filter( $woo->get_settings_for_section( 'stripe' ), static fn( $f ) => ! empty( $f['id'] ) && ! in_array( $f['type'], array( 'title', 'sectionend' ), true ) ), 'type', 'id' );
 $check(
 	'with the same four options',
@@ -81,14 +81,10 @@ $check(
 	$fields
 );
 
-$page   = rest_do_request( new WP_REST_Request( 'GET', '/submex/v1/settings/stripe' ) );
-$values = array();
-foreach ( $page->get_data()['cards'] ?? array() as $card ) {
-	foreach ( $card['rows'] as $row ) {
-		$values[ $row['id'] ?? '' ] = $row['value'] ?? null;
-	}
-}
-$check( 'Submex → Settings shows the saved values under Payments', 200 === $page->get_status() && 'payments' === ( $page->get_data()['group'] ?? '' ) && 'sk_test_in_free' === ( $values['submex_stripe_test_secret'] ?? '' ), array( $page->get_status(), $values ) );
+ob_start();
+$listed->admin_options();
+$screen_html = (string) ob_get_clean();
+$check( 'Stripe\'s WooCommerce screen shows the saved values', 1 === preg_match( '/<input[^>]*id="submex_stripe_test_secret"[^>]*value="sk_test_in_free"|<input[^>]*value="sk_test_in_free"[^>]*id="submex_stripe_test_secret"/', $screen_html ) );
 
 echo "\n5. Block checkout\n";
 $blocks = \Automattic\WooCommerce\Blocks\Package::container()->get( \Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry::class )->get_registered( Stripe_Checkout_Gateway::ID );

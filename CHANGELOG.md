@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+* **Stripe and PayPal are set up in WooCommerce → Payments.** Manage beside each opens its full setup: the setup card, the switch, the environment and that environment's keys, saved with WooCommerce's own Save button. Unticking Enable there also switches the gateway off in Submex, unless subscriptions still pay through it; those keep renewing. They are no longer sections of Submex → Settings, and old links there open the WooCommerce screen. Saved keys stay where they are. The setup checklist's Choose a gateway and the "Finish setting it up" notices go there too.
+
 ## 1.2.4
 
 * **Link buttons keep their colours.** A `Button` rendered as a link (`asChild` with an `<a>`), such as New subscription product and All subscriptions on the Overview, took wp-admin's `a:hover` / `a:focus` / `a:active` colour, which outranks a single utility class, so the white label turned blue on hover. Each variant now restates its text colour for those states.
