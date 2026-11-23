@@ -1044,12 +1044,24 @@
 	color: hsl(var(--sb-accent-foreground));
 }
 
+.hover\:sb-text-destructive:hover {
+	color: hsl(var(--sb-destructive));
+}
+
 .hover\:sb-text-foreground:hover {
 	color: hsl(var(--sb-foreground));
 }
 
 .hover\:sb-text-primary:hover {
 	color: hsl(var(--sb-primary));
+}
+
+.hover\:sb-text-primary-foreground:hover {
+	color: hsl(var(--sb-primary-foreground));
+}
+
+.hover\:sb-text-secondary-foreground:hover {
+	color: hsl(var(--sb-secondary-foreground));
 }
 
 .hover\:sb-underline:hover {
@@ -1060,6 +1072,26 @@
 	--tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 	--tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
 	box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.focus\:sb-text-destructive:focus {
+	color: hsl(var(--sb-destructive));
+}
+
+.focus\:sb-text-foreground:focus {
+	color: hsl(var(--sb-foreground));
+}
+
+.focus\:sb-text-primary:focus {
+	color: hsl(var(--sb-primary));
+}
+
+.focus\:sb-text-primary-foreground:focus {
+	color: hsl(var(--sb-primary-foreground));
+}
+
+.focus\:sb-text-secondary-foreground:focus {
+	color: hsl(var(--sb-secondary-foreground));
 }
 
 .focus-visible\:sb-outline-none:focus-visible {
@@ -1079,6 +1111,26 @@
 
 .focus-visible\:sb-ring-offset-2:focus-visible {
 	--tw-ring-offset-width: 2px;
+}
+
+.active\:sb-text-accent-foreground:active {
+	color: hsl(var(--sb-accent-foreground));
+}
+
+.active\:sb-text-destructive:active {
+	color: hsl(var(--sb-destructive));
+}
+
+.active\:sb-text-primary:active {
+	color: hsl(var(--sb-primary));
+}
+
+.active\:sb-text-primary-foreground:active {
+	color: hsl(var(--sb-primary-foreground));
+}
+
+.active\:sb-text-secondary-foreground:active {
+	color: hsl(var(--sb-secondary-foreground));
 }
 
 .disabled\:sb-pointer-events-none:disabled {
