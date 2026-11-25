@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "additionalDirectories": ["../submex-pro"],
+    "allow": [
+      "Bash(composer check)",
+      "Bash(composer lint)",
+      "Bash(composer lint:fix)",
+      "Bash(composer analyse)",
+      "Bash(npm run build)",
+      "Bash(npm run lint:js)",
+      "Bash(npm run test:unit:*)",
+      "Bash(npx wp-env start)",
+      "Bash(npx wp-env stop)",
+      "Bash(npx wp-env logs:*)",
+      "Bash(npx wp-env run cli wp:*)",
+      "Bash(tools/test.sh:*)",
+      "Bash(tools/check-version.sh)",
+      "Bash(php -l:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "WebSearch",
+      "WebFetch"
+    ],
+    "ask": [
+      "Bash(tools/release.sh:*)",
+      "Bash(tools/bump-version.sh:*)",
+      "Bash(git push:*)",
+      "Bash(git tag:*)",
+      "Bash(npx wp-env destroy:*)",
+      "Bash(npx wp-env clean:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./**/.env)",
+      "Read(./**/*.pem)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/php-guard.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

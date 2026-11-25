@@ -12,3 +12,6 @@ vendor/
 
 # Release zips built by tools/build.sh
 /dist/
+
+# Personal Claude Code overrides (shared config in .claude/ is committed)
+.claude/settings.local.json

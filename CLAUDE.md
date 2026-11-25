@@ -68,3 +68,7 @@ Each `tests/integration/test-*.php` requires `bootstrap.php`, prints PASS/FAIL p
 ## Docs
 
 `docs/TESTING.md` (all test types, sandbox Stripe procedure, what is still untested), `docs/RELEASING.md` (release flow and what CI checks), `docs/FEATURES.md` (feature inventory with verification level per feature — update it when you change what is proven), `docs/INTEGRATIONS.md`, `docs/USER-GUIDE.md`. Docblocks cite a "Developer Guide" section by number; that guide is not in this repo.
+
+## Workflows
+
+Repeatable procedures live in `.claude/skills/`: `verify` (every CI check; run before calling anything done), `move-feature` (free ↔ Pro), `release` (user-invoked only). `.claude/agents/gateway-reviewer.md` independently reviews gateway and billing changes. New Pro gateways and Pro features are done from the `submex-pro` repo, whose skills cover them. This session can also edit Pro at `../submex-pro`. Free code must stay fully usable on its own (wordpress.org guidelines: no locked or trial features).
