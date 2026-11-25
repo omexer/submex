@@ -4,7 +4,7 @@ Tags: woocommerce, subscriptions, recurring payments, billing, memberships
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.2.4
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -300,6 +300,10 @@ Visit the support forum on WordPress.org or the plugin documentation. Replace th
 10. Payment gateway settings.
 
 == Changelog ==
+
+= 1.3.0 =
+* Integrations: a plugin that is installed but switched off now shows Activate now instead of Install, and activates in one click. Activating only needs permission to activate plugins.
+* Integrations are grouped in alphabetical order, and an extension can place its own group first.
 
 = 1.2.4 =
 * Fixed: buttons that open another page, such as New subscription product on the Overview, no longer change text colour on hover, focus or click.

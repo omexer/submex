@@ -78,11 +78,12 @@ class Assets {
 			'submex_admin_script_data',
 			array(
 				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
-				'installAction' => current_user_can( 'install_plugins' ) ? Integration_Installer::ACTION : '',
+				'installAction' => current_user_can( 'activate_plugins' ) ? Integration_Installer::ACTION : '',
 				'installNonce'  => wp_create_nonce( Integration_Installer::ACTION ),
 				'i18n'          => array(
 					'install'    => __( 'Install', 'submex' ),
 					'installing' => __( 'Installing…', 'submex' ),
+					'activating' => __( 'Activating…', 'submex' ),
 					'done'       => __( 'Done.', 'submex' ),
 					'failed'     => __( 'That did not work.', 'submex' ),
 				),

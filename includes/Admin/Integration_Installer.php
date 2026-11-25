@@ -20,6 +20,12 @@ class Integration_Installer {
 
 	public const ACTION = 'submex_install_integration';
 
+	public const STATE_MISSING = 'missing';
+
+	public const STATE_INACTIVE = 'inactive';
+
+	public const STATE_ACTIVE = 'active';
+
 	public function register(): void {
 		add_action( 'wp_ajax_' . self::ACTION, array( $this, 'handle' ) );
 	}
@@ -27,25 +33,25 @@ class Integration_Installer {
 	public function handle(): void {
 		check_ajax_referer( self::ACTION );
 
-		// install_plugins and activate_plugins are separate capabilities on purpose, and a
-		// site can grant one without the other.
-		if ( ! current_user_can( 'install_plugins' ) || ! current_user_can( 'activate_plugins' ) ) {
-			wp_send_json_error( array( 'message' => __( 'You do not have permission to install plugins.', 'submex' ) ), 403 );
-		}
-
 		$slug = isset( $_POST['slug'] ) ? sanitize_key( wp_unslash( $_POST['slug'] ) ) : '';
 
 		if ( '' === $slug || ! in_array( $slug, $this->allowed(), true ) ) {
 			wp_send_json_error( array( 'message' => __( 'That is not an integration Submex offers.', 'submex' ) ), 400 );
 		}
 
-		// admin-ajax.php already loads plugin.php, file.php and misc.php; these two it does not.
-		require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
-		require_once ABSPATH . 'wp-admin/includes/plugin-install.php';
+		$file = self::installed_file( $slug );
 
-		$file = $this->installed_file( $slug );
+		// install_plugins and activate_plugins are separate capabilities on purpose, and a
+		// site can grant one without the other: activating what is already there needs only the second.
+		if ( ! current_user_can( 'activate_plugins' ) || ( ! $file && ! current_user_can( 'install_plugins' ) ) ) {
+			wp_send_json_error( array( 'message' => __( 'You do not have permission to install plugins.', 'submex' ) ), 403 );
+		}
 
 		if ( ! $file ) {
+			// admin-ajax.php already loads plugin.php, file.php and misc.php; these two it does not.
+			require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+			require_once ABSPATH . 'wp-admin/includes/plugin-install.php';
+
 			$file = $this->install( $slug );
 		}
 
@@ -115,12 +121,37 @@ class Integration_Installer {
 			return new \WP_Error( 'submex_install_failed', __( 'WordPress could not install that plugin.', 'submex' ) );
 		}
 
-		$file = $this->installed_file( $slug );
+		$file = self::installed_file( $slug );
 
 		return $file ?: new \WP_Error( 'submex_install_missing', __( 'The plugin installed but could not be found afterwards.', 'submex' ) );
 	}
 
-	private function installed_file( string $slug ): string {
+	/**
+	 * What the screen can offer for a plugin: STATE_MISSING to install, STATE_INACTIVE to
+	 * activate, STATE_ACTIVE for nothing. A tile with no slug is not ours to install.
+	 */
+	public static function state( string $slug ): string {
+		$file = self::installed_file( $slug );
+
+		if ( '' === $file ) {
+			return self::STATE_MISSING;
+		}
+
+		return is_plugin_active( $file ) ? self::STATE_ACTIVE : self::STATE_INACTIVE;
+	}
+
+	/**
+	 * The installed plugin's main file, found by its folder so a renamed main file still counts.
+	 */
+	public static function installed_file( string $slug ): string {
+		if ( '' === $slug ) {
+			return '';
+		}
+
+		if ( ! function_exists( 'get_plugins' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
 		foreach ( array_keys( get_plugins() ) as $file ) {
 			if ( dirname( (string) $file ) === $slug ) {
 				return (string) $file;

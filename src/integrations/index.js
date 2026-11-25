@@ -71,6 +71,21 @@ export function install( installer, slug ) {
 		.then( ( response ) => response.json() );
 }
 
+/**
+ * @param {boolean} activate Whether the plugin is installed and only needs activating.
+ * @param {boolean} busy     Whether the request is running.
+ * @return {string} The install button's label.
+ */
+function actionLabel( activate, busy ) {
+	if ( activate ) {
+		return busy
+			? __( 'Activating…', 'submex' )
+			: __( 'Activate now', 'submex' );
+	}
+
+	return busy ? __( 'Installing…', 'submex' ) : __( 'Install', 'submex' );
+}
+
 function Tile( { item, installer, onInstalled } ) {
 	const [ busy, setBusy ] = useState( false );
 	const [ error, setError ] = useState( '' );
@@ -144,9 +159,7 @@ function Tile( { item, installer, onInstalled } ) {
 					) : null }
 					{ item.install && installer ? (
 						<Button size="sm" disabled={ busy } onClick={ run }>
-							{ busy
-								? __( 'Installing…', 'submex' )
-								: __( 'Install', 'submex' ) }
+							{ actionLabel( item.activate, busy ) }
 						</Button>
 					) : null }
 					{ ! item.install && item.get_url ? (

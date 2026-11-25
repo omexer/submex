@@ -135,6 +135,37 @@ describe( 'the integrations screen', () => {
 		expect( button( 'Install' ) ).toBeUndefined();
 	} );
 
+	it( 'offers to activate an installed plugin, through the same installer', async () => {
+		apiFetch
+			.mockResolvedValueOnce( {
+				integrations: [
+					item( { install: 'fluent-crm', activate: true } ),
+				],
+				installer: INSTALLER,
+			} )
+			.mockResolvedValueOnce( {
+				integrations: [ item( { active: true } ) ],
+				installer: INSTALLER,
+			} );
+		window.fetch.mockResolvedValue( {
+			json: () => Promise.resolve( { success: true } ),
+		} );
+
+		await render();
+
+		expect( button( 'Install' ) ).toBeUndefined();
+
+		await act( async () => {
+			button( 'Activate now' ).click();
+		} );
+
+		expect( window.fetch.mock.calls[ 0 ][ 1 ].body.get( 'slug' ) ).toBe(
+			'fluent-crm'
+		);
+		expect( container.textContent ).toContain( 'Connected' );
+		expect( button( 'Activate now' ) ).toBeUndefined();
+	} );
+
 	it( 'says why an install was refused and leaves the button to try again', async () => {
 		apiFetch.mockResolvedValue( {
 			integrations: [ item( { install: 'sfwd-lms' } ) ],

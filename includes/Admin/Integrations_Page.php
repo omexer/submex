@@ -17,6 +17,10 @@ class Integrations_Page {
 
 	public const SLUG = Menu::SLUG . '-integrations';
 
+	public const STATE_INSTALL = 'install';
+
+	public const STATE_ACTIVATE = 'activate';
+
 	public function register(): void {
 		add_action( 'admin_menu', array( $this, 'add_page' ), 30 );
 	}
@@ -35,7 +39,10 @@ class Integrations_Page {
 	/**
 	 * Each entry is title, the plugin it needs, whether that plugin is here, and where it is set up.
 	 *
-	 * @return array<int, array{title: string, requires: string, active: bool, url: string, configure_url?: string, configure_label?: string, hint?: string}>
+	 * A tile's optional `category_order` puts its group before others (lower first, default
+	 * 10); groups of equal order are alphabetical, and tiles within a group by title.
+	 *
+	 * @return array<int, array{title: string, requires: string, active: bool, url: string, configure_url?: string, configure_label?: string, hint?: string, category_order?: int}>
 	 */
 	public function integrations(): array {
 		/**
@@ -45,9 +52,12 @@ class Integrations_Page {
 		 */
 		$integrations = (array) apply_filters( 'submex_admin_integrations', array() );
 
+		$order = static fn( array $tile ): int => (int) ( $tile['category_order'] ?? 10 );
+
 		usort(
 			$integrations,
-			static fn( array $a, array $b ): int => strcasecmp( (string) ( $a['title'] ?? '' ), (string) ( $b['title'] ?? '' ) )
+			static fn( array $a, array $b ): int => array( $order( $a ), strtolower( (string) ( $a['category'] ?? '' ) ), strtolower( (string) ( $a['title'] ?? '' ) ) )
+				<=> array( $order( $b ), strtolower( (string) ( $b['category'] ?? '' ) ), strtolower( (string) ( $b['title'] ?? '' ) ) )
 		);
 
 		return $integrations;
@@ -175,20 +185,23 @@ class Integrations_Page {
 	}
 
 	/**
-	 * Install where we can, link out where the plugin is sold rather than hosted.
+	 * Install or activate where we can, link out where the plugin is sold rather than hosted.
+	 *
+	 * @param array<string, mixed> $integration
 	 */
 	private function render_action( array $integration, bool $active ): void {
 		if ( $active ) {
 			return;
 		}
 
-		$slug = (string) ( $integration['slug'] ?? '' );
+		$offer = self::offer( $integration );
 
-		if ( '' !== $slug && current_user_can( 'install_plugins' ) && current_user_can( 'activate_plugins' ) ) {
+		if ( '' !== $offer ) {
 			printf(
-				'<button type="button" class="submex-btn submex-btn--primary submex-btn--sm submex-install" data-slug="%s">%s</button>',
-				esc_attr( $slug ),
-				esc_html__( 'Install', 'submex' )
+				'<button type="button" class="submex-btn submex-btn--primary submex-btn--sm submex-install" data-slug="%s"%s>%s</button>',
+				esc_attr( (string) $integration['slug'] ),
+				self::STATE_ACTIVATE === $offer ? ' data-activate="1"' : '',
+				esc_html( self::STATE_ACTIVATE === $offer ? __( 'Activate now', 'submex' ) : __( 'Install', 'submex' ) )
 			);
 
 			return;
@@ -196,7 +209,7 @@ class Integrations_Page {
 
 		$url = (string) ( $integration['url'] ?? '' );
 
-		if ( '' === $url ) {
+		if ( '' === $url || Integration_Installer::STATE_MISSING !== Integration_Installer::state( (string) ( $integration['slug'] ?? '' ) ) ) {
 			return;
 		}
 
@@ -205,6 +218,30 @@ class Integrations_Page {
 			esc_url( $url ),
 			esc_html__( 'Get it', 'submex' )
 		);
+	}
+
+	/**
+	 * What the tile's button does for this user: install, activate, or nothing.
+	 *
+	 * A plugin that is active while its integration is not (one not yet set up) gets
+	 * no button, since installing or activating it again would change nothing.
+	 *
+	 * @param array<string, mixed> $integration
+	 */
+	public static function offer( array $integration ): string {
+		$slug = (string) ( $integration['slug'] ?? '' );
+
+		if ( ! empty( $integration['active'] ) || '' === $slug || ! current_user_can( 'activate_plugins' ) ) {
+			return '';
+		}
+
+		$state = Integration_Installer::state( $slug );
+
+		if ( Integration_Installer::STATE_INACTIVE === $state ) {
+			return self::STATE_ACTIVATE;
+		}
+
+		return Integration_Installer::STATE_MISSING === $state && current_user_can( 'install_plugins' ) ? self::STATE_INSTALL : '';
 	}
 
 	/**

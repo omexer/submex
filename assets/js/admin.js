@@ -14,13 +14,14 @@
 
 		var cell = button.parentNode;
 		var body = new FormData();
+		var label = button.textContent;
 
 		body.append( 'action', config.installAction );
 		body.append( '_wpnonce', config.installNonce );
 		body.append( 'slug', button.dataset.slug );
 
 		button.disabled = true;
-		button.textContent = config.i18n.installing;
+		button.textContent = button.dataset.activate ? config.i18n.activating : config.i18n.installing;
 
 		window.fetch( config.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: body } )
 			.then( function ( response ) { return response.json(); } )
@@ -32,12 +33,12 @@
 				}
 
 				button.disabled = false;
-				button.textContent = config.i18n.install;
+				button.textContent = label;
 				cell.appendChild( notice( ( result && result.data && result.data.message ) || config.i18n.failed ) );
 			} )
 			.catch( function () {
 				button.disabled = false;
-				button.textContent = config.i18n.install;
+				button.textContent = label;
 				cell.appendChild( notice( config.i18n.failed ) );
 			} );
 	} );

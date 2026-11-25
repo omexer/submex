@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+
+* **Activate now on the Integrations screen.** A card whose plugin is installed but inactive offers Activate now instead of Install; the same `submex_install_integration` action activates it without downloading anything, and needs only `activate_plugins`. A card whose plugin is active while the integration is not yet connected offers no button, and an installed plugin no longer shows Get it. Both the app (`activate` in `GET /submex/v1/integrations`) and the server-rendered screen do this; `Integration_Installer::state()` says which applies.
+* **Group order.** Integrations are sorted by group, then title. A card's optional `category_order` (default 10, lower first) puts its group ahead of the alphabetical ones, for Submex Pro's Payment Gateways.
+
 ## 1.2.4
 
 * **Link buttons keep their colours.** A `Button` rendered as a link (`asChild` with an `<a>`), such as New subscription product and All subscriptions on the Overview, took wp-admin's `a:hover` / `a:focus` / `a:active` colour, which outranks a single utility class, so the white label turned blue on hover. Each variant now restates its text colour for those states.

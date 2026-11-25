@@ -38,7 +38,7 @@ class Integrations_Controller {
 	}
 
 	public function integrations(): \WP_REST_Response {
-		$can_install = current_user_can( 'install_plugins' ) && current_user_can( 'activate_plugins' );
+		$can_install = current_user_can( 'activate_plugins' );
 		$items       = array();
 
 		foreach ( $this->page->integrations() as $integration ) {
@@ -46,6 +46,8 @@ class Integrations_Controller {
 			$slug     = sanitize_key( (string) ( $integration['slug'] ?? '' ) );
 			$title    = (string) ( $integration['title'] ?? '' );
 			$category = (string) ( $integration['category'] ?? '' );
+			$offer    = Integrations_Page::offer( array( 'slug' => $slug ) + $integration );
+			$missing  = Integration_Installer::STATE_MISSING === Integration_Installer::state( $slug );
 
 			$items[] = array(
 				'title'           => $title,
@@ -57,8 +59,10 @@ class Integrations_Controller {
 				'active'          => $active,
 				'configure_url'   => esc_url_raw( (string) ( $integration['configure_url'] ?? '' ) ),
 				'configure_label' => (string) ( $integration['configure_label'] ?? '' ),
-				'install'         => ! $active && '' !== $slug && $can_install ? $slug : '',
-				'get_url'         => $active ? '' : esc_url_raw( (string) ( $integration['url'] ?? '' ) ),
+				// The slug to send the installer, which installs a missing plugin or activates an installed one.
+				'install'         => '' !== $offer ? $slug : '',
+				'activate'        => Integrations_Page::STATE_ACTIVATE === $offer,
+				'get_url'         => $active || '' !== $offer || ! $missing ? '' : esc_url_raw( (string) ( $integration['url'] ?? '' ) ),
 			);
 		}
 

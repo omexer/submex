@@ -5,7 +5,7 @@ for — a course, a mailing list, a licence key — and takes it back when they 
 
 FluentCRM is part of Submex itself; the other twelve are **Submex Pro**. Find them under **Submex → Integrations**: a card for each,
 grouped by what it connects to, saying what it does, which plugin it needs, whether that
-plugin is active right now, and — for plugins on WordPress.org — an Install button.
+plugin is active right now, and — for plugins on WordPress.org — an Install button, or Activate now when the plugin is installed but switched off.
 
 For *which* integration a given business needs — and the two builds that need four at once —
 see [BUSINESS-EXAMPLES.md](BUSINESS-EXAMPLES.md).
