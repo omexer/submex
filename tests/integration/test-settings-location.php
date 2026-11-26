@@ -27,7 +27,8 @@ foreach ( WC_Admin_Settings::get_settings_pages() as $candidate ) {
 		$page = $candidate;
 	}
 }
-$check( 'the settings are still defined for Submex → Settings to draw', null !== $page && isset( ( new Settings_Page() )->sections()['paypal'] ) );
+$check( 'the settings are still defined for Submex → Settings to draw', null !== $page && isset( ( new Settings_Page() )->sections()['customer_controls'] ) );
+$check( 'PayPal\'s are drawn on its WooCommerce payment page', null !== $page && isset( $page->get_sections()['paypal'] ) && ! isset( ( new Settings_Page() )->sections()['paypal'] ) );
 
 $tabs = (array) apply_filters( 'woocommerce_settings_tabs_array', array() );
 $check( 'WooCommerce → Settings has no Subscriptions tab', ! isset( $tabs['submex'] ), array_keys( $tabs ) );

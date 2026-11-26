@@ -106,7 +106,8 @@ foreach ( $groups as $group ) {
 		$listed[ $section['id'] ][] = $group['id'];
 	}
 }
-$sections = $woo->get_sections();
+// Sections drawn on a WooCommerce gateway page instead (Gateway_Panel) are not on this screen.
+$sections = array_diff_key( $woo->get_sections(), \Submex\Admin\Gateway_Panel::panels() );
 $missing  = array();
 foreach ( $sections as $section => $label ) {
 	$section = (string) $section;
@@ -118,8 +119,8 @@ foreach ( $sections as $section => $label ) {
 $check( 'every section is in the menu once, in the group the PHP page puts it in', array() === $missing && count( $listed ) === count( $sections ), $missing );
 $check( 'groups keep their labels and menu order', array_values( array_intersect( array_keys( Settings_Page::groups() ), array_column( $groups, 'id' ) ) ) === array_column( $groups, 'id' ) && 'Customer Controls' === ( array_column( $groups, 'label', 'id' )['customers'] ?? '' ) );
 $check( 'a section no group names lands in Integrations', array( 'integrations' ) === ( $listed['submex_test_extra'] ?? null ) );
-$payments = array_column( $groups, null, 'id' )['payments'] ?? array();
-$check( 'Payments lists its gateways', ! empty( $payments['list'] ) && in_array( 'paypal', array_column( $payments['sections'], 'id' ), true ) );
+$check( 'PayPal is not in the menu: its settings are on its WooCommerce payment page', ! isset( $listed['paypal'] ), array_keys( $listed ) );
+$check( 'and asking for it says so', 404 === $get( '/paypal' )->get_status() );
 $notices = $get( '', array( 'submex_license_notice' => 'activated' ) )->get_data()['notices'] ?? array();
 $check( 'a licence change that came back to the page is reported', array( array( 'type' => 'good', 'message' => 'Licence activated.' ) ) === $notices, $notices );
 

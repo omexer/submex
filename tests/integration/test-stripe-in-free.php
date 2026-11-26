@@ -81,14 +81,11 @@ $check(
 	$fields
 );
 
-$page   = rest_do_request( new WP_REST_Request( 'GET', '/submex/v1/settings/stripe' ) );
-$values = array();
-foreach ( $page->get_data()['cards'] ?? array() as $card ) {
-	foreach ( $card['rows'] as $row ) {
-		$values[ $row['id'] ?? '' ] = $row['value'] ?? null;
-	}
-}
-$check( 'Submex → Settings shows the saved values under Payments', 200 === $page->get_status() && 'payments' === ( $page->get_data()['group'] ?? '' ) && 'sk_test_in_free' === ( $values['submex_stripe_test_secret'] ?? '' ), array( $page->get_status(), $values ) );
+ob_start();
+( new \Submex\Admin\Settings_Page() )->render_panel_form( 'stripe' );
+$panel = (string) ob_get_clean();
+$check( 'Stripe\'s panel on its WooCommerce page shows the saved values', str_contains( $panel, 'sk_test_in_free' ), $panel );
+$check( 'and links to its settings open that page', str_contains( \Submex\Admin\Settings_Page::section_url( 'stripe' ), 'tab=checkout&section=submex_stripe' ) );
 
 echo "\n5. Block checkout\n";
 $blocks = \Automattic\WooCommerce\Blocks\Package::container()->get( \Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry::class )->get_registered( Stripe_Checkout_Gateway::ID );

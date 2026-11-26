@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.0
+
+* **Gateway settings on the gateway's WooCommerce page.** `Admin\Gateway_Panel` draws a Submex settings section on a WooCommerce payment gateway page, after WooCommerce's own form, as a form of its own posting to Submex → Settings (`Settings_Page::render_panel_form()`, saved by `maybe_save()` as before and redirected back with `submex_saved`). Outside WooCommerce's form because some providers (Square, WooPayments) draw their settings in their own app, hide what follows it inside the form and do not use WooCommerce's Save changes. Extensions register panels on the `submex_gateway_settings_panels` filter, keyed by section: `gateways` (WooCommerce gateway ids), or `tab` (a settings tab of its own, drawn on its first page), and an optional `url`; a panel with only a `url` has no page yet and only redirects. Stripe and PayPal register theirs.
+* **Moved sections leave Submex → Settings.** `Settings_Page::sections()`, the menu and `GET /submex/v1/settings/{section}` leave them out (404); `Settings_Page::section_url()` returns where the section now lives, so every existing link follows it, and an old `?section=` URL redirects there. The Payments group is hidden once empty; sections an older Pro registers stay in it.
+* **One switch per gateway.** Where Submex mirrors a gateway's Enable (`Gateway_Switch::is_linked()`), WooCommerce's Enable/Disable is left off that gateway's page while the panel shows.
+* **Stripe and PayPal cards** in the Integrations screen's Payment Gateways group, connected when switched on and configured, with Settings opening their page.
+
 ## 1.3.0
 
 * **Activate now on the Integrations screen.** A card whose plugin is installed but inactive offers Activate now instead of Install; the same `submex_install_integration` action activates it without downloading anything, and needs only `activate_plugins`. A card whose plugin is active while the integration is not yet connected offers no button, and an installed plugin no longer shows Get it. Both the app (`activate` in `GET /submex/v1/integrations`) and the server-rendered screen do this; `Integration_Installer::state()` says which applies.

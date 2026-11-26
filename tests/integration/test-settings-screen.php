@@ -134,9 +134,10 @@ $row_of = static function ( string $html, string $id ) use ( $xpath ): ?DOMEleme
 };
 
 echo "\n1. Every section is reachable, in its group\n";
+$panels   = \Submex\Admin\Gateway_Panel::panels();
 $sections = $woo->get_sections();
 $groups   = Settings_Page::groups();
-foreach ( $sections as $section => $label ) {
+foreach ( array_diff_key( $sections, $panels ) as $section => $label ) {
 	$section = (string) $section;
 	$group   = Settings_Page::group_of( $section );
 	$html    = $render( $section );
@@ -156,13 +157,24 @@ $check( 'a section no group names lands in Integrations', 'integrations' === Set
 $named = array_merge( ...array_values( array_column( $groups, 'sections' ) ) );
 $check( 'no group names Content Restriction, which moved to its own add-on', ! in_array( 'content', $named, true ), $named );
 
-$paypal = $xpath( $render( 'paypal' ) );
-$subnav = array_map( static fn( $a ) => trim( $a->textContent ), iterator_to_array( $paypal->query( '//ul[contains(@class,"submex-settings__subnav")]//a' ) ) );
-$check( 'Payments lists its gateways under the menu entry', in_array( 'PayPal', $subnav, true ) && in_array( $sections['mollie'], $subnav, true ), $subnav );
-$check( 'with the one on screen marked', 'PayPal' === trim( (string) $paypal->query( '//ul[contains(@class,"submex-settings__subnav")]//a[@aria-current="page"]' )->item( 0 )?->textContent ) );
-$listed = array_column( array_filter( $woo->get_settings_for_section( 'mollie' ), static fn( $f ) => ! empty( $f['id'] ) && in_array( $f['type'] ?? '', array( 'checkbox', 'select', 'text', 'password' ), true ) ), 'id' );
-$shown  = array_filter( $listed, static fn( $id ) => $paypal->query( '//form//*[@id="' . $id . '"]' )->length > 0 );
-$check( 'and only its own fields in the form', $listed && array() === $shown && 1 === $paypal->query( '//form//*[@id="submex_paypal_sandbox_client_id"]' )->length, $shown );
+// A gateway's section is drawn on its WooCommerce payment page instead, as a form of its own.
+$panel_of = static function ( string $section ) use ( $screen ): string {
+	ob_start();
+	$screen->render_panel_form( $section );
+	return (string) ob_get_clean();
+};
+foreach ( array_intersect_key( $sections, $panels ) as $section => $label ) {
+	$section = (string) $section;
+	$x       = $xpath( $panel_of( $section ) );
+	$fields  = array_filter( $woo->get_settings_for_section( $section ), static fn( $f ) => ! empty( $f['id'] ) && in_array( $f['type'] ?? '', array( 'checkbox', 'select', 'text', 'number', 'password', 'textarea', 'email', 'url' ), true ) );
+	$missing = array_values( array_filter( array_column( $fields, 'id' ), static fn( $id ) => 0 === $x->query( '//form[contains(@class,"submex-gateway-panel__form")]//*[@id="' . $id . '"]' )->length ) );
+	$url     = wp_parse_url( Settings_Page::section_url( $section ) );
+	parse_str( $url['query'] ?? '', $query );
+
+	$check( "'{$section}' ({$label}) links to the page its panel is on, not to Submex → Settings", Settings_Page::SLUG !== ( $query['page'] ?? '' ) && wp_parse_url( (string) \Submex\Admin\Gateway_Panel::url_of( $section ) ) === $url, $query );
+	$check( '  its panel posts every one of its fields, with the section, to Submex → Settings', array() === $missing && $x->query( '//input[@name="submex_section"]' )->item( 0 )?->getAttribute( 'value' ) === $section && 1 === $x->query( '//input[@name="submex_settings_nonce"]' )->length, $missing );
+}
+$check( 'PayPal is drawn on its WooCommerce page', isset( $panels['paypal'] ) && array( \Submex\Gateways\PayPal\PayPal_Checkout_Gateway::ID ) === $panels['paypal']['gateways'] );
 
 $renewal = $render( 'recovery' );
 $check( 'a stacked group draws its sections together', str_contains( $renewal, 'id="submex_catch_up_policy"' ) && str_contains( $renewal, 'id="submex_test_stacked_option"' ) );

@@ -94,7 +94,7 @@ $states = static fn( $integrations ): array => array_merge(
 			'requires'       => 'Harness',
 			'active'         => true,
 			'category'       => 'Zz First',
-			'category_order' => 1,
+			'category_order' => 0,
 		),
 	)
 );

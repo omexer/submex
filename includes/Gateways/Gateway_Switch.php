@@ -39,6 +39,13 @@ final class Gateway_Switch {
 	/**
 	 * Switches that disagreed before they were joined: checkout turned off by hand is the only state left as it was.
 	 */
+	/**
+	 * Whether this WooCommerce gateway's Enable is mirrored by a Submex switch.
+	 */
+	public static function is_linked( string $gateway_id ): bool {
+		return isset( self::$links[ $gateway_id ] );
+	}
+
 	public static function reconcile( string $gateway_id, string $option ): void {
 		$name     = self::settings_name( $gateway_id );
 		$settings = get_option( $name, null );

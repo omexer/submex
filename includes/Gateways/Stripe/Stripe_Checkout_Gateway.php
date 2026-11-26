@@ -26,7 +26,7 @@ class Stripe_Checkout_Gateway extends \WC_Payment_Gateway {
 	public function __construct( private readonly Stripe_Client $client ) {
 		$this->id                 = self::ID;
 		$this->method_title       = __( 'Stripe Subscriptions (Submex)', 'submex' );
-		$this->method_description = __( 'Take card payments for subscriptions. Renewals are charged automatically against the saved card. Configure keys under Submex → Settings → Stripe.', 'submex' );
+		$this->method_description = __( 'Take card payments for subscriptions. Renewals are charged automatically against the saved card. Its keys and renewals are set on this gateway\'s settings page.', 'submex' );
 		$this->has_fields         = false;
 		$this->supports           = array( 'products', 'refunds' );
 

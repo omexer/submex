@@ -30,7 +30,7 @@ class PayPal_Checkout_Gateway extends \WC_Payment_Gateway {
 	) {
 		$this->id                 = self::ID;
 		$this->method_title       = __( 'PayPal Subscriptions (Submex)', 'submex' );
-		$this->method_description = __( 'Lets customers start a subscription with PayPal. Configure the credentials under Submex → Settings → PayPal.', 'submex' );
+		$this->method_description = __( 'Lets customers start a subscription with PayPal. Its credentials and renewals are set on this gateway\'s settings page.', 'submex' );
 		$this->has_fields         = false;
 		$this->supports           = array( 'products' );
 

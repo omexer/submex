@@ -153,7 +153,7 @@ $xpath  = static function ( string $html ): DOMXPath {
 $form_of = static function ( string $html ) use ( $xpath ): array {
 	$x    = $xpath( $html );
 	$post = array();
-	foreach ( $x->query( '//form[contains(@class,"submex-settings__main")]//*[self::input or self::select or self::textarea][@name][not(@disabled)]' ) as $el ) {
+	foreach ( $x->query( '//form[contains(@class,"submex-settings__main") or contains(@class,"submex-gateway-panel__form")]//*[self::input or self::select or self::textarea][@name][not(@disabled)]' ) as $el ) {
 		$name = $el->getAttribute( 'name' );
 		if ( 'select' === $el->nodeName ) {
 			$chosen        = $x->query( './/option[@selected]', $el )->item( 0 ) ?? $x->query( './/option', $el )->item( 0 );
@@ -285,7 +285,10 @@ $check( 'Stripe opens with a setup card', Setup_Card::TYPE === ( $screen->settin
 update_option( 'submex_stripe_live', 'no' );
 update_option( 'submex_stripe_test_secret', 'sk_test_keep' );
 update_option( 'submex_stripe_secret', '' );
-$post                         = $form_of( $render( 'stripe' ) );
+// Stripe's settings are on its WooCommerce payment page, in a panel that posts to this screen.
+ob_start();
+$screen->render_panel_form( 'stripe' );
+$post                         = $form_of( (string) ob_get_clean() );
 $post['submex_stripe_live']   = 'yes';
 $post['submex_stripe_secret'] = 'sk_live_new';
 $save( $post );

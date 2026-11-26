@@ -85,7 +85,23 @@ class Settings_Page {
 		// This screen's own load, not admin_init: the licence buttons post to admin-post.php
 		// carrying this form's fields, and an admin_init handler would answer for them.
 		if ( $hook ) {
+			add_action( 'load-' . $hook, array( $this, 'redirect_moved' ) );
 			add_action( 'load-' . $hook, array( $this, 'maybe_save' ) );
+		}
+	}
+
+	/**
+	 * A section shown on a WooCommerce payment gateway page now (Gateway_Panel): bookmarks and older links follow it there.
+	 */
+	public function redirect_moved(): void {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only screen routing.
+		$asked = isset( $_GET['section'] ) ? sanitize_key( wp_unslash( $_GET['section'] ) ) : '';
+		$url   = '' === $asked ? null : Gateway_Panel::url_of( $asked );
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- only whether this is a save, which maybe_save() checks the nonce of.
+		if ( null !== $url && ! isset( $_POST['submex_settings_nonce'] ) ) {
+			wp_safe_redirect( $url );
+			exit;
 		}
 	}
 
@@ -101,8 +117,9 @@ class Settings_Page {
 
 		check_admin_referer( self::NONCE, 'submex_settings_nonce' );
 
-		$section  = isset( $_POST['submex_section'] ) ? sanitize_key( wp_unslash( $_POST['submex_section'] ) ) : '';
-		$sections = $this->sections();
+		$section = isset( $_POST['submex_section'] ) ? sanitize_key( wp_unslash( $_POST['submex_section'] ) ) : '';
+		// Including sections drawn on a gateway's WooCommerce page, whose panel posts here.
+		$sections = $this->all_sections();
 
 		if ( ! isset( $sections[ $section ] ) ) {
 			return;
@@ -112,7 +129,10 @@ class Settings_Page {
 			return;
 		}
 
-		wp_safe_redirect( add_query_arg( 'submex_saved', '1', self::section_url( $section ) ) );
+		// Back to the gateway's WooCommerce page, at its panel, when that is where the section is drawn.
+		$anchor = null === Gateway_Panel::url_of( $section ) ? '' : '#submex-gateway-panel';
+
+		wp_safe_redirect( add_query_arg( 'submex_saved', '1', self::section_url( $section ) ) . $anchor );
 		exit;
 	}
 
@@ -908,9 +928,35 @@ class Settings_Page {
 	 * @return array<string, string>
 	 */
 	public function sections(): array {
+		// A section drawn on a WooCommerce gateway page instead is no longer listed here.
+		return array_diff_key( $this->all_sections(), Gateway_Panel::panels() );
+	}
+
+	/**
+	 * @return array<string, string>
+	 */
+	private function all_sections(): array {
 		$page = $this->woo_page();
 
 		return $page ? (array) $page->get_sections() : array();
+	}
+
+	/**
+	 * One section as a form of its own, outside this screen: a gateway's panel on its
+	 * WooCommerce page. It posts here, and the save comes back to wherever the section lives.
+	 */
+	public function render_panel_form( string $section ): void {
+		printf( '<form class="submex-gateway-panel__form" method="post" action="%s">', esc_url( add_query_arg( 'page', self::SLUG, admin_url( 'admin.php' ) ) ) );
+		wp_nonce_field( self::NONCE, 'submex_settings_nonce' );
+		printf( '<input type="hidden" name="submex_section" value="%s" />', esc_attr( $section ) );
+
+		$this->render_notices();
+		$this->render_cards( array( $section => $this->settings_for( $section ) ) );
+
+		printf(
+			'<p class="submex-gateway-panel__save"><button type="submit" class="button button-primary">%s</button></p></form>',
+			esc_html__( 'Save Submex settings', 'submex' )
+		);
 	}
 
 	/**
@@ -949,9 +995,16 @@ class Settings_Page {
 	}
 
 	/**
-	 * Any section's address, including one drawn stacked inside a group.
+	 * Any section's address, including one drawn stacked inside a group, or the WooCommerce
+	 * gateway page a section is drawn on instead.
 	 */
 	public static function section_url( string $section = '' ): string {
+		$moved = '' === $section ? null : Gateway_Panel::url_of( $section );
+
+		if ( null !== $moved ) {
+			return $moved;
+		}
+
 		$args = array( 'page' => self::SLUG );
 
 		if ( '' !== $section ) {

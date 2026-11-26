@@ -4,7 +4,7 @@ Tags: woocommerce, subscriptions, recurring payments, billing, memberships
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.3.0
+Stable tag: 1.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -300,6 +300,11 @@ Visit the support forum on WordPress.org or the plugin documentation. Replace th
 10. Payment gateway settings.
 
 == Changelog ==
+
+= 1.4.0 =
+* Stripe and PayPal settings have moved to their own pages under WooCommerce → Settings → Payments, in a "Submex subscriptions" panel with its own Save button. Every setting keeps its value, and links and bookmarks to the old place open the new one.
+* Submex → Integrations lists Stripe and PayPal under Payment Gateways, each with a Settings button.
+* Submex → Settings no longer has a Payments menu once every payment gateway's settings have moved. With an older Submex Pro, its gateways stay there until Pro is updated.
 
 = 1.3.0 =
 * Integrations: a plugin that is installed but switched off now shows Activate now instead of Install, and activates in one click. Activating only needs permission to activate plugins.

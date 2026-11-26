@@ -336,6 +336,15 @@ final class Plugin {
 		$this->services['settings_page'] = new Settings_Page();
 		$this->services['settings_page']->register();
 
+		$this->services['gateway_panel'] = new \Submex\Admin\Gateway_Panel( $this->services['settings_page'] );
+		$this->services['gateway_panel']->register();
+
+		( new \Submex\Admin\Own_Gateways(
+			self::owns_stripe(),
+			fn(): bool => isset( $this->services['stripe_client'] ) && $this->services['stripe_client']->is_enabled(),
+			fn(): bool => $this->services['paypal_client']->is_enabled()
+		) )->register();
+
 		$this->services['settings_api'] = new Settings_Controller( $this->services['settings_page'] );
 		$this->services['settings_api']->register();
 

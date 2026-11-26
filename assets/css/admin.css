@@ -1446,3 +1446,24 @@ body.submex-admin #wpbody-content > .notice + .notice {
 	color: var(--submex-ink-soft);
 	font-size: 13px;
 }
+
+/* A gateway's Submex settings on its WooCommerce payment page (Gateway_Panel). */
+.submex-gateway-panel {
+	max-width: 960px;
+	margin: 32px 0 0;
+	padding-top: 24px;
+	border-top: 1px solid #dcdcde;
+}
+
+.submex-gateway-panel__title {
+	margin: 0 0 4px;
+}
+
+.submex-gateway-panel__lede {
+	margin: 0 0 16px;
+	color: #50575e;
+}
+
+.submex-gateway-panel__save {
+	margin-top: 16px;
+}

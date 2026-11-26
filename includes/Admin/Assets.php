@@ -155,7 +155,7 @@ class Assets {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only screen routing.
 		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : '';
 
-		// Our own tab of the WooCommerce settings screen, and nobody else's.
-		return 'woocommerce_page_wc-settings' === $hook && 'submex' === $tab;
+		// Our own tab of the WooCommerce settings screen, and a gateway page showing Submex's panel.
+		return 'woocommerce_page_wc-settings' === $hook && ( 'submex' === $tab || '' !== Gateway_Panel::current() );
 	}
 }
